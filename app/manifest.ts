@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Comandero - Restaurant Management System",
     short_name: "Comandero",
     description: "Comandero - Restaurant Management System",
-    start_url: "/",
+    start_url: "/login",
     display: "standalone",
     background_color: "#ffffff",
     theme_color: "#000000",
