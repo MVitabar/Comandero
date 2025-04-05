@@ -163,12 +163,8 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="absolute top-4 right-4">
-        <LanguageSwitcher />
-      </div>
-
-      <Card className="w-full max-w-md">
+    <div className="flex items-center justify-center min-h-screen w-full">
+      <Card className="w-full max-w-md mx-auto">
         <CardHeader>
           <CardTitle>{t("register")}</CardTitle>
           <CardDescription>{t("createAccountDescription")}</CardDescription>
@@ -286,4 +282,3 @@ export default function RegisterPage() {
     </div>
   )
 }
-

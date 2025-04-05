@@ -31,7 +31,7 @@ export default function RootLayout({
             <FirebaseError />
             <AuthProvider>
               <I18nProvider>
-                <div className="flex flex-col md:grid min-h-screen md:grid-cols-[auto_1fr] w-full max-w-full overflow-x-hidden">
+                <div className="flex flex-col min-h-screen md:grid-cols-[auto_1fr] w-full max-w-screen overflow-x-hidden">
                   <CollapsibleSidebar />
                   <main className="flex-1 w-full min-h-screen overflow-x-hidden p-4 md:p-6">
                     {children}
