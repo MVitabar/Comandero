@@ -244,25 +244,8 @@ export default function LoginPage() {
             </Button>
           )}
 
-          {/* Mobile App Download Button */}
-          {downloadOption && (
-            <Button 
-              variant="outline" 
-              className="w-full mt-2" 
-              onClick={() => {
-                // Redirect to app store or download link
-                window.open(
-                  downloadOption.platform === "Android" 
-                    ? "https://play.google.com/store/apps/details?id=your.app.package" 
-                    : "https://apps.apple.com/app/your-app-id",
-                  "_blank"
-                )
-              }}
-            >
-              {downloadOption.icon}
-              {downloadOption.text}
-            </Button>
-          )}
+          
+          
         </CardFooter>
       </Card>
     </div>
