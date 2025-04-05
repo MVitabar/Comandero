@@ -7,6 +7,7 @@ import { useI18n } from "./i18n-provider"
 import { useAuth } from "./auth-provider"
 import { signOut } from "firebase/auth"
 import { useFirebase } from "./firebase-provider"
+import { doc, getDoc } from "firebase/firestore"
 import { useToast } from "@/components/ui/use-toast"
 import {
   LayoutDashboard,
@@ -30,7 +31,7 @@ import { cn } from "@/lib/utils"
 export function CollapsibleSidebar() {
   const { t, language, setLanguage } = useI18n()
   const { user } = useAuth()
-  const { auth } = useFirebase()
+  const { auth, db } = useFirebase()
   const { toast } = useToast()
   const pathname = usePathname()
 
@@ -42,6 +43,31 @@ export function CollapsibleSidebar() {
 
   // Check if we're on mobile based on screen width
   const [isMobile, setIsMobile] = useState(false)
+
+  // Restaurant name state
+  const [restaurantName, setRestaurantName] = useState<string>("Comandero")
+
+  // Effect to fetch restaurant name
+  useEffect(() => {
+    const fetchRestaurantName = async () => {
+      try {
+        if (user && db) {
+          const userDocRef = doc(db, "users", user.uid)
+          const userDoc = await getDoc(userDocRef)
+          
+          if (userDoc.exists()) {
+            const userData = userDoc.data()
+            setRestaurantName(userData.restaurantName || "Comandero")
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching restaurant name:", error)
+        setRestaurantName("Comandero")
+      }
+    }
+
+    fetchRestaurantName()
+  }, [user, db])
 
   // Effect to handle window resize and set mobile state
   useEffect(() => {
@@ -169,7 +195,9 @@ export function CollapsibleSidebar() {
         <div className="flex flex-col h-full">
           {/* Header with logo and collapse button */}
           <div className={cn("flex items-center p-4 border-b", isCollapsed ? "justify-center" : "justify-between")}>
-            {!isCollapsed && <h2 className="text-xl font-bold truncate">Restaurant PWA</h2>}
+            {!isCollapsed && (
+              <h2 className="text-lg font-bold truncate">{restaurantName}</h2>
+            )}
             {isCollapsed && <span className="text-xl font-bold">R</span>}
 
             {/* Collapse toggle button - only visible on desktop */}

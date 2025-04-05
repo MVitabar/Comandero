@@ -1,6 +1,6 @@
 "use client"
 
-import type React from "react"
+import React, { useEffect } from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { LanguageSwitcher } from "@/components/language-switcher"
-import { Eye, EyeOff, Loader2 } from "lucide-react"
+import { Eye, EyeOff, Loader2, Download, Smartphone } from "lucide-react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -22,11 +22,80 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [canInstallPWA, setCanInstallPWA] = useState(false)
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
 
   const { auth } = useFirebase()
   const { t } = useI18n()
   const { toast } = useToast()
   const router = useRouter()
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      // Prevent the mini-infobar from appearing
+      e.preventDefault()
+      // Stash the event so it can be triggered later
+      setDeferredPrompt(e)
+      setCanInstallPWA(true)
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    }
+  }, [])
+
+  const handleInstallPWA = async () => {
+    if (deferredPrompt) {
+      // Show the install prompt
+      deferredPrompt.prompt()
+      
+      // Wait for the user to respond to the prompt
+      const { outcome } = await deferredPrompt.userChoice
+      
+      if (outcome === 'accepted') {
+        toast({
+          title: t("appInstallSuccess"),
+          description: t("appInstallSuccessDescription"),
+        })
+      } else {
+        toast({
+          title: t("appInstallCancelled"),
+          description: t("appInstallCancelledDescription"),
+          variant: "default",
+        })
+      }
+
+      // Reset the deferred prompt
+      setDeferredPrompt(null)
+      setCanInstallPWA(false)
+    }
+  }
+
+  // Determine download options based on device
+  const getDownloadOptions = () => {
+    const userAgent = navigator.userAgent.toLowerCase()
+    const platform = navigator.platform.toLowerCase()
+
+    if (/android/.test(userAgent)) {
+      return {
+        platform: "Android",
+        icon: <Smartphone className="mr-2 h-5 w-5" />,
+        text: t("downloadAndroidApp")
+      }
+    } else if (/(ipod|iphone|ipad)/.test(userAgent)) {
+      return {
+        platform: "iOS",
+        icon: <Smartphone className="mr-2 h-5 w-5" />,
+        text: t("downloadIOSApp")
+      }
+    }
+
+    return null
+  }
+
+  const downloadOption = getDownloadOptions()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -155,13 +224,45 @@ export default function LoginPage() {
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-between">
-          <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
-            {t("forgotPassword")}
-          </Link>
-          <Link href="/register" className="text-sm text-blue-600 hover:underline">
-            {t("register")}
-          </Link>
+        <CardFooter className="flex flex-col space-y-2">
+          <p className="text-sm text-muted-foreground">
+            {t("noAccount")}{" "}
+            <Link href="/register" className="text-primary hover:underline">
+              {t("register")}
+            </Link>
+          </p>
+          
+          {/* PWA Install Button */}
+          {canInstallPWA && (
+            <Button 
+              variant="outline" 
+              className="w-full mt-2" 
+              onClick={handleInstallPWA}
+            >
+              <Download className="mr-2 h-5 w-5" />
+              {t("install App")}
+            </Button>
+          )}
+
+          {/* Mobile App Download Button */}
+          {downloadOption && (
+            <Button 
+              variant="outline" 
+              className="w-full mt-2" 
+              onClick={() => {
+                // Redirect to app store or download link
+                window.open(
+                  downloadOption.platform === "Android" 
+                    ? "https://play.google.com/store/apps/details?id=your.app.package" 
+                    : "https://apps.apple.com/app/your-app-id",
+                  "_blank"
+                )
+              }}
+            >
+              {downloadOption.icon}
+              {downloadOption.text}
+            </Button>
+          )}
         </CardFooter>
       </Card>
     </div>

@@ -24,6 +24,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { doc, getDoc, db } from "firebase/firestore"
 
 // Dynamically import Link to ensure client-side rendering
 const Link = dynamic(() => import('next/link'), { ssr: false })
@@ -49,6 +50,7 @@ export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false)
   const [navItems, setNavItems] = useState<Array<{name: string, href: string, icon: React.ComponentType}>>([])
   const [isClient, setIsClient] = useState(false)
+  const [restaurantName, setRestaurantName] = useState<string>("Comandero")
 
   useEffect(() => {
     setIsClient(true)
@@ -91,6 +93,27 @@ export function Sidebar() {
     ])
   }, [t, language])
 
+  useEffect(() => {
+    const fetchRestaurantName = async () => {
+      try {
+        if (user && db) {
+          const userDocRef = doc(db, "users", user.uid)
+          const userDoc = await getDoc(userDocRef)
+          
+          if (userDoc.exists()) {
+            const userData = userDoc.data()
+            setRestaurantName(userData.restaurantName || "Comandero")
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching restaurant name:", error)
+        setRestaurantName("Comandero")
+      }
+    }
+
+    fetchRestaurantName()
+  }, [user, db])
+
   const handleLogout = async () => {
     if (!auth) return
     try {
@@ -131,7 +154,7 @@ export function Sidebar() {
       >
         <div className="flex flex-col h-full">
           <div className="p-4 border-b">
-            <h2 className="text-xl font-bold">Restaurant PWA</h2>
+            <h2 className="text-lg font-bold truncate">{restaurantName}</h2>
           </div>
 
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
