@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useI18n } from "./i18n-provider"
@@ -19,6 +19,7 @@ import {
   X,
   ChevronDown,
   FileSpreadsheet,
+  Download,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -31,6 +32,52 @@ export function Sidebar() {
   const { toast } = useToast()
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+
+  // Install app state and handler
+  const [installPrompt, setInstallPrompt] = useState<any>(null)
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      // Prevent the default browser install prompt
+      e.preventDefault()
+      // Store the event for later use
+      setInstallPrompt(e as any)
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    }
+  }, [])
+
+  const handleInstallApp = async () => {
+    if (!installPrompt) return
+
+    try {
+      // Show the install prompt
+      const result = await (installPrompt as any).prompt()
+      
+      // Wait for the user to respond to the prompt
+      const choiceResult = await result.userChoice
+
+      if (choiceResult.outcome === 'accepted') {
+        toast({
+          title: t("commons.success"),
+          description: t("sidebar.installApp") + " " + t("commons.initiated")
+        })
+      }
+
+      // Reset the install prompt
+      setInstallPrompt(null)
+    } catch (error) {
+      toast({
+        title: t("commons.error"),
+        description: t("commons.installFailed"),
+        variant: "destructive"
+      })
+    }
+  }
 
   const handleLogout = async () => {
     if (!auth) return
@@ -52,37 +99,37 @@ export function Sidebar() {
 
   const navItems = [
     {
-      name: t("dashboard"),
+      name: t("sidebar.dashboard"),
       href: "/dashboard",
       icon: LayoutDashboard,
     },
     {
-      name: t("orders"),
+      name: t("sidebar.orders"),
       href: "/orders",
       icon: ClipboardList,
     },
     {
-      name: t("tables"),
+      name: t("sidebar.tables"),
       href: "/tables",
       icon: FileSpreadsheet,
     },
     {
-      name: t("inventory"),
+      name: t("sidebar.inventory"),
       href: "/inventory",
       icon: Package,
     },
     {
-      name: t("users"),
+      name: t("sidebar.users"),
       href: "/users",
       icon: Users,
     },
     {
-      name: t("advancedReports"),
+      name: t("sidebar.advancedReports"),
       href: "/advanced-reports",
       icon: FileSpreadsheet,
     },
     {
-      name: t("settings"),
+      name: t("sidebar.settings"),
       href: "/settings",
       icon: Settings,
     },
@@ -130,26 +177,46 @@ export function Sidebar() {
             ))}
           </nav>
 
-          <div className="p-4 border-t">
+          <div className="p-4 border-t space-y-2">
+            {/* Language Switcher */}
             <div className="flex items-center justify-between mb-4">
-              <span className="text-sm font-medium">{t("language")}</span>
+              <span className="text-sm font-medium">{t("sidebar.language")}</span>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-8">
-                    {language === "en" && t("english")}
-                    {language === "es" && t("spanish")}
-                    {language === "pt" && t("portuguese")}
+                    {language === "en" && t("sidebar.languages.english")}
+                    {language === "es" && t("sidebar.languages.spanish")}
+                    {language === "pt" && t("sidebar.languages.portuguese")}
                     <ChevronDown className="ml-2 h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setLanguage("en")}>{t("english")}</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLanguage("es")}>{t("spanish")}</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLanguage("pt")}>{t("portuguese")}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguage("en")}>
+                    {t("sidebar.languages.english")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguage("es")}>
+                    {t("sidebar.languages.spanish")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguage("pt")}>
+                    {t("sidebar.languages.portuguese")}
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
 
+            {/* Install App Button - Only show if install prompt is available */}
+            {installPrompt && (
+              <Button 
+                variant="outline" 
+                className="w-full justify-start" 
+                onClick={handleInstallApp}
+              >
+                <Download className="mr-2 h-5 w-5" />
+                {t("sidebar.installApp")}
+              </Button>
+            )}
+
+            {/* Logout Button */}
             <Button variant="outline" className="w-full justify-start" onClick={handleLogout}>
               <LogOut className="mr-2 h-5 w-5" />
               {t("sidebar.logout")}

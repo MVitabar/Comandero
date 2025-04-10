@@ -22,6 +22,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Globe,
+  Download,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -92,6 +93,52 @@ export function CollapsibleSidebar() {
         title: "Error",
         description: "Failed to log out",
         variant: "destructive",
+      })
+    }
+  }
+
+  // Install app state and handler
+  const [installPrompt, setInstallPrompt] = useState<any>(null)
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      // Prevent the default browser install prompt
+      e.preventDefault()
+      // Store the event for later use
+      setInstallPrompt(e as any)
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    }
+  }, [])
+
+  const handleInstallApp = async () => {
+    if (!installPrompt) return
+
+    try {
+      // Show the install prompt
+      const result = await (installPrompt as any).prompt()
+      
+      // Wait for the user to respond to the prompt
+      const choiceResult = await result.userChoice
+
+      if (choiceResult.outcome === 'accepted') {
+        toast({
+          title: t("commons.success"),
+          description: t("sidebar.installApp") + " " + t("commons.initiated")
+        })
+      }
+
+      // Reset the install prompt
+      setInstallPrompt(null)
+    } catch (error) {
+      toast({
+        title: t("commons.error"),
+        description: t("commons.installFailed"),
+        variant: "destructive"
       })
     }
   }
@@ -199,7 +246,7 @@ export function CollapsibleSidebar() {
           <div className="mb-4">
             <div className="flex items-center justify-between">
               <span className={cn("text-sm font-medium", isCollapsed && "hidden")}>
-                {t("language")}
+                {t("sidebar.language")}
               </span>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -213,9 +260,9 @@ export function CollapsibleSidebar() {
                   >
                     {!isCollapsed && (
                       <>
-                        {language === "en" && t("english")}
-                        {language === "es" && t("spanish")}
-                        {language === "pt" && t("portuguese")}
+                        {language === "en" && t("sidebar.languages.english")}
+                        {language === "es" && t("sidebar.languages.spanish")}
+                        {language === "pt" && t("sidebar.languages.portuguese")}
                         <ChevronDown className="ml-2 h-4 w-4" />
                       </>
                     )}
@@ -224,17 +271,32 @@ export function CollapsibleSidebar() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => setLanguage("en")}>
-                    {t("english")}
+                    {t("sidebar.languages.english")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setLanguage("es")}>
-                    {t("spanish")}
+                    {t("sidebar.languages.spanish")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setLanguage("pt")}>
-                    {t("portuguese")}
+                    {t("sidebar.languages.portuguese")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
+
+            {/* Install App Button - Only show if install prompt is available */}
+            {installPrompt && (
+              <Button 
+                variant="outline" 
+                className={cn(
+                  "w-full justify-start mt-2", 
+                  isCollapsed && "p-2 justify-center"
+                )} 
+                onClick={handleInstallApp}
+              >
+                <Download className="mr-2 h-5 w-5" />
+                {!isCollapsed && t("sidebar.installApp")}
+              </Button>
+            )}
           </div>
 
           {/* Logout Button */}
@@ -307,29 +369,44 @@ export function CollapsibleSidebar() {
               {/* Language Switcher */}
               <div className="mb-4 px-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{t("language")}</span>
+                  <span className="text-sm font-medium">{t("sidebar.language")}</span>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm" className="h-8">
-                        {language === "en" && t("english")}
-                        {language === "es" && t("spanish")}
-                        {language === "pt" && t("portuguese")}
+                        {language === "en" && t("sidebar.languages.english")}
+                        {language === "es" && t("sidebar.languages.spanish")}
+                        {language === "pt" && t("sidebar.languages.portuguese")}
                         <ChevronDown className="ml-2 h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => setLanguage("en")}>
-                        {t("english")}
+                        {t("sidebar.languages.english")}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setLanguage("es")}>
-                        {t("spanish")}
+                        {t("sidebar.languages.spanish")}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setLanguage("pt")}>
-                        {t("portuguese")}
+                        {t("sidebar.languages.portuguese")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
+
+                {/* Install App Button - Only show if install prompt is available */}
+                {installPrompt && (
+                  <Button 
+                    variant="outline" 
+                    className={cn(
+                      "w-full justify-start mt-2", 
+                      isCollapsed && "p-2 justify-center"
+                    )} 
+                    onClick={handleInstallApp}
+                  >
+                    <Download className="mr-2 h-5 w-5" />
+                    {!isCollapsed && t("sidebar.installApp")}
+                  </Button>
+                )}
               </div>
 
               {/* Logout Button */}

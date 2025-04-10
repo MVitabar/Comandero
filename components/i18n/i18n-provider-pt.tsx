@@ -1,17 +1,33 @@
 export const ptTranslations = {
-  // Commons Translations
   "commons": {
+    "yes": "Sim",
+    "no": "Não",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "save": "Salvar",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "loading": "Carregando...",
+    "success": "Sucesso",
+    "warning": "Aviso",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "actions": "Ações",
     "button": {
       "add": "Adicionar",
       "edit": "Editar",
       "delete": "Excluir",
       "cancel": "Cancelar",
       "save": "Salvar",
-      "submit": "Enviar"
+      "submit": "Enviar",
+      "sending": "Enviando...",
+      "create": "Criar",
+      "created": "Criado"
     },
     "status": {
       "lowStock": "Estoque Baixo",
-      "inStock": "Em Estoque"
+      "inStock": "Em Estoque",
+      "outOfStock": "Fora de Estoque"
     },
     "table": {
       "headers": {
@@ -25,12 +41,29 @@ export const ptTranslations = {
         "actions": "Ações"
       }
     },
-    "error": "Erro",
-    "loading": "Carregando...",
+    "error": {
+      "generic": "Ocorreu um erro",
+      "required": "Este campo é obrigatório",
+      "invalid": "Entrada inválida",
+      "configurationError": "Erro de configuração do Firebase. Por favor, entre em contato com o suporte",
+      "serviceUnavailable": "Serviço de autenticação indisponível. Tente novamente mais tarde"
+    },
     "noItemsFound": "Nenhum item encontrado",
     "searchPlaceholder": "Buscar...",
     "confirmDelete": "Tem certeza de que deseja excluir este item? Esta ação não pode ser desfeita.",
-    "currency": "{{value}}"
+    "currency": "{{value}}",
+    "password": "Senha",
+    "emailRequired": "O e-mail é obrigatório",
+    "passwordRequired": "A senha é obrigatória",
+    "login": {
+      "error": {
+        "emailRequired": "O e-mail é obrigatório",
+        "passwordRequired": "A senha é obrigatória",
+        
+        "invalidCredentials": "E-mail ou senha inválidos",
+        "tooManyAttempts": "Muitas tentativas falhas. Tente novamente mais tarde."
+      }
+    }
   },
 
   "tableMapSettings": {
@@ -69,27 +102,73 @@ export const ptTranslations = {
   },
 
   "tables": {
+    "dialog": {
+      "title": "Configurar Mesa",
+      "description": "Adicionar ou editar detalhes da mesa",
+      "tableName": {
+        "label": "Nome da Mesa",
+        "placeholder": "Ex: Mesa 1, Mesa VIP"
+      },
+      "tableCapacity": {
+        "label": "Capacidade da Mesa",
+        "placeholder": "Número de pessoas",
+        "min": 1,
+        "max": 20
+      },
+      "status": {
+        "label": "Status da Mesa",
+        "options": {
+          "available": "Disponível",
+          "occupied": "Ocupada",
+          "reserved": "Reservada",
+          "cleaning": "Limpando"
+        }
+      },
+      "location": {
+        "label": "Localização",
+        "placeholder": "Área ou seção do restaurante"
+      },
+      "buttons": {
+        "save": "Salvar Mesa",
+        "cancel": "Cancelar",
+        "edit": "Editar Mesa",
+        "delete": "Excluir Mesa"
+      }
+    },
+    "tableMap": {
+      "title": "Mapas de Mesas",
+      "description": "Gerencie os layouts de mesas do seu restaurante",
+      "addNew": "Adicionar Novo Mapa",
+      "edit": "Editar Mapa",
+      "delete": "Excluir Mapa"
+    },
+    "errors": {
+      "tableNameRequired": "Nome da mesa é obrigatório",
+      "invalidCapacity": "Capacidade inválida",
+      "saveError": "Erro ao salvar mesa",
+      "deleteError": "Erro ao excluir mesa"
+    },
+    "success": {
+      "tableSaved": "Mesa salva com sucesso",
+      "tableDeleted": "Mesa excluída com sucesso"
+    },
+    "actions": "Ações",
+    "status": {
+      "available": "Disponível",
+      "occupied": "Ocupada",
+      "reserved": "Reservada"
+    },
     "pageTitle": "Mesas do Restaurante",
     "addTable": "Adicionar Nova Mesa",
     "tableName": "Nome da Mesa",
     "tableCapacity": "Capacidade",
     "tableStatus": "Status",
-    "actions": "Ações",
     "search": "Procurar Mesas",
     "sortBy": "Ordenar por",
     "tableNumber": "Número da Mesa",
     "seats": "Assentos",
     "noTablesMatchFilter": "Nenhuma mesa corresponde ao filtro",
     "noTablesInMap": "Nenhuma mesa no mapa",
-    "status": {
-      "available": "Disponível",
-      "occupied": "Ocupada", 
-      "reserved": "Reservada",
-      "ordering": "Em Pedido",
-      "preparing": "Em Preparação",
-      "ready": "Pronto",
-      "served": "Servida"
-    },
     "tableMaps": {
       "title": "Mapas de Mesas",
       "createMap": "Criar Mapa de Mesas",
@@ -110,47 +189,147 @@ export const ptTranslations = {
       "mapCreated": "Mapa de Mesas Criado",
       "mapUpdated": "Mapa de Mesas Atualizado",
       "mapDeleted": "Mapa de Mesas Excluído",
-
     }
   },
 
- 
-
   "sidebar": {
-    "appName": "Gestão de Restaurante",
-    "dashboard": "Painel",
+    "appName": "Comandero",
+    "dashboard": "Painel de Controle",
     "orders": "Pedidos",
     "tables": "Mesas",
-    "inventory": "Inventário",
+    "inventory": "Estoque",
     "users": "Usuários",
     "settings": "Configurações",
-    "logout": "Sair"
+    "advancedReports": "Relatórios Avançados",
+    "logout": "Sair",
+    "language": "Idioma",
+    "installApp": "Baixar Aplicativo",
+    "languages": {
+      "english": "Inglês",
+      "spanish": "Espanhol", 
+      "portuguese": "Português"
+    }
   },
 
   "dashboard": {
     "title": "Painel de Controle",
     "salesOverview": {
       "title": "Resumo de Vendas",
-      "description": "Resumo de vendas diárias",
-      "totalSales": "Vendas Totais: {{amount}}",
-      "monthlyGrowth": "+{{percentage}}% desde o mês passado",
-      "dailySalesTrend": "Vendas do Dia {{day}}: {{amount}}",
-      "dailySalesTrendFormat": "Dia {{day}}: {{amount}}"
+      "description": "Vendas totais e desempenho",
+      "totalSales": "Vendas Totais",
+      "monthlyGrowth": "+{percentage}% do mês passado"
     },
     "topSellingItems": {
       "title": "Itens Mais Vendidos",
-      "description": "Itens mais populares",
+      "description": "Itens populares",
       "orderCount": "{{count, number}} pedidos"
     },
     "stockLevel": {
-      "title": "Status do Estoque",
-      "description": "Níveis de estoque atuais",
-      "percentage": "{{percentage}}%",
-      "lowStockItems": "{{count, number}} itens com estoque baixo"
+      "title": "Níveis de Estoque",
+      "description": "Status do inventário",
+      "percentage": "{percentage}%",
+      "lowStockItems": "{count} itens com estoque baixo",
+      "totalItems": "Total de Itens",
+      "inStock": "Em Estoque",
+      "lowStock": "Estoque Baixo",
+      "status": {
+        "critical": "Estoque Crítico",
+        "warning": "Estoque Baixo",
+        "healthy": "Estoque Saudável"
+      }
+    },
+    "recentOrders": "Pedidos Recentes",
+    "categories": "Categorias",
+    "errors": {
+      "fetchFailed": "Falha ao carregar os dados do painel. Tente novamente mais tarde."
     }
   },
 
-  
+  "orders": {
+    "title": "Pedidos",
+    "newOrder": "Novo Pedido",
+    "noOrdersFound": "Nenhum pedido encontrado",
+    "table": {
+      "headers": {
+        "id": "ID",
+        "tableNumber": "Número da Mesa",
+        "waiter": "Garçom",
+        "items": "Itens",
+        "status": "Status",
+        "total": "Total",
+        "actions": "Ações"
+      },
+      "placeholders": {
+        "searchOrders": "Buscar pedidos por ID, mesa ou garçom",
+        "selectStatus": "Selecionar status",
+        "selectWaiter": "Selecionar garçom"
+      }
+    },
+    "status": {
+      "pending": "Pendente",
+      "preparing": "Em Preparação",
+      "ready": "Pronto",
+      "served": "Servido",
+      "cancelled": "Cancelado",
+      "completed": "Concluído",
+      "delivered": "Entregue",
+      "closed": "Fechado",
+      "finished": "Finalizado",
+      "ordering": "Em Pedido"
+    },
+    "actions": {
+      "view": "Visualizar",
+      "edit": "Editar",
+      "delete": "Excluir",
+      "cancel": "Cancelar",
+      "updateStatus": "Atualizar Status",
+      "createOrder": "Criar Pedido"
+    },
+    "action": {
+      "updateStatus": "Atualizar Status",
+      "updatedTo": "Atualizado para",
+      "updateStatusDescription": "Selecione o novo status para o pedido {{orderId}}",
+      "selectStatus": "Selecionar Status",
+      "delete": "Excluir",
+      "deleted": "Excluído",
+      "deleteConfirmation": "Tem certeza de que deseja excluir o pedido {{orderId}}?"
+    },
+    "errors": {
+      "fetchOrders": "Erro ao carregar pedidos",
+      "createOrder": "Erro ao criar pedido",
+      "updateOrder": "Erro ao atualizar pedido",
+      "deleteOrder": "Erro ao excluir pedido",
+      "updateStatus": "Erro ao atualizar status do pedido"
+    },
+    "success": {
+      "orderCreated": "Pedido criado com sucesso",
+      "orderUpdated": "Pedido atualizado com sucesso",
+      "orderDeleted": "Pedido excluído com sucesso",
+      "statusUpdated": "Status do pedido atualizado com sucesso"
+    },
+    "dialogs": {
+      "updateStatus": {
+        "title": "Atualizar Status do Pedido",
+        "description": "Selecione o novo status para o pedido {{orderId}}",
+        "selectStatus": "Selecionar Status"
+      },
+      "deleteOrder": {
+        "title": "Excluir Pedido",
+        "description": "Tem certeza de que deseja excluir o pedido {{orderId}}? Esta ação não pode ser desfeita.",
+        "confirmButton": "Excluir Pedido",
+        "cancelButton": "Cancelar"
+      }
+    },
+    "search": {
+      "placeholder": "Buscar pedidos por ID, mesa ou garçom",
+      "filterByStatus": "Filtrar por status",
+      "filterByWaiter": "Filtrar por garçom"
+    },
+    "filters": {
+      "allStatuses": "Todos os Status",
+      "noOrdersFound": "Nenhum pedido encontrado"
+    },
+  },
 
   "ordersPage": {
     "pageTitle": "Pedidos",
@@ -318,35 +497,69 @@ export const ptTranslations = {
 
   "users": {
     "pageTitle": "Usuários",
-    "userList": "Lista de Usuários",
     "addUser": "Adicionar Usuário",
-    "searchPlaceholder": "Pesquisar usuários...",
+    "userList": "Lista de Usuários",
+    "searchPlaceholder": "Buscar usuários...",
     "noUsers": "Nenhum usuário encontrado",
     "username": "Nome de Usuário",
     "email": "E-mail",
     "role": "Função",
-    "createdAt": "Criado em",
-    "lastLogin": "Último login",
     "status": "Status",
     "actions": "Ações",
     "openMenu": "Abrir menu",
     "copyId": "Copiar ID",
+    "userStatus": {
+      "active": "Ativo",
+      "inactive": "Inativo",
+      "suspended": "Suspenso"
+    },
     "roles": {
       "admin": "Administrador",
       "manager": "Gerente",
-      "chef": "Chef",
-      "waiter": "Garçom"
-    },
-    "userStatus": {
-      "active": "Ativo",
-      "inactive": "Inativo"
+      "staff": "Funcionário"
     },
     "errors": {
-      "fetchUsers": "Erro ao buscar usuários"
+      "fetchUsers": "Erro ao carregar usuários",
+      "createUser": "Erro ao criar usuário",
+      "updateUser": "Erro ao atualizar usuário",
+      "deleteUser": "Erro ao excluir usuário"
+    },
+    "success": {
+      "userCreated": "Usuário criado com sucesso",
+      "userUpdated": "Usuário atualizado com sucesso",
+      "userDeleted": "Usuário excluído com sucesso"
+    },
+    "form": {
+      "createTitle": "Criar Novo Usuário",
+      "editTitle": "Editar Usuário",
+      "labels": {
+        "username": "Nome de Usuário",
+        "email": "E-mail",
+        "role": "Função",
+        "status": "Status",
+        "password": "Senha",
+        "confirmPassword": "Confirmar Senha"
+      },
+      "placeholders": {
+        "username": "Digite o nome de usuário",
+        "email": "Digite o e-mail",
+        "role": "Selecione a função",
+        "status": "Selecione o status",
+        "password": "Digite a senha",
+        "confirmPassword": "Confirme a senha"
+      },
+      "validation": {
+        "usernameRequired": "Nome de usuário é obrigatório",
+        "emailRequired": "E-mail é obrigatório",
+        "emailInvalid": "E-mail inválido",
+        "roleRequired": "Função é obrigatória",
+        "statusRequired": "Status é obrigatório",
+        "passwordRequired": "Senha é obrigatória",
+        "passwordMinLength": "Senha deve ter no mínimo 8 caracteres",
+        "passwordsMatch": "As senhas devem coincidir"
+      }
     }
   },
-
-  
 
   "login": {
     "title": "Entrar",
@@ -354,10 +567,13 @@ export const ptTranslations = {
     "email": "E-mail",
     "password": "Senha",
     "login": "Entrar",
+    "forgotPassword": "Esqueceu sua senha?",
     "error": {
       "invalidCredentials": "E-mail ou senha inválidos",
       "tooManyAttempts": "Muitas tentativas de login. Tente novamente mais tarde.",
-      "unknown": "Ocorreu um erro desconhecido"
+      "emailRequired": "O e-mail é obrigatório",
+      "passwordRequired": "A senha é obrigatória",
+      "serviceUnavailable": "Serviço de autenticação indisponível. Tente novamente mais tarde"
     }
   },
 
@@ -368,14 +584,11 @@ export const ptTranslations = {
     "email": "E-mail",
     "password": "Senha",
     "confirmPassword": "Confirmar Senha",
-    "register": "Registrar",
+    "submit": "Registrar",
     "error": {
-      "usernameRequired": "O nome de usuário é obrigatório",
-      "usernameMinLength": "O nome de usuário deve ter pelo menos 3 caracteres",
-      "emailInvalid": "O e-mail não é válido",
-      "passwordMinLength": "A senha deve ter pelo menos 8 caracteres",
-      "passwordRequirements": "A senha deve incluir maiúsculas, minúsculas e números",
-      "passwordsDoNotMatch": "As senhas não coincidem"
+      "passwordsDoNotMatch": "As senhas não coincidem",
+      "emailInUse": "Este e-mail já está em uso",
+      "weakPassword": "A senha é muito fraca"
     }
   },
 
@@ -395,184 +608,82 @@ export const ptTranslations = {
   },
 
   "settings": {
-    "language": {
-      "title": "Idioma",
-      "description": "Selecione seu idioma preferido para o aplicativo",
-      "languages": {
-        "en": "Inglês",
-        "es": "Espanhol",
-        "pt": "Português"
-      },
-      "actions": {
-        "saveChanges": "Salvar Alterações",
-        "saving": "Salvando...",
-        "submit": "Enviar",
-        "saved": "Idioma Atualizado",
-        "saveSuccess": "Sua preferência de idioma foi atualizada com sucesso."
-      }
+    "title": "Configurações",
+    "profile": {
+      "title": "Perfil",
+      "description": "Gerencie suas informações pessoais e configurações de conta",
+      "personalInfo": "Informações Pessoais",
+      "accountSettings": "Configurações da Conta"
     },
     "notifications": {
       "title": "Notificações",
-      "description": "Configure como você recebe notificações",
-      "types": {
-        "title": "Tipos de Notificação",
-        "newOrders": {
-          "label": "Novos Pedidos",
-          "description": "Seja notificado quando novos pedidos forem realizados"
-        },
-        "orderUpdates": {
-          "label": "Atualizações de Pedidos", 
-          "description": "Receba atualizações sobre mudanças no status dos pedidos"
-        },
-        "inventoryAlerts": {
-          "label": "Alertas de Inventário",
-          "description": "Seja informado sobre problemas de estoque ou inventário"
-        },
-        "systemAnnouncements": {
-          "label": "Anúncios do Sistema",
-          "description": "Receba notificações importantes do sistema"
-        },
-        "dailyReports": {
-          "label": "Relatórios Diários",
-          "description": "Obtenha relatórios de resumo diários"
-        }
-      },
-      "deliveryMethods": {
-        "title": "Métodos de Entrega",
-        "emailNotifications": {
-          "label": "Notificações por E-mail",
-          "description": "Receba notificações por e-mail"
-        },
-        "pushNotifications": {
-          "label": "Notificações Push",
-          "description": "Receba notificações em tempo real no seu dispositivo"
-        },
-        "soundAlerts": {
-          "label": "Alertas de Som",
-          "description": "Reproduzir alertas de som para notificações"
-        }
-      },
-      "frequency": {
-        "immediate": "Imediato",
-        "daily": "Diário",
-        "weekly": "Semanal",
-        "never": "Nunca"
-      },
-      "actions": {
-        "save": "Salvar Preferências",
-        "saving": "Salvando...",
-        "submit": "Enviar",
-        "saved": "Preferências de Notificação Atualizadas",
-        "saveSuccess": "Suas preferências de notificação foram atualizadas com sucesso.",
-        "saveFailed": "Falha ao Atualizar Preferências de Notificação",
-        "saveError": "Ocorreu um erro ao atualizar suas preferências de notificação."
-      }
+      "description": "Gerencie suas preferências de notificação",
+      "emailNotifications": "Notificações por E-mail",
+      "pushNotifications": "Notificações por Push",
+      "smsNotifications": "Notificações por SMS"
     },
-    "system": {
-      "title": "Sistema",
-      "description": "Configurar configurações do sistema"
-    },
-    "deliveryMethods": {
-      "title": "Métodos de Entrega",
-      "emailNotifications": {
-        "label": "Notificações por E-mail",
-        "description": "Receba notificações por e-mail"
-      },
-      "pushNotifications": {
-        "label": "Notificações Push",
-        "description": "Receba notificações em tempo real no seu dispositivo"
-      },
-      "soundAlerts": {
-        "label": "Alertas de Som",
-        "description": "Reproduzir alertas de som para notificações"
+    "language": {
+      "title": "Idioma",
+      "description": "Selecione seu idioma preferido para o aplicativo",
+      "currentLanguage": "Idioma Atual",
+      "availableLanguages": {
+        "portuguese": "Português",
+        "spanish": "Espanhol",
+        "english": "Inglês"
       }
     },
     "appearance": {
       "title": "Aparência",
-      "description": "Personalize a aparência e a sensação do aplicativo",
-      "modes": {
-        "light": {
-          "label": "Modo Claro",
-          "icon": "sun"
-        },
-        "dark": {
-          "label": "Modo Escuro",
-          "icon": "moon"
-        },
-        "system": {
-          "label": "Modo do Sistema",
-          "icon": "monitor"
-        }
+      "description": "Personalize a aparência do aplicativo",
+      "theme": {
+        "light": "Claro",
+        "dark": "Escuro",
+        "system": "Sistema"
       },
-      "actions": {
-        "save": "Salvar Alterações",
-        "saving": "Salvando...",
-        "saved": "Preferências de Aparência Atualizadas",
-        "saveSuccess": "Suas preferências de aparência foram atualizadas com sucesso.",
-        "saveFailed": "Falha ao Atualizar Preferências de Aparência",
-        "saveError": "Ocorreu um erro ao atualizar suas preferências de aparência."
-      }
+      "colorScheme": "Esquema de Cores"
     },
-    "profile": {
-      "title": "Perfil",
-      "description": "Gerencie suas informações pessoais e configurações de conta",
-      "fields": {
-        "username": "Nome de Usuário",
-        "email": {
-          "label": "E-mail",
-          "cannotBeChanged": "O endereço de e-mail não pode ser alterado"
-        },
-        "phoneNumber": "Número de Telefone",
-        "position": {
-          "label": "Cargo",
-          "placeholder": "Digite seu cargo de trabalho"
-        },
-        "role": {
-          "label": "Função",
-          "placeholder": "Selecione sua função",
-          "options": {
-            "admin": "Administrador",
-            "manager": "Gerente", 
-            "chef": "Chef",
-            "waiter": "Garçom"
-          }
-        }
-      },
-      "actions": {
-        "uploadPhoto": "Enviar Foto",
-        "submit": "Salvar Alterações",
-        "submitting": "Salvando...",
-        "profileUpdated": "Perfil Atualizado",
-        "profileUpdateSuccess": "Seu perfil foi atualizado com sucesso.",
-        "profileUpdateFailed": "Falha ao Atualizar Perfil",
-        "profileUpdateError": "Ocorreu um erro ao atualizar seu perfil."
-      },
-      
+    "system": {
+      "title": "Sistema",
+      "description": "Configurações avançadas do sistema",
+      "dataUsage": "Uso de Dados",
+      "performanceSettings": "Configurações de Desempenho",
+      "resetSettings": "Redefinir Configurações"
     },
-      "tableMaps": {
-        "title": "Mapas de Mesas",
-        "description": "Criar e gerenciar layouts de mesas do restaurante",
-        "addNew": "Adicionar Novo Mapa",
-        "edit": "Editar Mapa",
-        
-
-
-        "delete": "Excluir Mapa"
-      },
-      
-   
+    "buttons": {
+      "save": "Salvar Alterações",
+      "cancel": "Cancelar",
+      "reset": "Redefinir"
+    },
+    "success": {
+      "settingsSaved": "Configurações salvas com sucesso",
+      "settingsReset": "Configurações redefinidas com sucesso"
+    },
+    "errors": {
+      "saveSettings": "Erro ao salvar configurações",
+      "resetSettings": "Erro ao redefinir configurações"
+    }
   },
-  
 
- 
- 
-  
-  
-
- 
   "orderForm": {
     "title": "Criar Pedido",
     "selectTable": "Selecione a Mesa",
+    "noTableSelected": "Nenhuma mesa selecionada",
+    "menuCategories": {
+      "title": "Categorias do Menu"
+    },
+    "menuItems": {
+      "search": "Pesquisar itens",
+      "noResults": "Nenhum item encontrado"
+    },
+    "orderDetails": {
+      "title": "Detalhes do Pedido",
+      "items": "Itens do Pedido",
+      "total": "Total",
+      "subtotal": "Subtotal",
+      "discount": "Desconto",
+      "tax": "Imposto",
+      "noItems": "Nenhum item adicionado"
+    },
     "selectCategory": "Selecione a Categoria",
     "selectItem": "Selecione o Item",
     "quantity": "Quantidade",

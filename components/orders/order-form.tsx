@@ -916,7 +916,6 @@ export function OrderForm({
           <Label>Mesa</Label>
           <Input 
             type="text" 
-            value={tableNumber} 
             onChange={handleTableNumberChange}
             readOnly 
             className="bg-muted cursor-not-allowed" 
@@ -1009,7 +1008,6 @@ export function OrderForm({
           onChange={handleMenuUrlChange}
           className="w-full"
           pattern="https?://.*"  // Basic URL validation
-          defaultValue={menuUrl}
         />
       </div>
     );
@@ -1021,7 +1019,6 @@ export function OrderForm({
         <Label htmlFor="special-requests">{t("specialRequests")}</Label>
         <Textarea
           id="special-requests"
-          value={specialRequests}
           onChange={handleSpecialRequestsChange}
           placeholder={t("specialRequestsPlaceholder")}
           className="resize-y min-h-[100px]"
@@ -1047,7 +1044,6 @@ export function OrderForm({
             min="0"
             step="0.01"
             max="100"  // Assuming percentage or fixed amount
-            defaultValue={0}
           />
           <Select 
             value={discountType}
@@ -1299,7 +1295,6 @@ export function OrderForm({
                         onChange={handleDiscountChange}
                         min="0"
                         className="w-[100px]"
-                        defaultValue={0}
                       />
                     </div>
                   </div>

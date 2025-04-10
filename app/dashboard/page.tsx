@@ -13,6 +13,11 @@ import {
   User,
   Order
 } from "@/types"
+import { 
+  AlertTriangle, 
+  CheckCircle2, 
+  XCircle 
+} from "lucide-react"
 
 // Define types for our dashboard data
 type SalesData = {
@@ -46,58 +51,146 @@ export default function DashboardPage() {
     totalSales: number;
     lowStockItems: number;
     recentOrders: Order[];
+    monthlyGrowth: number;
+    totalInventoryItems: number;
+    inventoryItems: {
+      total: number;
+      lowStock: number;
+      inStock: number;
+      details: Array<{
+        name: string;
+        total: number;
+        inStock: number;
+        lowStock: number;
+        status: 'critical' | 'warning' | 'healthy'
+      }>;
+    }
   }>({
     totalOrders: 0,
     totalSales: 0,
     lowStockItems: 0,
-    recentOrders: []
+    recentOrders: [],
+    monthlyGrowth: 0,
+    totalInventoryItems: 0,
+    inventoryItems: {
+      total: 0,
+      lowStock: 0,
+      inStock: 0,
+      details: []
+    }
   })
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      if (!db || !user) return
+  const fetchDashboardData = async () => {
+    try {
+      const ordersRef = collection(db, "orders")
+      const inventoryRef = collection(db, "inventory")
 
-      try {
-        // Fetch orders
-        const ordersRef = collection(db, 'restaurants', user.uid, 'orders')
-        const ordersQuery = query(
-          ordersRef, 
-          orderBy('createdAt', 'desc'), 
-          limit(10)
-        )
-        const ordersSnapshot = await getDocs(ordersQuery)
-        const totalOrdersCount = await getCountFromServer(ordersRef)
+      // Fetch total orders and sales for the current month
+      const currentMonthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+      const lastMonthStart = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1)
+      
+      const currentMonthOrdersQuery = query(
+        ordersRef, 
+        where("date", ">=", currentMonthStart),
+        where("status", "==", "completed")
+      )
+      const lastMonthOrdersQuery = query(
+        ordersRef, 
+        where("date", ">=", lastMonthStart),
+        where("date", "<", currentMonthStart),
+        where("status", "==", "completed")
+      )
 
-        // Fetch sales
-        const salesRef = collection(db, 'restaurants', user.uid, 'sales')
-        const salesQuery = query(salesRef, orderBy('date', 'desc'), limit(10))
-        const salesSnapshot = await getDocs(salesQuery)
-        const totalSales = salesSnapshot.docs.reduce((total, doc) => 
-          total + (doc.data().total || 0), 0)
+      // Fetch inventory data with detailed breakdown
+      const inventorySnapshot = await getDocs(inventoryRef)
+      
+      const inventoryDetails = inventorySnapshot.docs.map(doc => {
+        const data = doc.data()
+        const total = data.initialStock || 0
+        const inStock = data.stock || 0
+        const lowStock = Math.max(0, total - inStock)
+        
+        // Determine stock status
+        let status: 'critical' | 'warning' | 'healthy' = 'healthy'
+        const stockPercentage = (inStock / total) * 100
+        
+        if (stockPercentage <= 20) status = 'critical'
+        else if (stockPercentage <= 50) status = 'warning'
 
-        // Fetch low stock items
-        const inventoryRef = collection(db, 'restaurants', user.uid, 'inventory')
-        const lowStockQuery = query(
-          inventoryRef, 
-          where('currentStock', '<=', 'minimumStock')
-        )
-        const lowStockSnapshot = await getDocs(lowStockQuery)
-        const lowStockCount = lowStockSnapshot.docs.length
+        return {
+          name: data.name || 'Unknown',
+          total,
+          inStock,
+          lowStock,
+          status
+        }
+      })
 
-        setDashboardData({
-          totalOrders: totalOrdersCount.data().count,
-          totalSales,
-          lowStockItems: lowStockCount,
-          recentOrders: ordersSnapshot.docs.map(doc => ({
-            ...doc.data() as Order,
-            id: doc.id
-          }))
-        })
-      } catch (error) {
-        console.error("Dashboard data fetch error:", error)
-      }
+      // Calculate inventory totals
+      const totalInventoryItems = inventoryDetails.reduce((sum, item) => sum + item.total, 0)
+      const totalInStockItems = inventoryDetails.reduce((sum, item) => sum + item.inStock, 0)
+      const totalLowStockItems = inventoryDetails.reduce((sum, item) => sum + item.lowStock, 0)
+
+      // Fetch orders data
+      const [
+        currentMonthOrdersSnapshot, 
+        lastMonthOrdersSnapshot,
+        ordersSnapshot
+      ] = await Promise.all([
+        getDocs(currentMonthOrdersQuery),
+        getDocs(lastMonthOrdersQuery),
+        getDocs(query(ordersRef, orderBy('date', 'desc'), limit(5)))
+      ])
+
+      const currentMonthTotalSales = currentMonthOrdersSnapshot.docs.reduce(
+        (total, doc) => total + (doc.data().totalAmount || 0), 
+        0
+      )
+      const lastMonthTotalSales = lastMonthOrdersSnapshot.docs.reduce(
+        (total, doc) => total + (doc.data().totalAmount || 0), 
+        0
+      )
+
+      // Calculate monthly growth percentage
+      const monthlyGrowth = lastMonthTotalSales > 0 
+        ? ((currentMonthTotalSales - lastMonthTotalSales) / lastMonthTotalSales * 100)
+        : 0
+
+      setDashboardData({
+        totalOrders: currentMonthOrdersSnapshot.size,
+        totalSales: currentMonthTotalSales,
+        lowStockItems: totalLowStockItems,
+        recentOrders: ordersSnapshot.docs.map(doc => ({
+          ...doc.data() as Order,
+          id: doc.id
+        })),
+        monthlyGrowth,
+        totalInventoryItems,
+        inventoryItems: {
+          total: totalInventoryItems,
+          inStock: totalInStockItems,
+          lowStock: totalLowStockItems,
+          details: inventoryDetails
+        }
+      })
+    } catch (error) {
+      console.error("Dashboard data fetch error:", error)
     }
+  }
 
+  // Stock status icon component
+  const StockStatusIcon = ({ status }: { status: 'critical' | 'warning' | 'healthy' }) => {
+    switch (status) {
+      case 'critical':
+        return <XCircle className="text-red-500 w-5 h-5" />
+      case 'warning':
+        return <AlertTriangle className="text-yellow-500 w-5 h-5" />
+      case 'healthy':
+        return <CheckCircle2 className="text-green-500 w-5 h-5" />
+    }
+  }
+
+  useEffect(() => {
     fetchDashboardData()
   }, [db, user])
 
@@ -124,7 +217,7 @@ export default function DashboardPage() {
             </div>
             <p className="text-xs text-muted-foreground">
               {t("dashboard.salesOverview.monthlyGrowth", { 
-                percentage: 0
+                percentage: dashboardData.monthlyGrowth
               })}
             </p>
           </CardContent>
@@ -148,41 +241,70 @@ export default function DashboardPage() {
             <CardDescription>{t("dashboard.stockLevel.description")}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-center h-[120px]">
-              <div className="relative w-32 h-32">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xl font-bold">
-                    {t("dashboard.stockLevel.percentage", { 
-                      percentage: 0
-                    })}
+            <div className="space-y-4">
+              {/* Stock Level Summary */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium">{t("dashboard.stockLevel.totalItems")}</span>
+                  <span className="text-muted-foreground text-xs">
+                    {dashboardData.inventoryItems.total}
                   </span>
                 </div>
-                <svg className="w-full h-full" viewBox="0 0 100 100">
-                  <circle
-                    className="text-muted stroke-current"
-                    strokeWidth="10"
-                    fill="transparent"
-                    r="40"
-                    cx="50"
-                    cy="50"
-                  />
-                  <circle
-                    className="text-primary stroke-current"
-                    strokeWidth="10"
-                    fill="transparent"
-                    r="40"
-                    cx="50"
-                    cy="50"
-                    strokeDasharray="251.2"
-                    strokeDashoffset="251.2"
-                  />
-                </svg>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium">{t("dashboard.stockLevel.inStock")}</span>
+                  <span className="text-green-600 text-xs">
+                    {dashboardData.inventoryItems.inStock}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium">{t("dashboard.stockLevel.lowStock")}</span>
+                  <span className="text-red-600 text-xs">
+                    {dashboardData.inventoryItems.lowStock}
+                  </span>
+                </div>
               </div>
-            </div>
-            <div className="mt-2 text-center text-sm text-muted-foreground">
-              {t("dashboard.stockLevel.lowStockItems", { 
-                count: dashboardData.lowStockItems
-              })}
+
+              {/* Detailed Inventory Breakdown */}
+              <div className="space-y-2">
+                {dashboardData.inventoryItems.details.map((item, index) => (
+                  <div 
+                    key={index} 
+                    className="flex items-center space-x-3 bg-muted/50 p-2 rounded-lg"
+                  >
+                    <StockStatusIcon status={item.status} />
+                    <div className="flex-grow">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span>{item.name}</span>
+                        <span className="text-muted-foreground">
+                          {item.inStock} / {item.total}
+                        </span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full ${
+                            item.status === 'critical' ? 'bg-red-500' :
+                            item.status === 'warning' ? 'bg-yellow-500' :
+                            'bg-green-500'
+                          }`}
+                          style={{ 
+                            width: `${(item.inStock / item.total) * 100}%` 
+                          }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-xs mt-1 text-muted-foreground">
+                        <span>
+                          {t(`dashboard.stockLevel.status.${item.status}`)}
+                        </span>
+                        <span>
+                          {t("dashboard.stockLevel.percentage", { 
+                            percentage: Math.round((item.inStock / item.total) * 100)
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -211,7 +333,7 @@ export default function DashboardPage() {
               </SelectItem>
               <SelectItem value="categories" className="flex items-center">
                 <PieChart className="h-4 w-4 mr-2" />
-                Categories
+                {t("dashboard.categories")}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -235,7 +357,7 @@ export default function DashboardPage() {
             </TabsTrigger>
             <TabsTrigger value="categories" className="flex-grow sm:flex-grow-0 sm:min-w-[120px] max-w-[200px]">
               <PieChart className="h-4 w-4 mr-2 shrink-0" />
-              <span className="truncate">Categories</span>
+              <span className="truncate">{t("dashboard.categories")}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -266,7 +388,7 @@ export default function DashboardPage() {
           <TabsContent value="categories" className="mt-4">
             <Card>
               <CardHeader>
-                <CardTitle>Categories</CardTitle>
+                <CardTitle>{t("dashboard.categories")}</CardTitle>
                 <CardDescription>Sales by category</CardDescription>
               </CardHeader>
               <CardContent>
