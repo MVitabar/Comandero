@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { collection, getDocs, query, where, doc } from 'firebase/firestore'
 import { useFirebase } from '@/components/firebase-provider'
+import { useAuth } from '@/components/auth-provider'
 import { Button } from '@/components/ui/button'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { Plus, Edit, Trash2, Eye } from 'lucide-react'
@@ -40,6 +41,7 @@ interface TableMapsListProps {
 export default function TableMapsList({ onCreateMap }: TableMapsListProps) {
   const { t } = useTranslation()
   const { db } = useFirebase()
+  const { user } = useAuth()
   const [tableMaps, setTableMaps] = useState<TableMap[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedTableMap, setSelectedTableMap] = useState<TableMap | null>(null)
@@ -48,18 +50,29 @@ export default function TableMapsList({ onCreateMap }: TableMapsListProps) {
 
   useEffect(() => {
     async function fetchTableMaps() {
-      if (!db) return
+      if (!db || !user) {
+        console.log('Debug: Missing db or user', { db: !!db, user: !!user })
+        setIsLoading(false)
+        return
+      }
 
       try {
-        const restaurantId = 'Wz0Z6r7LpneHy3gfIg7d9zjzU6K2'
+        const restaurantId = user.uid
+        console.log('Debug: Fetching table maps for restaurantId:', restaurantId)
         const q = query(collection(db, `restaurants/${restaurantId}/tableMaps`))
         const querySnapshot = await getDocs(q)
         
-        const maps = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as TableMap))
+        console.log('Debug: Query snapshot size:', querySnapshot.size)
+        const maps = querySnapshot.docs.map(doc => {
+          const mapData = {
+            id: doc.id,
+            ...doc.data()
+          } as TableMap
+          console.log('Debug: Individual map:', mapData)
+          return mapData
+        })
 
+        console.log('Debug: Fetched maps:', maps)
         setTableMaps(maps)
         setIsLoading(false)
       } catch (error) {
@@ -69,7 +82,7 @@ export default function TableMapsList({ onCreateMap }: TableMapsListProps) {
     }
 
     fetchTableMaps()
-  }, [db])
+  }, [db, user])
 
   const handleAddTables = (tableMap: TableMap) => {
     setSelectedTableMap(tableMap)

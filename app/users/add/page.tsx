@@ -15,6 +15,8 @@ export default function AddTeamMemberPage() {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
+    password: "",
+    confirmPassword: "",
     role: "waiter" // Default role
   })
   const [loading, setLoading] = useState(false)
@@ -51,6 +53,16 @@ export default function AddTeamMemberPage() {
       newErrors.email = "Invalid email format"
     }
 
+    if (!formData.password.trim()) {
+      newErrors.password = "Password is required"
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters"
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match"
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -74,20 +86,48 @@ export default function AddTeamMemberPage() {
     setLoading(true)
 
     try {
-      // Generate a temporary password
-      const tempPassword = Math.random().toString(36).slice(-8)
-
-      // Create user in Firebase Authentication
+      // Crear usuario en Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(
         auth, 
         formData.email, 
-        tempPassword
+        formData.password
       )
 
       const newTeamMember = userCredential.user
 
-      // Add team member to restaurant's users subcollection
-      await setDoc(doc(db, "restaurants", user.uid, "users", newTeamMember.uid), {
+      // Verificar que el establecimiento actual esté definido
+      if (!user.currentEstablishmentName) {
+        toast({
+          title: "Error",
+          description: "No establishment context found. Please select an establishment.",
+          variant: "destructive"
+        })
+        setLoading(false)
+        return
+      }
+
+      // Obtener el nombre del establecimiento actual
+      const currentEstablishmentName = user.currentEstablishmentName
+      const baseSlug = currentEstablishmentName
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '-')
+        .replace(/-+/g, '-')
+        .trim()
+
+      // Crear usuario global
+      await setDoc(doc(db, 'users', newTeamMember.uid), {
+        uid: newTeamMember.uid,
+        username: formData.username,
+        email: formData.email,
+        role: formData.role,
+        status: "active",
+        establishmentName: currentEstablishmentName,
+        addedBy: user.uid,
+        createdAt: new Date()
+      })
+
+      // Crear usuario en la subcolección de usuarios del establecimiento
+      await setDoc(doc(db, 'establishments', baseSlug, 'users', newTeamMember.uid), {
         uid: newTeamMember.uid,
         username: formData.username,
         email: formData.email,
@@ -106,12 +146,13 @@ export default function AddTeamMemberPage() {
       setFormData({
         username: "",
         email: "",
+        password: "",
+        confirmPassword: "",
         role: "waiter"
       })
     } catch (error: any) {
       console.error("Error adding team member:", error)
 
-      // Handle specific Firebase errors
       const errorMessage = error.code === 'auth/email-already-in-use' 
         ? "This email is already in use" 
         : error.message || "Failed to add team member"
@@ -159,6 +200,34 @@ export default function AddTeamMemberPage() {
                 className={errors.email ? "border-red-500" : ""}
               />
               {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+            </div>
+
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                disabled={loading}
+                className={errors.password ? "border-red-500" : ""}
+              />
+              {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
+            </div>
+
+            <div>
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                disabled={loading}
+                className={errors.confirmPassword ? "border-red-500" : ""}
+              />
+              {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword}</p>}
             </div>
 
             <div>

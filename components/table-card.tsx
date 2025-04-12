@@ -24,10 +24,11 @@ import { Toast } from "@/components/ui/toast"
 import { useFirebase } from "@/components/firebase-provider"
 import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/components/auth-provider"
-import { doc, getDoc, updateDoc, collection, query, where, getDocs, limit } from "firebase/firestore"
+import { doc, getDoc, updateDoc, collection, query, where, getDocs, limit, serverTimestamp } from "firebase/firestore"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { OrderDetailsDialog } from './orders/order-details-dialog'
 import { Order as ImportedOrder, TableItem, PaymentInfo, PaymentMethod } from '@/types'
+import { DialogDescription } from "@radix-ui/react-dialog"
 
 interface TableCardProps {
   table: TableItem
@@ -61,6 +62,8 @@ export function TableCard({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [activeOrder, setActiveOrder] = useState<ImportedOrder | null>(null)
   const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false)
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null)
 
   // Determine restaurant ID
   const restaurantId = user?.uid || table.restaurantId || ''
@@ -122,43 +125,53 @@ export function TableCard({
   }
 
   // Enhanced close table and order handler
-  const handleCloseTableAndOrder = async () => {
-    if (!activeOrder) {
-      console.warn('No active order to close')
+  const handleCloseTableAndOrder = () => {
+    setIsPaymentDialogOpen(true)
+  }
+
+  // Confirm order closure with payment method
+  const confirmCloseOrder = async () => {
+    if (!selectedPaymentMethod) {
+      toast({
+        title: t("orders.errors.selectPaymentMethod"),
+        variant: "destructive"
+      })
       return
     }
 
     try {
-      const restaurantId = user?.uid || table.restaurantId || ''
-      
-      // Reference to the current order
-      const orderRef = doc(db, `restaurants/${restaurantId}/orders`, activeOrder.id)
-      
-      // Update order status to finished
-      await updateDoc(orderRef, {
-        status: 'finished',
-        closedAt: new Date(),
-        updatedAt: new Date()
-      })
+      // Update order with payment method
+      if (activeOrder) {
+        const orderRef = doc(db, `restaurants/${restaurantId}/orders`, activeOrder.id)
+        await updateDoc(orderRef, {
+          status: 'closed',
+          'paymentInfo.method': selectedPaymentMethod,
+          closedAt: serverTimestamp()
+        })
 
-      // Sync table status (will set to available)
-      await syncTableWithOrder(null)
+        // Update table status
+        const tableRef = doc(db, `restaurants/${restaurantId}/tables`, table.uid)
+        await updateDoc(tableRef, {
+          status: 'available',
+          activeOrderId: null
+        })
 
-      // Optional: Additional cleanup or logging
-      console.log(`Closed order ${activeOrder.id} for table ${table.number}`)
+        toast({
+          title: t("orders.success.orderClosed"),
+          description: `${t("orders.paymentMethod")}: ${t(`orders.paymentMethods.${selectedPaymentMethod}`)}`,
+          variant: "default"
+        })
 
-      // Optional toast notification
-      toast({
-        title: 'Order Closed',
-        description: `Order for Table ${table.number} has been closed`,
-        variant: 'default'
-      })
+        // Reset states
+        setIsPaymentDialogOpen(false)
+        setSelectedPaymentMethod(null)
+      }
     } catch (error) {
-      console.error('Close Order Error:', error)
+      console.error('Error closing order:', error)
       toast({
-        title: 'Close Order Failed',
-        description: t("tableCard.errors.closeOrder"),
-        variant: 'destructive'
+        title: t("orders.errors.closeOrderFailed"),
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive"
       })
     }
   }
@@ -348,181 +361,14 @@ export function TableCard({
     }
   }
 
-  // Determine table actions based on current state
-  const renderTableActions = () => {
-    // When table is available
-    if (table.status === 'available') {
-      return (
-        <div className="flex gap-2 w-full">
-          <Button
-            variant="default"
-            size="sm"
-            className="flex-1"
-            onClick={() => {
-              console.log('Create Order Button Clicked', { table })
-              onCreateOrder && onCreateOrder()
-            }}
-          >
-            <ClipboardList className="h-4 w-4 mr-1" />
-            {t("tableCard.actions.createOrder")}
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="flex-1">
-                <Settings className="h-4 w-4 mr-1" />
-                {t("tableCard.actions.changeStatus")}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem 
-                onSelect={async () => {
-                  try {
-                    const restaurantId = user?.uid || table.restaurantId || ''
-                    const tableRef = doc(db, `restaurants/${restaurantId}/tables`, table.uid)
-                    
-                    await updateDoc(tableRef, {
-                      status: 'reserved'
-                    })
-                    
-                    toast({
-                      title: 'Table Status Updated',
-                      description: `Table ${table.number} is now reserved`,
-                      variant: 'default'
-                    })
-                  } catch (error) {
-                    console.error('Error changing table status:', error)
-                    toast({
-                      title: 'Error',
-                      description: t("tableCard.errors.updateStatus"),
-                      variant: 'destructive'
-                    })
-                  }
-                }}
-              >
-                {t("tableCard.status.reserved")}
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onSelect={async () => {
-                  try {
-                    const restaurantId = user?.uid || table.restaurantId || ''
-                    const tableRef = doc(db, `restaurants/${restaurantId}/tables`, table.uid)
-                    
-                    await updateDoc(tableRef, {
-                      status: 'maintenance'
-                    })
-                    
-                    toast({
-                      title: 'Table Status Updated',
-                      description: `Table ${table.number} is now in maintenance`,
-                      variant: 'default'
-                    })
-                  } catch (error) {
-                    console.error('Error changing table status:', error)
-                    toast({
-                      title: 'Error',
-                      description: t("tableCard.errors.updateStatus"),
-                      variant: 'destructive'
-                    })
-                  }
-                }}
-              >
-                {t("tableCard.status.maintenance")}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      )
-    }
-
-    // When there's an active order
-    if (activeOrder) {
-      switch (activeOrder.status) {
-        case 'pending':
-        case 'preparing':
-          return (
-            <div className="flex gap-2 w-full">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex-1" 
-                onClick={() => {
-                  console.log('View Order Clicked (Pending/Preparing)', activeOrder)
-                  setIsOrderDetailsOpen(true)
-                }}
-              >
-                <ClipboardList className="h-4 w-4 mr-1" />
-                {t("tableCard.actions.viewOrder")}
-              </Button>
-            </div>
-          )
-
-        case 'ready':
-          return (
-            <div className="flex gap-2 w-full">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex-1" 
-                onClick={() => {
-                  console.log('View Order Clicked (Ready)', activeOrder)
-                  setIsOrderDetailsOpen(true)
-                }}
-              >
-                <ClipboardList className="h-4 w-4 mr-1" />
-                {t("tableCard.actions.viewOrder")}
-              </Button>
-              <Button 
-                variant="default" 
-                size="sm" 
-                className="flex-1" 
-                onClick={handleCloseTableAndOrder}
-              >
-                <Receipt className="h-4 w-4 mr-1" />
-                {t("tableCard.actions.closeOrder")}
-              </Button>
-            </div>
-          )
-
-        case 'served':
-          return (
-            <div className="flex gap-2 w-full">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex-1" 
-                onClick={() => {
-                  console.log('View Order Clicked (Served)', activeOrder)
-                  setIsOrderDetailsOpen(true)
-                }}
-              >
-                <ClipboardList className="h-4 w-4 mr-1" />
-                {t("tableCard.actions.viewOrder")}
-              </Button>
-              <Button 
-                variant="default" 
-                size="sm" 
-                className="flex-1" 
-                onClick={() => {
-                  console.log('Process Payment Clicked')
-                  // TODO: Implement payment processing logic
-                }}
-              >
-                <CreditCard className="h-4 w-4 mr-1" />
-                {t("tableCard.actions.processPayment")}
-              </Button>
-            </div>
-          )
-
-        default:
-          console.warn('Unknown order status:', activeOrder.status)
-          return null
-      }
-    }
-
-    // Fallback for no active order and not available
-    console.warn('Unexpected table state:', table.status)
-    return null
-  }
+  // Payment method types
+  const paymentMethods: PaymentMethod[] = [
+    'cash', 
+    'credit', 
+    'debit', 
+    'transfer', 
+    'other'
+  ]
 
   return (
     <>
@@ -536,12 +382,18 @@ export function TableCard({
         <CardHeader className="pb-2">
           <CardTitle>
             <span>
-              {t("tableCard.label")} {table.number}
+              {t("commons.tableNumber")} {table.number}
             </span>
             <Badge variant="outline" className={cn("font-normal", getTableStatusColor())}>
-              {t(table.status)}
+              {t(`tableCard.label.${table.status || 'available'}`)}
             </Badge>
           </CardTitle>
+          <CardDescription>
+            {hasActiveOrder 
+              ? t(`tableCard.label.${table.status || 'occupied'}`)
+              : t("tableCard.status.noActiveOrder")
+            }
+          </CardDescription>
         </CardHeader>
         
         <CardContent>
@@ -556,8 +408,46 @@ export function TableCard({
           </div>
         </CardContent>
 
-        <CardFooter>
-          {renderTableActions()}
+        <CardFooter className="flex flex-col space-y-2">
+          {table.status === 'available' && (
+            <Button 
+              variant="default" 
+              className="w-full"
+              onClick={() => {
+                console.log('Create Order Button Clicked', { table })
+                onCreateOrder && onCreateOrder()
+              }}
+            >
+              <ClipboardList className="h-4 w-4 mr-2" />
+              {t("tableCard.actions.createOrder")}
+            </Button>
+          )}
+
+          {activeOrder && (
+            <>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => {
+                  console.log('View Order Clicked', activeOrder)
+                  setIsOrderDetailsOpen(true)
+                }}
+              >
+                <ClipboardList className="h-4 w-4 mr-2" />
+                {t("tableCard.actions.viewOrder")}
+              </Button>
+              {activeOrder.status === 'ready' && (
+                <Button 
+                  variant="default" 
+                  className="w-full" 
+                  onClick={handleCloseTableAndOrder}
+                >
+                  <Receipt className="h-4 w-4 mr-2" />
+                  {t("tableCard.actions.closeOrder")}
+                </Button>
+              )}
+            </>
+          )}
         </CardFooter>
       </Card>
 
@@ -568,6 +458,48 @@ export function TableCard({
           open={isOrderDetailsOpen}
           onOpenChange={(open) => setIsOrderDetailsOpen(open)}
         />
+      )}
+
+      {/* Payment Method Dialog */}
+      {isPaymentDialogOpen && (
+        <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t("orders.selectPaymentMethod")}</DialogTitle>
+              <DialogDescription>
+                {t("orders.paymentMethodDescription")}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4">
+              {paymentMethods.map((method) => (
+                <Button
+                  key={method}
+                  variant={selectedPaymentMethod === method ? "default" : "outline"}
+                  className="w-full"
+                  onClick={() => setSelectedPaymentMethod(method)}
+                >
+                  {t(`orders.paymentMethods.${method}`)}
+                </Button>
+              ))}
+            </div>
+            
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsPaymentDialogOpen(false)}
+              >
+                {t("commons.cancel")}
+              </Button>
+              <Button 
+                disabled={!selectedPaymentMethod}
+                onClick={confirmCloseOrder}
+              >
+                {t("orders.confirmPayment")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </>
   )

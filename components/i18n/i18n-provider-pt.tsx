@@ -13,6 +13,7 @@ export const ptTranslations = {
     "search": "Buscar",
     "filter": "Filtrar",
     "actions": "Ações",
+    "tableNumber": "Mesa N°",
     "button": {
       "add": "Adicionar",
       "edit": "Editar",
@@ -66,98 +67,57 @@ export const ptTranslations = {
     }
   },
 
-  "tableMapSettings": {
+  "tableMaps": {
     "title": "Mapas de Mesas",
-    "description": "Gerencie e configure os mapas de mesas do seu restaurante",
+    "description": "Gerencie os layouts de mesas do seu restaurante",
+    "createMap": "Criar Mapa de Mesas",
+    "editMap": "Editar Mapa de Mesas",
+    "mapName": "Nome do Mapa",
+    "mapDescription": "Descrição do Mapa",
+    "mapDescriptionPlaceholder": "Descreva o layout do mapa de mesas",
+    "addNew": "Adicionar Novo Mapa",
+    "noMapsFound": "Nenhum mapa de mesas encontrado",
+    "saveError": "Erro ao salvar o mapa de mesas",
+    "createError": "Erro ao criar o mapa de mesas",
+    "updateError": "Erro ao atualizar o mapa de mesas",
+    "deleteError": "Erro ao excluir o mapa de mesas"
+  },
+
+  "tableDialog": {
+    "title": "Adicionar Nova Mesa",
+    "description": "Criar uma nova mesa para o seu restaurante",
+    "labels": {
+      "tableName": "Nome da Mesa",
+      "tableCapacity": "Capacidade da Mesa"
+    },
+    "placeholders": {
+      "tableName": "Digite o nome da mesa",
+      "tableCapacity": "Digite a capacidade da mesa"
+    },
     "actions": {
-      "create": "Criar",
       "cancel": "Cancelar",
-      "createTableMap": "Criar Mapa de Mesas",
-      "viewTableMap": "Ver Mapa de Mesas",
-      "editTableMap": "Editar Mapa de Mesas",
-      "deleteTableMap": "Excluir Mapa de Mesas"
+      "create": "Criar Mesa"
     },
-    "form": {
-      "mapName": {
-        "label": "Nome do Mapa",
-        "placeholder": "Insira o nome do mapa"
-      },
-      "mapDescription": {
-        "label": "Descrição do Mapa",
-        "placeholder": "Insira a descrição do mapa"
-      }
+    "errors": {
+      "invalidCapacity": "A capacidade da mesa deve ser maior que 0",
+      "create": "Erro ao criar mesa"
     },
-    "empty": {
-      "title": "Nenhum Mapa de Mesas Encontrado",
-      "description": "Crie seu primeiro mapa de mesas para começar"
-    },
-    "notifications": {
-      "mapCreated": "Mapa de Mesas Criado",
-      "mapUpdated": "Mapa de Mesas Atualizado",
-      "mapDeleted": "Mapa de Mesas Excluído",
-      "mapCreationFailed": "Erro ao Criar o Mapa de Mesas",
-      "mapUpdateFailed": "Erro ao Atualizar o Mapa de Mesas",
-      "mapDeletionFailed": "Erro ao Excluir o Mapa de Mesas"
+    "success": {
+      "create": "Mesa criada com sucesso"
     }
   },
 
+  "common": {
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "create": "Criar",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "created": "criado",
+    "close": "Fechar"
+  },
+
   "tables": {
-    "dialog": {
-      "title": "Configurar Mesa",
-      "description": "Adicionar ou editar detalhes da mesa",
-      "tableName": {
-        "label": "Nome da Mesa",
-        "placeholder": "Ex: Mesa 1, Mesa VIP"
-      },
-      "tableCapacity": {
-        "label": "Capacidade da Mesa",
-        "placeholder": "Número de pessoas",
-        "min": 1,
-        "max": 20
-      },
-      "status": {
-        "label": "Status da Mesa",
-        "options": {
-          "available": "Disponível",
-          "occupied": "Ocupada",
-          "reserved": "Reservada",
-          "cleaning": "Limpando"
-        }
-      },
-      "location": {
-        "label": "Localização",
-        "placeholder": "Área ou seção do restaurante"
-      },
-      "buttons": {
-        "save": "Salvar Mesa",
-        "cancel": "Cancelar",
-        "edit": "Editar Mesa",
-        "delete": "Excluir Mesa"
-      }
-    },
-    "tableMap": {
-      "title": "Mapas de Mesas",
-      "description": "Gerencie os layouts de mesas do seu restaurante",
-      "addNew": "Adicionar Novo Mapa",
-      "edit": "Editar Mapa",
-      "delete": "Excluir Mapa"
-    },
-    "errors": {
-      "tableNameRequired": "Nome da mesa é obrigatório",
-      "invalidCapacity": "Capacidade inválida",
-      "saveError": "Erro ao salvar mesa",
-      "deleteError": "Erro ao excluir mesa"
-    },
-    "success": {
-      "tableSaved": "Mesa salva com sucesso",
-      "tableDeleted": "Mesa excluída com sucesso"
-    },
-    "actions": "Ações",
-    "status": {
-      "available": "Disponível",
-      "occupied": "Ocupada",
-      "reserved": "Reservada"
-    },
     "pageTitle": "Mesas do Restaurante",
     "addTable": "Adicionar Nova Mesa",
     "tableName": "Nome da Mesa",
@@ -248,87 +208,73 @@ export const ptTranslations = {
   "orders": {
     "title": "Pedidos",
     "newOrder": "Novo Pedido",
+    "createOrder": "Criar Pedido",
     "noOrdersFound": "Nenhum pedido encontrado",
-    "table": {
+    "search": {
+      "placeholder": "Buscar pedidos por ID, mesa ou garçom"
+    },
+    "filter": {
+      "allStatuses": "Todos os Status"
+    },
+    
+    "actions": {
+      "view": "Ver",
+      "updateStatus": "Atualizar Status",
+      "delete": "Excluir"
+    },
+    "action": {
+      "updated": "atualizado",
+      "deleted": "excluído"
+    },
+    "success": {
+      "statusUpdated": "Status Atualizado",
+      "orderDeleted": "Pedido Excluído"
+    },
+    "error": {
+      "fetchFailed": "Falha ao buscar pedidos",
+      "updateStatusFailed": "Falha ao atualizar status do pedido",
+      "deleteOrderFailed": "Falha ao excluir pedido"
+    },
+    "orderType": "Tipo de Pedido",
+    "table": "Mesa",
+    "tableNumber": "Número da Mesa",
+    "selectCategory": "Selecionar Categoria",
+    "selectItem": "Selecionar Item",
+    "noItemsInCategory": "Sem itens nesta categoria",
+    "quantity": "Quantidade",
+    "itemNotes": "Notas do Item",
+    "itemNotesPlaceholder": "Alguma instrução especial?",
+    "itemDietaryRestrictions": "Restrições Dietéticas",
+    "addToOrder": "Adicionar ao Pedido",
+    "orderSummary": "Resumo do Pedido",
+    "showMenuQr": "Mostrar QR do Cardápio",
+    "noItemsInOrder": "Sem itens no pedido",
+    "specialRequests": "Solicitações Especiais",
+    "specialRequestsPlaceholder": "Alguma solicitação especial para a cozinha?",
+    "menuUrl": "URL do Cardápio",
+    "discount": "Desconto",
+    "percentage": "Porcentagem",
+    "errors": {
+      "noItemsInOrder": "Por favor, adicione itens ao pedido",
+      "noTableSelected": "Por favor, selecione uma mesa",
       "headers": {
-        "id": "ID",
-        "tableNumber": "Número da Mesa",
-        "waiter": "Garçom",
+        "id": "ID do Pedido",
+        "tableNumber": "Mesa",
+        "waiter": "Garçom", 
         "items": "Itens",
         "status": "Status",
         "total": "Total",
         "actions": "Ações"
       },
-      "placeholders": {
-        "searchOrders": "Buscar pedidos por ID, mesa ou garçom",
-        "selectStatus": "Selecionar status",
-        "selectWaiter": "Selecionar garçom"
+      "paymentMethods": {
+        "cash": "Dinheiro",
+        "credit": "Cartão de Crédito",
+        "debit": "Cartão de Débito",
+        "transfer": "Transferência Bancária",
+        "other": "Outro"
       }
     },
-    "status": {
-      "pending": "Pendente",
-      "preparing": "Em Preparação",
-      "ready": "Pronto",
-      "served": "Servido",
-      "cancelled": "Cancelado",
-      "completed": "Concluído",
-      "delivered": "Entregue",
-      "closed": "Fechado",
-      "finished": "Finalizado",
-      "ordering": "Em Pedido"
-    },
-    "actions": {
-      "view": "Visualizar",
-      "edit": "Editar",
-      "delete": "Excluir",
-      "cancel": "Cancelar",
-      "updateStatus": "Atualizar Status",
-      "createOrder": "Criar Pedido"
-    },
-    "action": {
-      "updateStatus": "Atualizar Status",
-      "updatedTo": "Atualizado para",
-      "updateStatusDescription": "Selecione o novo status para o pedido {{orderId}}",
-      "selectStatus": "Selecionar Status",
-      "delete": "Excluir",
-      "deleted": "Excluído",
-      "deleteConfirmation": "Tem certeza de que deseja excluir o pedido {{orderId}}?"
-    },
-    "errors": {
-      "fetchOrders": "Erro ao carregar pedidos",
-      "createOrder": "Erro ao criar pedido",
-      "updateOrder": "Erro ao atualizar pedido",
-      "deleteOrder": "Erro ao excluir pedido",
-      "updateStatus": "Erro ao atualizar status do pedido"
-    },
-    "success": {
-      "orderCreated": "Pedido criado com sucesso",
-      "orderUpdated": "Pedido atualizado com sucesso",
-      "orderDeleted": "Pedido excluído com sucesso",
-      "statusUpdated": "Status do pedido atualizado com sucesso"
-    },
-    "dialogs": {
-      "updateStatus": {
-        "title": "Atualizar Status do Pedido",
-        "description": "Selecione o novo status para o pedido {{orderId}}",
-        "selectStatus": "Selecionar Status"
-      },
-      "deleteOrder": {
-        "title": "Excluir Pedido",
-        "description": "Tem certeza de que deseja excluir o pedido {{orderId}}? Esta ação não pode ser desfeita.",
-        "confirmButton": "Excluir Pedido",
-        "cancelButton": "Cancelar"
-      }
-    },
-    "search": {
-      "placeholder": "Buscar pedidos por ID, mesa ou garçom",
-      "filterByStatus": "Filtrar por status",
-      "filterByWaiter": "Filtrar por garçom"
-    },
-    "filters": {
-      "allStatuses": "Todos os Status",
-      "noOrdersFound": "Nenhum pedido encontrado"
-    },
+    "confirmPayment": "Confirmar Pago"
   },
 
   "ordersPage": {
@@ -427,6 +373,31 @@ export const ptTranslations = {
     }
   },
 
+  "newOrderPage": {
+    "title": "Novo Pedido",
+    "errors": {
+      "unauthorized": "Você não está autorizado a criar este pedido",
+      "menuItemNotFound": "Item do cardápio selecionado não encontrado",
+      "invalidQuantity": "Digite uma quantidade válida",
+      "missingTableNumber": "Selecione ou digite o número da mesa",
+      "missingMenuItem": "Selecione um item do cardápio",
+      "insufficientStock": "Estoque insuficiente para o item selecionado",
+      "orderCreationFailed": "Não foi possível criar o pedido. Tente novamente.",
+      "fetchOrders": "Erro ao carregar pedidos",
+      "createOrder": "Erro ao criar pedido",
+      "updateOrder": "Erro ao atualizar pedido",
+      "deleteOrder": "Erro ao excluir pedido",
+      "updateStatus": "Erro ao atualizar status do pedido"
+    },
+    "success": {
+      "orderCreated": "Pedido criado com sucesso",
+      "orderUpdated": "Pedido atualizado com sucesso",
+      "orderDeleted": "Pedido excluído com sucesso",
+      "statusUpdated": "Status do pedido atualizado com sucesso",
+      "itemAdded": "Item adicionado ao pedido"
+    },
+  },
+
   "inventory": {
     "pageTitle": "Gestão de Inventário",
     "searchPlaceholder": "Buscar no inventário...",
@@ -514,9 +485,12 @@ export const ptTranslations = {
       "suspended": "Suspenso"
     },
     "roles": {
+      "owner": "Propietario",
       "admin": "Administrador",
       "manager": "Gerente",
-      "staff": "Funcionário"
+      "staff": "Funcionário",
+      "waiter": "Garçom"
+      
     },
     "errors": {
       "fetchUsers": "Erro ao carregar usuários",
@@ -578,17 +552,29 @@ export const ptTranslations = {
   },
 
   "register": {
-    "title": "Registrar",
-    "description": "Criar uma nova conta para acessar o sistema de gestão de restaurantes",
-    "username": "Nome de Usuário",
+    "title": "Registrar-se",
+    "description": "Crie uma nova conta para acessar o sistema de gestão de restaurantes",
+    "username": "Nome de usuário",
     "email": "E-mail",
     "password": "Senha",
-    "confirmPassword": "Confirmar Senha",
-    "submit": "Registrar",
+    "confirmPassword": "Confirmar senha",
+    "establishmentName": "Nome do estabelecimento",
+    "submit": "Registrar-se",
     "error": {
       "passwordsDoNotMatch": "As senhas não coincidem",
       "emailInUse": "Este e-mail já está em uso",
-      "weakPassword": "A senha é muito fraca"
+      "weakPassword": "A senha é muito fraca",
+      "establishmentNameRequired": "O nome do estabelecimento é obrigatório",
+      "establishmentNameMinLength": "O nome do estabelecimento deve ter pelo menos 3 caracteres",
+      "establishmentNameTaken": "Este nome de estabelecimento já está em uso",
+      "suggestedAlternatives": "Nomes de estabelecimento sugeridos:",
+      "selectAlternative": "Por favor, selecione um nome alternativo ou modifique o atual"
+    },
+    "suggestedNames": {
+      "title": "Nomes de Estabelecimento Sugeridos",
+      "description": "O nome que você inseriu já está em uso. Por favor, escolha uma alternativa:",
+      "selectButton": "Selecionar",
+      "modifyButton": "Modificar Nome"
     }
   },
 
@@ -704,6 +690,34 @@ export const ptTranslations = {
     }
   },
 
+  "tableCard": {
+    "label": {
+      "available": "Disponível",
+      "occupied": "Ocupada",
+      "reserved": "Reservada"
+    },
+    "status": {
+      "noActiveOrder": "Sem pedido ativo"
+    },
+    "actions": {
+      "createOrder": "Criar Pedido",
+      "changeStatus": "Alterar Status",
+      "viewOrder": "Ver Pedido",
+      "closeOrder": "Fechar Pedido"
+    },
+    "errors": {
+      "sync": "Falha ao sincronizar o status da mesa",
+      "closeOrder": "Falha ao fechar o pedido"
+    }
+  },
+
+  "paymentMethods": {
+    "cash": "Dinheiro",
+    "credit": "Cartão de Crédito",
+    "debit": "Cartão de Débito",
+    "transfer": "Transferência Bancária",
+    "other": "Outro"
+  },
 };
 
 export default ptTranslations;

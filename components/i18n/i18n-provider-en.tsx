@@ -12,6 +12,7 @@ export const enTranslations = {
     "search": "Search",
     "filter": "Filter",
     "actions": "Actions",
+    "tableNumber": "Table #",
     "button": {
       "add": "Add",
       "edit": "Edit",
@@ -80,9 +81,6 @@ export const enTranslations = {
     }
   },
 
-  // Rest of the translations remain the same as the Portuguese structure, 
-  // but with English translations
-  
   "login": {
     "title": "Login",
     "description": "Enter your credentials to access your account",
@@ -106,11 +104,23 @@ export const enTranslations = {
     "email": "Email",
     "password": "Password",
     "confirmPassword": "Confirm Password",
+    "establishmentName": "Establishment Name",
     "submit": "Register",
     "error": {
       "passwordsDoNotMatch": "Passwords do not match",
       "emailInUse": "This email is already in use",
-      "weakPassword": "Password is too weak"
+      "weakPassword": "Password is too weak",
+      "establishmentNameRequired": "Establishment name is required",
+      "establishmentNameMinLength": "Establishment name must be at least 3 characters long",
+      "establishmentNameTaken": "This establishment name is already in use",
+      "suggestedAlternatives": "Suggested alternative names:",
+      "selectAlternative": "Please select an alternative name or modify the current one"
+    },
+    "suggestedNames": {
+      "title": "Suggested Establishment Names",
+      "description": "The name you entered is already in use. Please choose an alternative:",
+      "selectButton": "Select",
+      "modifyButton": "Modify Name"
     }
   },
 
@@ -132,90 +142,72 @@ export const enTranslations = {
   "orders": {
     "title": "Orders",
     "newOrder": "New Order",
+    "createOrder": "Create Order",
     "noOrdersFound": "No orders found",
     "search": {
-      "placeholder": "Search orders by ID, table, or waiter",
-      "filterByStatus": "Filter by status",
-      "filterByWaiter": "Filter by waiter"
-    },
-    "filters": {
-      "allStatuses": "All Statuses",
-      "noOrdersFound": "No orders found"
+      "placeholder": "Search orders by ID, table, or waiter"
     },
     "filter": {
       "allStatuses": "All Statuses"
     },
-    "table": {
-      "headers": {
-        "id": "ID",
-        "tableNumber": "Table Number",
-        "waiter": "Waiter",
-        "items": "Items",
-        "status": "Status",
-        "total": "Total",
-        "actions": "Actions"
-      },
-      "placeholders": {
-        "searchOrders": "Search orders by ID, table, or waiter",
-        "selectStatus": "Select status",
-        "selectWaiter": "Select waiter"
-      }
-    },
-    "status": {
-      "pending": "Pending",
-      "preparing": "In Preparation",
-      "ready": "Ready",
-      "served": "Served",
-      "cancelled": "Cancelled",
-      "completed": "Completed",
-      "delivered": "Delivered",
-      "closed": "Closed",
-      "finished": "Finished",
-      "ordering": "Ordering"
-    },
+    
     "actions": {
       "view": "View",
-      "edit": "Edit",
-      "delete": "Delete",
-      "cancel": "Cancel",
       "updateStatus": "Update Status",
-      "createOrder": "Create Order"
-    },
-    "errors": {
-      "fetchOrders": "Error loading orders",
-      "createOrder": "Error creating order",
-      "updateOrder": "Error updating order",
-      "deleteOrder": "Error deleting order",
-      "updateStatus": "Error updating order status"
-    },
-    "success": {
-      "orderCreated": "Order created successfully",
-      "orderUpdated": "Order updated successfully",
-      "orderDeleted": "Order deleted successfully",
-      "statusUpdated": "Order status updated successfully"
+      "delete": "Delete"
     },
     "action": {
-      "updateStatus": "Update Status",
-      "updatedTo": "Updated to",
-      "updateStatusDescription": "Select the new status for order {{orderId}}",
-      "selectStatus": "Select Status",
-      "delete": "Delete",
-      "deleted": "Deleted",
-      "deleteConfirmation": "Are you sure you want to delete order {{orderId}}?"
+      "updated": "updated",
+      "deleted": "deleted"
     },
-    "dialogs": {
-      "updateStatus": {
-        "title": "Update Order Status",
-        "description": "Select the new status for order {{orderId}}",
-        "selectStatus": "Select Status"
-      },
-      "deleteOrder": {
-        "title": "Delete Order",
-        "description": "Are you sure you want to delete order {{orderId}}? This action cannot be undone.",
-        "confirmButton": "Delete Order",
-        "cancelButton": "Cancel"
+    "success": {
+      "statusUpdated": "Status Updated",
+      "orderDeleted": "Order Deleted"
+    },
+    "error": {
+      "fetchFailed": "Failed to fetch orders",
+      "updateStatusFailed": "Failed to update order status",
+      "deleteOrderFailed": "Failed to delete order"
+    },
+    "orderType": "Order Type",
+    "table": "Table",
+    "tableNumber": "Table Number",
+    "selectCategory": "Select Category",
+    "selectItem": "Select Item",
+    "noItemsInCategory": "No items in this category",
+    "quantity": "Quantity",
+    "itemNotes": "Item Notes",
+    "itemNotesPlaceholder": "Any special instructions?",
+    "itemDietaryRestrictions": "Dietary Restrictions",
+    "addToOrder": "Add to Order",
+    "orderSummary": "Order Summary",
+    "showMenuQr": "Show Menu QR",
+    "noItemsInOrder": "No items in order",
+    "specialRequests": "Special Requests",
+    "specialRequestsPlaceholder": "Any special requests for the kitchen?",
+    "menuUrl": "Menu URL",
+    "discount": "Discount",
+    "percentage": "Percentage",
+    "errors": {
+      "noItemsInOrder": "Please add items to the order",
+      "noTableSelected": "Please select a table",
+      "headers": {
+        "id": "Order ID",
+        "tableNumber": "Table",
+        "waiter": "Waiter", 
+        "items": "Items",
+        "total": "Total",
+        "actions": "Actions"
       }
-    }
+    },
+    "paymentMethods": {
+      "cash": "Cash",
+      "credit": "Credit Card",
+      "debit": "Debit Card",
+      "transfer": "Bank Transfer",
+      "other": "Other"
+    },
+    "confirmPayment": "Confirm Payment"
   },
 
   "users": {
@@ -237,9 +229,11 @@ export const enTranslations = {
       "suspended": "Suspended"
     },
     "roles": {
+      "owner": "Owner",
       "admin": "Administrator",
       "manager": "Manager",
-      "staff": "Staff"
+      "staff": "Staff",
+      "waiter": "Waiter"
     },
     "errors": {
       "fetchUsers": "Error loading users",
@@ -285,74 +279,59 @@ export const enTranslations = {
   },
 
   "tables": {
-    "pageTitle": "Tables",
-    "dialog": {
-      "title": "Configure Table",
-      "description": "Add or edit table details",
-      "tableName": {
-        "label": "Table Name",
-        "placeholder": "E.g. Table 1, VIP Table"
-      },
-      "tableCapacity": {
-        "label": "Table Capacity",
-        "placeholder": "Number of people",
-        "min": 1,
-        "max": 20
-      },
-      "status": {
-        "label": "Table Status",
-        "options": {
-          "available": "Available",
-          "occupied": "Occupied",
-          "reserved": "Reserved",
-          "cleaning": "Cleaning"
-        }
-      },
-      "location": {
-        "label": "Location",
-        "placeholder": "Restaurant area or section"
-      },
-      "buttons": {
-        "save": "Save Table",
-        "cancel": "Cancel",
-        "edit": "Edit Table",
-        "delete": "Delete Table"
-      }
-    },
-    "tableMap": {
-      "title": "Table Maps",
-      "description": "Manage your restaurant's table layouts",
-      "addNew": "Add New Map",
-      "edit": "Edit Map",
-      "delete": "Delete Map"
-    },
-    "errors": {
-      "tableNameRequired": "Table name is required",
-      "invalidCapacity": "Invalid capacity",
-      "saveError": "Error saving table",
-      "deleteError": "Error deleting table"
-    },
-    "success": {
-      "tableSaved": "Table saved successfully",
-      "tableDeleted": "Table deleted successfully"
-    },
-    "title": "Tables",
+    "pageTitle": "Restaurant Tables",
     "tableMaps": {
       "title": "Table Maps",
+      "description": "Manage your restaurant's table layouts",
       "createMap": "Create Table Map",
-      "noMapsFound": "No table maps found",
+      "editMap": "Edit Table Map",
       "mapName": "Map Name",
       "mapDescription": "Map Description",
-      "viewMap": "View Map",
+      "mapDescriptionPlaceholder": "Describe the table map layout",
+      "addNew": "Add New Map",
+      "noMapsFound": "No Table Maps Found",
+      "saveError": "Error saving table map",
+      "createError": "Error creating table map",
+      "updateError": "Error updating table map",
+      "deleteError": "Error deleting table map",
       "addTable": "Add Table",
-      "noDescription": "No description"
-    },
-    "actions": "Actions",
-    "status": {
-      "available": "Available",
-      "occupied": "Occupied",
-      "reserved": "Reserved"
+      "noDescription": "No Description",
+      "viewMap": "View Map"
     }
+  },
+
+  "tableDialog": {
+    "title": "Add New Table",
+    "description": "Create a new table for your restaurant",
+    "labels": {
+      "tableName": "Table Name",
+      "tableCapacity": "Table Capacity"
+    },
+    "placeholders": {
+      "tableName": "Enter table name",
+      "tableCapacity": "Enter table capacity"
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "create": "Create Table"
+    },
+    "errors": {
+      "invalidCapacity": "Table capacity must be greater than 0",
+      "create": "Error creating table"
+    },
+    "success": {
+      "create": "Table created successfully"
+    }
+  },
+
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "created": "created",
+    "close": "Close"
   },
 
   "dialog": {
@@ -478,6 +457,64 @@ export const enTranslations = {
       "spanish": "Spanish", 
       "portuguese": "Portuguese"
     }
+  },
+
+  "newOrderPage": {
+    "title": "New Order",
+    "errors": {
+      "unauthorized": "You are not authorized to create this order",
+      "menuItemNotFound": "Selected menu item not found",
+      "invalidQuantity": "Please enter a valid quantity",
+      "missingTableNumber": "Please select or enter a table number",
+      "missingMenuItem": "Please select a menu item",
+      "insufficientStock": "Insufficient stock for the selected item",
+      "orderCreationFailed": "Could not create the order. Please try again.",
+      "fetchOrders": "Error loading orders",
+      "createOrder": "Error creating order",
+      "updateOrder": "Error updating order",
+      "deleteOrder": "Error deleting order",
+      "updateStatus": "Error updating order status"
+    },
+    "success": {
+      "orderCreated": "Order created successfully",
+      "orderUpdated": "Order updated successfully",
+      "orderDeleted": "Order deleted successfully", 
+      "statusUpdated": "Order status updated successfully",
+      "itemAdded": "Item added to order"
+    }
+  },
+
+  "tableCard": {
+    "label": {
+      "available": "Available",
+      "occupied": "Occupied",
+      "reserved": "Reserved"
+    },
+    "status": {
+      "noActiveOrder": "No active order",
+      "ready": "Ready",
+      "served": "Served",
+      "pending": "Pending",
+      "closed": "Closed",
+      "serving": "Serving"
+    },
+    "actions": {
+      "createOrder": "Create Order",
+      "viewOrder": "View Order",
+      "closeOrder": "Close Order"
+    },
+    "errors": {
+      "sync": "Failed to synchronize table status",
+      "closeOrder": "Failed to close order"
+    }
+  },
+
+  "paymentMethods": {
+    "cash": "Cash",
+    "credit": "Credit Card",
+    "debit": "Debit Card",
+    "transfer": "Bank Transfer",
+    "other": "Other"
   },
 
   // Add the rest of the translations following the Portuguese structure

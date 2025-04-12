@@ -16,7 +16,7 @@ import {
   updateDoc, 
   addDoc, 
   deleteDoc, 
-  deleteField,  // Add this import
+  deleteField,  
   where, 
   writeBatch, 
   serverTimestamp,
@@ -160,34 +160,323 @@ export default function InventoryPage() {
   ]);
 
   // Fetch categories from Firestore
-  const fetchCategories = async () => {
-    if (!db || !user) return;
+  const fetchCategories = async (): Promise<string[]> => {
+    if (!db || !user) return [];
 
     try {
-      const inventoryRef = doc(db, 'restaurants', user.uid);
-      const categoriesRef = collection(inventoryRef, 'inventory');
-      const categoriesSnapshot = await getDocs(categoriesRef);
+      // Use the specific restaurant path
+      const inventoryRef = collection(db, 'restaurants', user.uid, 'inventory')
+      const querySnapshot = await getDocs(inventoryRef)
 
-      const fetchedCategories = categoriesSnapshot.docs
-        .map(doc => doc.id)
-        .filter(category => 
-          !['entradas', 'pratosPrincipais', 'saladas', 'bebidas', 'sobremesas', 'porcoesExtras']
-            .includes(category)
-        );
+      // Extract unique categories from the subcollections
+      const fetchedCategories = new Set<string>()
+      
+      // Iterate through each category document
+      for (const categoryDoc of querySnapshot.docs) {
+        fetchedCategories.add(categoryDoc.id)
+      }
 
       // Combine default and fetched categories, removing duplicates
       const uniqueCategories = [
         ...new Set([
-          ...categories,
+          ...Object.keys(categoryTranslations),
           ...fetchedCategories
         ])
-      ].sort();
+      ].sort()
 
-      setCategories(uniqueCategories);
+      setCategories(uniqueCategories)
+      setAvailableCategories(uniqueCategories)
+
+      return uniqueCategories
     } catch (error) {
-      console.error("Error fetching categories:", error);
+      console.error("Error fetching categories:", error)
+      toast({
+        title: t('inventory.fetchCategoriesError'),
+        description: error instanceof Error ? error.message : String(error),
+        variant: 'destructive'
+      })
+      return []
     }
-  };
+  }
+
+  // Fetch categories when user and db are available
+  useEffect(() => {
+    fetchCategories()
+  }, [db, user]);
+
+  // Fetch items from Firestore
+  const fetchItems = async () => {
+    if (!db || !user) {
+      setLoading(false)
+      return
+    }
+
+    try {
+      // Fetch items from all categories
+      const categories = await fetchCategories()
+      const fetchedItems: InventoryItem[] = []
+
+      // Define a type for item data to help TypeScript
+      type ItemData = {
+        name?: string;
+        quantity?: number;
+        price?: number;
+        minimumStock?: number;
+        description?: string;
+        notes?: string;
+        createdAt?: { seconds: number };
+        updatedAt?: { seconds: number };
+        uid?: string;
+        unit?: string;
+        minQuantity?: number;
+      }
+
+      // Type guard to check if data is a valid ItemData
+      const isValidItemData = (data: unknown): data is ItemData => {
+        return data !== null && typeof data === 'object'
+      }
+
+      for (const category of categories) {
+        const categoryRef = doc(
+          db, 
+          'restaurants', 
+          user.uid, 
+          'inventory', 
+          category
+        )
+        const categoryDoc = await getDoc(categoryRef)
+        
+        if (categoryDoc.exists()) {
+          const categoryData = categoryDoc.data()
+          
+          // Check if the category has items
+          if (categoryData && categoryData.items) {
+            Object.entries(categoryData.items).forEach(([itemId, itemData]) => {
+              // Additional type checking
+              if (isValidItemData(itemData)) {
+                fetchedItems.push({
+                  id: itemId,
+                  name: String(itemData.name || ''),
+                  category: category,
+                  quantity: Number(itemData.quantity || 0),
+                  price: Number(itemData.price || 0),
+                  minimumStock: Number(itemData.minimumStock || 0),
+                  description: String(itemData.description || ''),
+                  notes: String(itemData.notes || ''),
+                  createdAt: itemData.createdAt 
+                    ? new Date(itemData.createdAt.seconds * 1000) 
+                    : new Date(),
+                  updatedAt: itemData.updatedAt 
+                    ? new Date(itemData.updatedAt.seconds * 1000) 
+                    : undefined,
+                  restaurantId: user.uid,
+                  uid: String(itemData.uid || ''),
+                  unit: String(itemData.unit || ''),
+                  minQuantity: Number(itemData.minQuantity || 0)
+                })
+              }
+            })
+          }
+        }
+      }
+
+      setItems(fetchedItems)
+      setLoading(false)
+    } catch (error) {
+      console.error("Error fetching items:", error)
+      setLoading(false)
+      toast({
+        title: t('inventory.fetchItemsError'),
+        description: error instanceof Error ? error.message : String(error),
+        variant: 'destructive'
+      })
+    }
+  }
+
+  // Add initial items to Firestore if not already added
+  const addInitialItems = async () => {
+    if (!db || !user || initialItemsAdded) return
+
+    try {
+      // Use the specific restaurant path
+      const inventoryRef = collection(db, 'restaurants', user.uid, 'inventory')
+
+      // Batch write initial items
+      const batch = writeBatch(db)
+
+      const initialItemSets = [
+        { category: 'entradas', items: entradas },
+        { category: 'pratosPrincipais', items: pratosPrincipais },
+        { category: 'saladas', items: saladas },
+        { category: 'bebidas', items: bebidas },
+        { category: 'sobremesas', items: sobremesas },
+        { category: 'porcoesExtras', items: porcoesExtras }
+      ]
+
+      initialItemSets.forEach(({ category, items }) => {
+        items.forEach((item) => {
+          const itemRef = doc(inventoryRef, `${category}_${item.name.toLowerCase().replace(/\s+/g, '_')}`)
+          batch.set(itemRef, {
+            ...item,
+            category,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          })
+        })
+      })
+
+      await batch.commit()
+      setInitialItemsAdded(true)
+    } catch (error) {
+      console.error("Error adding initial items:", error)
+    }
+  }
+
+  // Add new item to Firestore
+  const addItem = async (newItem: Omit<InventoryItem, 'id'>) => {
+    if (!db || !user) return
+
+    // Convert name to string and validate
+    const itemName = typeof newItem.name === 'string' 
+      ? newItem.name.trim() 
+      : ''
+
+    // Validate required fields
+    if (!itemName || !newItem.category) {
+      toast({
+        title: t('inventory.addItemError'),
+        description: t('inventory.missingFields'),
+        variant: 'destructive'
+      })
+      return
+    }
+
+    // Prepare item data with explicit type conversion
+    const preparedItem = {
+      name: String(itemName),
+      category: String(newItem.category),
+      quantity: Number(newItem.quantity || 0),
+      price: Number(newItem.price || 0),
+      minimumStock: Number(newItem.minimumStock || 0),
+      description: String(newItem.description || ''),
+      uid: user.uid,
+      restaurantId: user.uid,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      unit: String(newItem.unit || ''),
+      minQuantity: Number(newItem.minQuantity || 0)
+    }
+
+    try {
+      // Use the specific restaurant path with category
+      const categoryRef = doc(
+        db, 
+        'restaurants', 
+        user.uid, 
+        'inventory', 
+        preparedItem.category
+      )
+      
+      // Generate a unique ID for the new item
+      const newItemId = doc(collection(db, 'temp')).id
+      
+      // Update the category document with the new item
+      await updateDoc(categoryRef, {
+        [`items.${newItemId}`]: {
+          ...preparedItem,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        }
+      })
+
+      // Show success toast
+      toast({
+        title: t('inventory.addItemSuccess'),
+        description: `${preparedItem.name} ${t('inventory.addedToCategory')} ${preparedItem.category}`,
+        variant: 'default'
+      })
+
+      // Refresh items and categories
+      await fetchItems()
+      await fetchCategories()
+    } catch (error) {
+      console.error("Error adding item:", error)
+      toast({
+        title: t('inventory.addItemError'),
+        description: error instanceof Error ? error.message : String(error),
+        variant: 'destructive'
+      })
+    }
+  }
+
+  // Update item in Firestore
+  const updateItem = async (updatedItem: InventoryItem) => {
+    if (!db || !user) return
+
+    try {
+      // Use the specific restaurant path
+      const inventoryRef = collection(db, 'restaurants', user.uid, 'inventory')
+
+      // Ensure the item has a valid ID and sanitize it
+      const sanitizedId = String(updatedItem.id)
+        .toLowerCase()
+        .replace(/\s+/g, '_')
+        .replace(/[^a-z0-9_]/g, '')
+
+      // Prepare the sanitized item for update
+      const preparedItem = {
+        ...updatedItem,
+        id: sanitizedId,
+        updatedAt: serverTimestamp()
+      }
+
+      // Create a direct document reference using the sanitized ID
+      const itemRef = doc(inventoryRef, sanitizedId)
+      
+      await updateDoc(itemRef, preparedItem)
+
+      // Refresh items
+      await fetchItems()
+
+      // Optional: Show success toast
+      toast({
+        title: t('inventory.updateItemSuccess'),
+        description: `${updatedItem.name} updated`,
+        variant: 'default'
+      })
+    } catch (error) {
+      console.error("Error updating item:", error)
+      toast({
+        title: t('inventory.updateItemError'),
+        description: error instanceof Error ? error.message : String(error),
+        variant: "destructive"
+      })
+    }
+  }
+
+  // Delete item from Firestore
+  const deleteItem = async (itemId: string) => {
+    if (!db || !user) return
+
+    try {
+      // Use the specific restaurant path
+      const inventoryRef = collection(db, 'restaurants', user.uid, 'inventory')
+      const itemRef = doc(inventoryRef, itemId)
+      
+      await deleteDoc(itemRef)
+
+      // Refresh items and categories
+      await fetchItems()
+      await fetchCategories()
+    } catch (error) {
+      console.error("Error deleting item:", error)
+      toast({
+        title: t('inventory.deleteItemError'),
+        description: error instanceof Error ? error.message : String(error),
+        variant: "destructive"
+      })
+    }
+  }
 
   // Use effect to fetch categories when user and db are ready
   useEffect(() => {
@@ -220,14 +509,14 @@ export default function InventoryPage() {
     if (!db || !user) return;
 
     try {
-      const inventoryRef = doc(db, 'restaurants', user.uid);
-      const categoriesRef = collection(inventoryRef, 'inventory');
+      // Use the specific restaurant path
+      const inventoryRef = collection(db, 'restaurants', user.uid, 'inventory')
 
       // Batch write to create categories efficiently
       const batch = writeBatch(db);
 
       DEFAULT_CATEGORIES.forEach(categoryName => {
-        const categoryDocRef = doc(categoriesRef, categoryName);
+        const categoryDocRef = doc(inventoryRef, categoryName);
         batch.set(categoryDocRef, {
           name: categoryName,
           createdAt: serverTimestamp(),
@@ -265,8 +554,9 @@ export default function InventoryPage() {
 
       try {
         // Fetch all categories first
-        const categoriesRef = collection(db, 'restaurants', user.uid, 'inventory');
-        const categoriesSnapshot = await getDocs(categoriesRef);
+        // Use the specific restaurant path
+        const inventoryRef = collection(db, 'restaurants', user.uid, 'inventory')
+        const categoriesSnapshot = await getDocs(inventoryRef);
         
         console.log('Categories Found:', categoriesSnapshot.docs.map(doc => doc.id));
 
@@ -275,7 +565,7 @@ export default function InventoryPage() {
           await initializeDefaultCategories();
           
           // Refetch categories after initialization
-          const reInitializedCategoriesSnapshot = await getDocs(categoriesRef);
+          const reInitializedCategoriesSnapshot = await getDocs(inventoryRef);
           categoriesSnapshot.docs.push(...reInitializedCategoriesSnapshot.docs);
         }
 
@@ -305,7 +595,7 @@ export default function InventoryPage() {
                 supplier: itemData.supplier || '',
                 reorderPoint: itemData.reorderPoint || 0,
                 createdAt: itemData.createdAt?.toDate() || new Date(),
-                updatedAt: itemData.updatedAt?.toDate() || new Date(),
+                updatedAt: itemData.updatedAt?.toDate() || undefined,
                 restaurantId: user.uid,
                 ...itemData
               };
@@ -379,6 +669,7 @@ export default function InventoryPage() {
       if (!db || !user) return;
 
       try {
+        // Use the specific restaurant path
         const inventoryRef = collection(db, 'restaurants', user.uid, 'inventory');
         
         const categoriesSnapshot = await getDocs(inventoryRef);
@@ -409,13 +700,9 @@ export default function InventoryPage() {
       }
 
       // Create a reference to the specific category document
-      const categoryRef = doc(
-        db, 
-        'restaurants', 
-        user.uid, 
-        'inventory', 
-        formData.category
-      );
+      // Use the specific restaurant path
+      const inventoryRef = collection(db, 'restaurants', user.uid, 'inventory')
+      const categoryRef = doc(inventoryRef, formData.category);
 
       // Generate a unique ID for the new item
       const newItemId = doc(collection(db, 'temp')).id;
@@ -537,8 +824,9 @@ export default function InventoryPage() {
     if (!db || !user || !selectedItem || !selectedItem.id) return
 
     try {
-      const inventoryRef = doc(db, 'restaurants', user.uid);
-      const categoryRef = doc(inventoryRef, 'inventory', selectedItem.category);
+      // Use the specific restaurant path
+      const inventoryRef = collection(db, 'restaurants', user.uid, 'inventory')
+      const categoryRef = doc(inventoryRef, selectedItem.category);
       await updateDoc(categoryRef, {
         [`items.${selectedItem.id}`]: {
           name: formData.name,
@@ -579,8 +867,9 @@ export default function InventoryPage() {
     if (!db || !user || !item) return;
 
     try {
-      const inventoryRef = doc(db, 'restaurants', user.uid);
-      const categoryRef = doc(inventoryRef, 'inventory', item.category);
+      // Use the specific restaurant path
+      const inventoryRef = collection(db, 'restaurants', user.uid, 'inventory')
+      const categoryRef = doc(inventoryRef, item.category);
       
       // Remove the specific item from the category's items map
       await updateDoc(categoryRef, {
@@ -664,6 +953,80 @@ export default function InventoryPage() {
     'sobremesas': 'Sobremesas',
     'porcoesExtras': 'Porções Extras'
   };
+
+  // Form data state for adding new item
+  const [newFormData, setNewFormData] = useState<Partial<InventoryItem>>({
+    name: '',
+    category: '',
+    quantity: 0,
+    unit: '',
+    minQuantity: 0,
+    price: 0,
+    description: ''
+  })
+
+  // Handle input changes in the form
+  const handleNewInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setNewFormData(prev => ({
+      ...prev,
+      [name]: name === 'quantity' || name === 'minQuantity' || name === 'price' 
+        ? Number(value) 
+        : value
+    }))
+  }
+
+  // Handle adding a new item
+  const handleNewAddItem = async () => {
+    // Validate required fields
+    if (!newFormData.name || !newFormData.category) {
+      toast({
+        title: t('inventory.addItemError'),
+        description: 'Nome e categoria são obrigatórios',
+        variant: 'destructive'
+      })
+      return
+    }
+
+    try {
+      // Prepare the new item for Firestore
+      const newItem: Omit<InventoryItem, 'id'> = {
+        name: newFormData.name,
+        category: newFormData.category,
+        quantity: newFormData.quantity || 0,
+        unit: newFormData.unit || '',
+        minQuantity: newFormData.minQuantity || 0,
+        price: newFormData.price || 0,
+        description: newFormData.description || '',
+        uid: user?.uid || '',
+        restaurantId: user?.uid || '',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+
+      // Call the addItem function to save to Firestore
+      await addItem(newItem)
+
+      // Reset form and close dialog
+      setNewFormData({
+        name: '',
+        category: '',
+        quantity: 0,
+        unit: '',
+        minQuantity: 0,
+        price: 0,
+        description: ''
+      })
+      setIsAddDialogOpen(false)
+    } catch (error) {
+      console.error("Error adding item:", error)
+      toast({
+        title: t('inventory.addItemError'),
+        description: error instanceof Error ? error.message : String(error),
+        variant: 'destructive'
+      })
+    }
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -764,17 +1127,17 @@ export default function InventoryPage() {
                     name="name" 
                     className="w-full max-w-[300px] self-center"
                     placeholder={t("inventory.addItem.namePlaceholder")}
-                    value={formData.name} 
-                    onChange={handleInputChange} 
+                    value={newFormData.name} 
+                    onChange={handleNewInputChange} 
                     required 
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="category" className="text-sm">{t("inventory.addItem.categoryPlaceholder")}</Label>
                   <Select 
-                    value={formData.category} 
+                    value={newFormData.category} 
                     onValueChange={(value) => {
-                      setFormData(prev => ({
+                      setNewFormData(prev => ({
                         ...prev,
                         category: value
                       }));
@@ -802,8 +1165,8 @@ export default function InventoryPage() {
                     type="number"
                     className="w-full max-w-[300px] self-center"
                     placeholder={t("inventory.addItem.quantityPlaceholder")}
-                    value={formData.quantity}
-                    onChange={handleInputChange}
+                    value={newFormData.quantity}
+                    onChange={handleNewInputChange}
                     required
                   />
                 </div>
@@ -814,8 +1177,8 @@ export default function InventoryPage() {
                     name="unit" 
                     className="w-full max-w-[300px] self-center"
                     placeholder={t("inventory.addItem.unitPlaceholder")}
-                    value={formData.unit} 
-                    onChange={handleInputChange} 
+                    value={newFormData.unit} 
+                    onChange={handleNewInputChange} 
                     required 
                   />
                 </div>
@@ -829,8 +1192,8 @@ export default function InventoryPage() {
                     type="number"
                     className="w-full max-w-[300px] self-center"
                     placeholder={t("inventory.addItem.minQuantityPlaceholder")}
-                    value={formData.minQuantity}
-                    onChange={handleInputChange}
+                    value={newFormData.minQuantity}
+                    onChange={handleNewInputChange}
                     required
                   />
                 </div>
@@ -843,8 +1206,8 @@ export default function InventoryPage() {
                     step="0.01"
                     className="w-full max-w-[300px] self-center"
                     placeholder={t("inventory.addItem.pricePlaceholder")}
-                    value={formData.price}
-                    onChange={handleInputChange}
+                    value={newFormData.price}
+                    onChange={handleNewInputChange}
                     required
                   />
                 </div>
@@ -856,8 +1219,8 @@ export default function InventoryPage() {
                   name="description" 
                   className="w-full max-w-[300px] self-center"
                   placeholder={t("inventory.addItem.descriptionPlaceholder")}
-                  value={formData.description} 
-                  onChange={handleInputChange} 
+                  value={newFormData.description} 
+                  onChange={handleNewInputChange} 
                 />
               </div>
             </div>
@@ -871,7 +1234,7 @@ export default function InventoryPage() {
               </Button>
               <Button 
                 className="w-[120px]"
-                onClick={handleAddItem}
+                onClick={handleNewAddItem}
               >
                 {t("inventory.addItem.title")}
               </Button>

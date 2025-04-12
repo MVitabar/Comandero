@@ -38,16 +38,20 @@ export enum InventoryCategory {
 // Global Application Types
 
 // User and Authentication
-export interface User extends FirebaseUser {
-  uid: string;
-  username?: string;
-  role?: string;
-  phoneNumber: string | null;
-  position?: string;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+export interface User {
+  uid: string
+  email: string | null
+  username: string
+  role: UserRole
+  currentEstablishmentName?: string
+  status?: 'active' | 'inactive' | 'suspended'
+  phoneNumber?: string | null
+  position?: string
+  createdAt?: Date
+  loading: boolean
+  login: (email: string, password: string) => Promise<void>
+  logout: () => Promise<void>
+  signUp: (email: string, password: string, establishmentName?: string) => Promise<void>
 }
 
 // Inventory Management
@@ -83,6 +87,8 @@ export interface MenuItem {
   restaurantId?: string;
   unit?: string;
   stock?: number;
+  minimumStock?: number;
+  dietaryInfo?: DietaryRestriction;
 }
 
 export interface DietaryRestriction {

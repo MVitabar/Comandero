@@ -102,17 +102,8 @@ const translateStatus = (
     ? status.toString() as BaseOrderStatus
     : 'null';
 
-  // Construct translation key
-  const translationKey = validStatus !== 'null' 
-    ? `orders.status.${validStatus}`
-    : 'orders.status.unknown';
-
-  // Use safeTranslate to handle translation
-  return safeTranslate(
-    (key) => t(key), 
-    translationKey, 
-    validStatus !== 'null' ? validStatus : 'Unknown'
-  );
+  // Directly return the translation from STATUS_TRANSLATIONS
+  return STATUS_TRANSLATIONS[validStatus][language];
 };
 
 // Define a type for Badge variants to ensure type safety
@@ -221,7 +212,7 @@ export default function OrdersPage() {
 
       toast({
         title: t("orders.success.statusUpdated"),
-        description: `${t("orders.table.headers.id")} #${String(selectedOrder.id).substring(0, 6)} ${t("orders.action.updated")} ${translateStatus(selectedStatus, i18n?.language)}`,
+        description: `${t("orders.table.headers.id")} #${String(selectedOrder.id).substring(0, 6)} ${t("orders.action.updated")} ${translateStatus(selectedStatus, i18n?.language as LanguageCode)}`,
       })
 
       setIsStatusDialogOpen(false)
@@ -283,202 +274,200 @@ export default function OrdersPage() {
   }
 
   return (
-    <>
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">{t("orders.title")}</h1>
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">{t("orders.title")}</h1>
+        <Button asChild>
           <Link href="/orders/new">
-            <Button asChild>
-              <Link href="/orders/new">
-                <Plus className="mr-2 h-4 w-4" /> {t("orders.newOrder")}
-              </Link>
-            </Button>
+            <Plus className="mr-2 h-4 w-4" />
+            {t("orders.newOrder")}
           </Link>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder={t("orders.search.placeholder")}
-              className="pl-8"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <Select defaultValue="all">
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder={t("orders.filter.allStatuses")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("orders.filter.allStatuses")}</SelectItem>
-              {Object.keys(STATUS_TRANSLATIONS).map((status) => (
-                <SelectItem key={status} value={status}>
-                  {translateStatus(status, i18n?.language)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("orders.title")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-4">{t("table.loading")}</div>
-            ) : filteredOrders.length === 0 ? (
-              <div className="text-center">
-                <h3 className="text-lg font-semibold">{t("table.emptyState.title")}</h3>
-                <p className="text-muted-foreground">{t("table.emptyState.description")}</p>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t("orders.table.headers.id")}</TableHead>
-                    <TableHead>{t("orders.table.headers.tableNumber")}</TableHead>
-                    <TableHead>{t("orders.table.headers.waiter")}</TableHead>
-                    <TableHead>{t("orders.table.headers.items")}</TableHead>
-                    <TableHead>{t("orders.table.headers.status")}</TableHead>
-                    <TableHead>{t("orders.table.headers.total")}</TableHead>
-                    <TableHead>{t("orders.table.headers.actions")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredOrders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell>{order.id}</TableCell>
-                      <TableCell>{order.tableNumber}</TableCell>
-                      <TableCell>{order.waiter}</TableCell>
-                      <TableCell>{order.items.length}</TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusBadgeVariant(order.status)}>
-                          {t(`orders.status.${order.status}`)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{order.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => handleViewOrder(order)}
-                          >
-                            {t("orders.actions.view")}
-                          </Button>
-                          <Button 
-                            variant="secondary" 
-                            size="sm" 
-                            onClick={() => {
-                              setSelectedOrder(order);
-                              setIsStatusDialogOpen(true);
-                            }}
-                          >
-                            {t("orders.actions.updateStatus")}
-                          </Button>
-                          <Button 
-                            variant="destructive" 
-                            size="sm" 
-                            onClick={() => {
-                              setSelectedOrder(order);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                          >
-                            {t("orders.actions.delete")}
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-
-        {isDeleteDialogOpen && selectedOrder && (
-          <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{t("dialog.delete.title")}</DialogTitle>
-                <DialogDescription>
-                  {t("dialog.delete.description")}
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsDeleteDialogOpen(false)}
-                >
-                  {t("dialog.delete.cancelButton")}
-                </Button>
-                <Button 
-                  variant="destructive" 
-                  onClick={handleDeleteOrder}
-                >
-                  {t("dialog.delete.confirmButton")}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
-
-        {isStatusDialogOpen && selectedOrder && (
-          <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{t("dialog.confirm.title")}</DialogTitle>
-                <DialogDescription>
-                  {t("dialog.confirm.description")}
-                </DialogDescription>
-              </DialogHeader>
-              <Select 
-                value={selectedStatus} 
-                onValueChange={(value: string) => {
-                  // Type guard to ensure only valid statuses are set
-                  if (Object.keys(STATUS_TRANSLATIONS).includes(value)) {
-                    setSelectedStatus(value as BaseOrderStatus)
-                  }
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t("orders.dialogs.updateStatus.selectStatus")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.keys(STATUS_TRANSLATIONS).map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {t(`orders.status.${status}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <DialogFooter>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsStatusDialogOpen(false)}
-                >
-                  {t("dialog.confirm.cancelButton")}
-                </Button>
-                <Button onClick={handleUpdateStatus}>
-                  {t("dialog.confirm.confirmButton")}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
-
-        {/* Order Details Dialog */}
-        {selectedOrder && (
-          <OrderDetailsDialog 
-            order={selectedOrder}
-            open={isOrderDetailsDialogOpen}
-            onOpenChange={setIsOrderDetailsDialogOpen}
-          />
-        )}
+        </Button>
       </div>
-    </>
+
+      <div className="flex items-center space-x-2">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder={t("orders.search.placeholder")}
+            className="pl-8"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <Select defaultValue="all">
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder={t("orders.filter.allStatuses")} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t("orders.filter.allStatuses")}</SelectItem>
+            {Object.keys(STATUS_TRANSLATIONS).map((status) => (
+              <SelectItem key={status} value={status}>
+                {translateStatus(status, i18n?.language as LanguageCode)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("orders.title")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-center py-4">{t("table.loading")}</div>
+          ) : filteredOrders.length === 0 ? (
+            <div className="text-center">
+              <h3 className="text-lg font-semibold">{t("table.emptyState.title")}</h3>
+              <p className="text-muted-foreground">{t("table.emptyState.description")}</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("orders.errors.headers.id")}</TableHead>
+                  <TableHead>{t("commons.tableNumber")}</TableHead>
+                  <TableHead>{t("orders.errors.headers.waiter")}</TableHead>
+                  <TableHead>{t("orders.errors.headers.items")}</TableHead>
+                  <TableHead>{t("commons.table.headers.status")}</TableHead>
+                  <TableHead className="text-right">{t("commons.table.headers.price")}</TableHead>
+                  <TableHead className="text-right">{t("orders.errors.headers.actions")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredOrders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell>{order.id}</TableCell>
+                    <TableCell>{order.tableNumber}</TableCell>
+                    <TableCell>{order.waiter}</TableCell>
+                    <TableCell>
+                      {order.items.length > 0 
+                        ? order.items.map(item => item.name).join(", ") 
+                        : t("orders.noItemsInOrder")
+                      }
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(order.status as BaseOrderStatus)}>
+                        {translateStatus(order.status, i18n?.language as LanguageCode)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">R$ {order.total.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">{t("commons.openMenu")}</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem onClick={() => handleViewOrder(order)}>
+                            {t("orders.actions.view")}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => {
+                            setSelectedOrder(order);
+                            setIsStatusDialogOpen(true);
+                          }}>
+                            {t("orders.actions.updateStatus")}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => {
+                            setSelectedOrder(order);
+                            setIsDeleteDialogOpen(true);
+                          }}>
+                            {t("orders.actions.delete")}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {isDeleteDialogOpen && selectedOrder && (
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t("dialog.delete.title")}</DialogTitle>
+              <DialogDescription>
+                {t("dialog.delete.description")}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsDeleteDialogOpen(false)}
+              >
+                {t("dialog.delete.cancelButton")}
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleDeleteOrder}
+              >
+                {t("dialog.delete.confirmButton")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {isStatusDialogOpen && selectedOrder && (
+        <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t("dialog.confirm.title")}</DialogTitle>
+              <DialogDescription>
+                {t("dialog.confirm.description")}
+              </DialogDescription>
+            </DialogHeader>
+            <Select 
+              value={selectedStatus} 
+              onValueChange={(value: string) => {
+                // Type guard to ensure only valid statuses are set
+                if (Object.keys(STATUS_TRANSLATIONS).includes(value)) {
+                  setSelectedStatus(value as BaseOrderStatus)
+                }
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t("orders.dialogs.updateStatus.selectStatus")} />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.keys(STATUS_TRANSLATIONS).map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {translateStatus(status, i18n?.language as LanguageCode)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsStatusDialogOpen(false)}
+              >
+                {t("dialog.confirm.cancelButton")}
+              </Button>
+              <Button onClick={handleUpdateStatus}>
+                {t("dialog.confirm.confirmButton")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Order Details Dialog */}
+      {selectedOrder && (
+        <OrderDetailsDialog 
+          order={selectedOrder}
+          open={isOrderDetailsDialogOpen}
+          onOpenChange={setIsOrderDetailsDialogOpen}
+        />
+      )}
+    </div>
   )
 }

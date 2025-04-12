@@ -4,35 +4,47 @@ import { useState, useEffect } from "react"
 import { useI18n } from "@/components/i18n-provider"
 import { useFirebase } from "@/components/firebase-provider"
 import { useAuth } from "@/components/auth-provider"
-import { collection, query, orderBy, getDocs, doc, getDoc } from "firebase/firestore"
+import { collection, query, orderBy, getDocs, doc, deleteDoc } from "firebase/firestore"
 import { useToast } from "@/components/ui/use-toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { Search, MoreHorizontal, UserPlus } from "lucide-react"
+import { Search, MoreHorizontal, UserPlus, Edit, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { User } from "@/types"
+import { usePermissions } from "@/hooks/usePermissions"
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog"
 
 export default function UsersPage() {
   const { t } = useI18n() as { t: (key: string, options?: any) => string }
   const { db } = useFirebase()
-  const { user } = useAuth()
+  const { user: currentUser } = useAuth()
   const { toast } = useToast()
+  const { canDo } = usePermissions()
 
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
+  const [userToDelete, setUserToDelete] = useState<User | null>(null)
 
   useEffect(() => {
     const fetchUsers = async () => {
-      if (!db || !user) return
+      if (!db || !currentUser) return
 
       try {
-        // Query users subcollection for the current restaurant (user's own restaurant)
-        const usersRef = collection(db, "restaurants", user.uid, "users")
+        const usersRef = collection(db, "restaurants", currentUser.uid, "users")
         const q = query(usersRef, orderBy("createdAt", "desc"))
         
         const querySnapshot = await getDocs(q)
@@ -55,7 +67,31 @@ export default function UsersPage() {
     }
 
     fetchUsers()
-  }, [db, user])
+  }, [db, currentUser])
+
+  const handleDeleteUser = async () => {
+    if (!canDo('deleteUser') || !userToDelete || !db) return
+
+    try {
+      await deleteDoc(doc(db, "restaurants", currentUser!.uid, "users", userToDelete.uid))
+      
+      setUsers(prevUsers => prevUsers.filter(u => u.uid !== userToDelete.uid))
+      
+      toast({
+        title: t("users.deleteSuccess"),
+        description: `${userToDelete.username} ${t("users.hasBeenDeleted")}`,
+      })
+
+      setUserToDelete(null)
+    } catch (error) {
+      console.error("Error deleting user:", error)
+      toast({
+        title: t("users.errors.deleteUser"),
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive",
+      })
+    }
+  }
 
   // Filter users based on search query
   const filteredUsers = users.filter(user => {
@@ -76,12 +112,14 @@ export default function UsersPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{t("users.pageTitle")}</h1>
-        <Button asChild>
-          <Link href="/users/add">
-            <UserPlus className="mr-2 h-4 w-4" />
-            {t("users.addUser")}
-          </Link>
-        </Button>
+        {canDo('createUser') && (
+          <Button asChild>
+            <Link href="/users/add">
+              <UserPlus className="mr-2 h-4 w-4" />
+              {t("users.addUser")}
+            </Link>
+          </Button>
+        )}
       </div>
 
       <div className="flex items-center py-4">
@@ -127,9 +165,7 @@ export default function UsersPage() {
                     </TableCell>
                     <TableCell>
                       <Badge 
-                        className={
-                          "bg-green-100 text-green-800"
-                        }
+                        className={"bg-green-100 text-green-800"}
                       >
                         {t("users.userStatus.active")}
                       </Badge>
@@ -148,6 +184,31 @@ export default function UsersPage() {
                           >
                             {t("users.copyId")}
                           </DropdownMenuItem>
+                          
+                          {canDo('editUser') && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                onSelect={() => {/* Navegar a edición de usuario */}}
+                              >
+                                <Edit className="mr-2 h-4 w-4" />
+                                {t("users.editUser")}
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                          
+                          {canDo('deleteUser') && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                onSelect={() => setUserToDelete(user)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                {t("users.deleteUser")}
+                              </DropdownMenuItem>
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -158,6 +219,34 @@ export default function UsersPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Diálogo de confirmación de eliminación */}
+      <Dialog 
+        open={!!userToDelete} 
+        onOpenChange={() => setUserToDelete(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("users.confirmDelete")}</DialogTitle>
+            <DialogDescription>
+              {t("users.confirmDeleteDescription", { 
+                username: userToDelete?.username 
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">{t("commons.cancel")}</Button>
+            </DialogClose>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteUser}
+            >
+              {t("users.deleteUser")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

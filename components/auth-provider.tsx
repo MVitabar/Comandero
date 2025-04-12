@@ -14,7 +14,18 @@ import {
 import { useRouter, usePathname } from "next/navigation"
 import { useFirebase } from "@/components/firebase-provider"
 import { useToast } from "@/components/ui/use-toast"
-import { doc, getDoc } from "firebase/firestore"
+import { 
+  doc, 
+  getDoc, 
+  setDoc, 
+  updateDoc, 
+  arrayUnion, 
+  serverTimestamp, 
+  collection, 
+  query, 
+  where, 
+  getDocs 
+} from 'firebase/firestore'
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -103,98 +114,145 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.groupEnd();
   }, [])
 
-  // Fetch additional user details from Firestore
-  const fetchUserDetails = async (firebaseUser: FirebaseUser): Promise<User | null> => {
-    console.group('🔍 Fetch User Details')
-    console.log('Firebase User Input:', {
-      uid: firebaseUser.uid,
-      email: firebaseUser.email,
-      displayName: firebaseUser.displayName
-    })
+  // Función para generar nombre de usuario
+  const generateUsername = (email: string): string => {
+    if (!email) return 'user' + Math.floor(Math.random() * 10000)
+    
+    // Extraer parte antes del @ 
+    const baseUsername = email.split('@')[0]
+    
+    // Reemplazar caracteres no permitidos
+    const sanitizedUsername = baseUsername
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, '')
+      
+    // Si queda vacío, generar uno aleatorio
+    return sanitizedUsername || 'user' + Math.floor(Math.random() * 10000)
+  }
 
-    if (!db) {
-      console.warn('Firestore database not available')
-      console.groupEnd()
-      return null
-    }
+  // Función para verificar si un nombre de usuario ya existe
+  const isUsernameTaken = async (username: string, establishmentName: string): Promise<boolean> => {
+    if (!db) return false
+
+    const baseSlug = establishmentName
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '-')
+      .replace(/-+/g, '-')
+      .trim()
 
     try {
-      const userDocRef = doc(db, 'restaurants', firebaseUser.uid, 'users', firebaseUser.uid)
-      const userDoc = await getDoc(userDocRef)
+      const usersRef = collection(db, 'establishments', baseSlug, 'users')
+      const q = query(usersRef, where('username', '==', username))
+      const querySnapshot = await getDocs(q)
+      
+      return !querySnapshot.empty
+    } catch (error) {
+      console.error('Error checking username:', error)
+      return false
+    }
+  }
 
-      // Default implementation of authentication methods
-      const authMethods = {
+  // Función para generar nombre de usuario único
+  const generateUniqueUsername = async (email: string, establishmentName: string): Promise<string> => {
+    let baseUsername = generateUsername(email)
+    let uniqueUsername = baseUsername
+    let counter = 1
+
+    while (await isUsernameTaken(uniqueUsername, establishmentName)) {
+      uniqueUsername = `${baseUsername}${counter}`
+      counter++
+    }
+
+    return uniqueUsername
+  }
+
+  // Función de registro actualizada
+  const signUp = async (email: string, password: string, establishmentName?: string): Promise<void> => {
+    try {
+      await createUserWithEmailAndPassword(auth, email, password)
+    } catch (error) {
+      console.error("Sign up failed:", error)
+      throw error
+    }
+  }
+
+  // Función de obtención de detalles de usuario
+  const fetchUserDetails = async (firebaseUser: FirebaseUser): Promise<User | null> => {
+    if (!db) return null
+
+    try {
+      const globalUserRef = doc(db, 'users', firebaseUser.uid)
+      const globalUserDoc = await getDoc(globalUserRef)
+
+      if (!globalUserDoc.exists()) {
+        // Migración o primer inicio de sesión
+        await initializeUserProfile(firebaseUser)
+      }
+
+      const userData = globalUserDoc.data()
+
+      const customUser: User = {
+        ...firebaseUser,
+        uid: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        username: userData?.username || await generateUniqueUsername(firebaseUser.email || '', userData?.currentEstablishmentName || ''),
+        role: userData?.role || UserRole.Staff,
+        currentEstablishmentName: userData?.currentEstablishmentName,
+        status: userData?.status || 'active',
+        createdAt: userData?.createdAt || new Date(),
+        phoneNumber: userData?.phoneNumber || firebaseUser.phoneNumber,
+        position: userData?.position || '',
+        loading: false,
         login: async (email: string, password: string) => {
-          try {
-            await signInWithEmailAndPassword(auth, email, password)
-          } catch (error) {
-            console.error("Login failed:", error)
-            throw error
-          }
+          await signInWithEmailAndPassword(auth, email, password)
         },
         logout: async () => {
-          try {
-            await signOut(auth)
-          } catch (error) {
-            console.error("Logout failed:", error)
-            throw error
-          }
+          await signOut(auth)
         },
-        signUp: async (email: string, password: string) => {
-          try {
-            await createUserWithEmailAndPassword(auth, email, password)
-          } catch (error) {
-            console.error("Sign up failed:", error)
-            throw error
-          }
+        signUp: async (email: string, password: string, establishmentName?: string) => {
+          await signUp(email, password, establishmentName)
         }
       }
 
-      // Prepare user data with fallback values
-      const userData = userDoc.exists() ? userDoc.data() : {}
-      
-      const customUser: User = {
-        // Always include Firebase user properties
-        ...firebaseUser,
-        
-        // Ensure required properties exist
-        uid: firebaseUser.uid,
-        email: firebaseUser.email || '',
-        
-        // Username fallback
-        username: userData.username 
-          || firebaseUser.displayName 
-          || firebaseUser.email?.split('@')[0] 
-          || 'Unknown',
-        
-        // Role fallback
-        role: userData.role || 'staff',
-        
-        // Optional properties with fallbacks
-        phoneNumber: userData.phoneNumber || firebaseUser.phoneNumber || null,
-        position: userData.position || '',
-        
-        // Add authentication methods
-        ...authMethods,
-        
-        // Additional flags
-        loading: false
-      }
-
-      console.log('Transformed Custom User:', {
-        uid: customUser.uid,
-        email: customUser.email,
-        username: customUser.username,
-        role: customUser.role
-      })
-
-      console.groupEnd()
       return customUser
     } catch (error) {
       console.error("Error fetching user details:", error)
-      console.groupEnd()
       return null
     }
+  }
+
+  // Función de inicialización de perfil de usuario
+  const initializeUserProfile = async (firebaseUser: FirebaseUser) => {
+    const establishmentName = firebaseUser.uid
+
+    // Crear perfil global
+    const globalUserRef = doc(db, 'users', firebaseUser.uid)
+    await setDoc(globalUserRef, {
+      uid: firebaseUser.uid,
+      email: firebaseUser.email ?? '', // Manejar caso de email nulo
+      username: await generateUniqueUsername(
+        firebaseUser.email ?? `user_${firebaseUser.uid}`, // Manejar caso de email nulo
+        establishmentName
+      ),
+      currentEstablishmentName: establishmentName,
+      role: UserRole.Owner,
+      status: 'active',
+      createdAt: new Date()
+    })
+
+    // Crear documento en establecimiento
+    const establishmentUserRef = doc(db, 'establishments', establishmentName, 'users', firebaseUser.uid)
+    await setDoc(establishmentUserRef, {
+      uid: firebaseUser.uid,
+      username: await generateUniqueUsername(
+        firebaseUser.email ?? `user_${firebaseUser.uid}`, // Manejar caso de email nulo
+        establishmentName
+      ),
+      email: firebaseUser.email,
+      role: UserRole.Owner,
+      status: 'active',
+      createdAt: new Date()
+    })
   }
 
   useEffect(() => {
@@ -277,29 +335,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("Logout error:", error)
       toast({
         title: "Logout Failed",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive",
-      })
-      throw error
-    }
-  }
-
-  const signUp = async (email: string, password: string) => {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
-      const firebaseUser = userCredential.user
-      const customUser = await fetchUserDetails(firebaseUser)
-      setUser(customUser)
-      
-      toast({
-        title: "Sign Up Successful",
-        description: "Your account has been created successfully.",
-        variant: "default",
-      })
-    } catch (error) {
-      console.error("Sign up error:", error)
-      toast({
-        title: "Sign Up Failed",
         description: error instanceof Error ? error.message : "An unexpected error occurred",
         variant: "destructive",
       })

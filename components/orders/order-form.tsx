@@ -43,12 +43,13 @@ export function OrderForm({
   const { db } = useFirebase()
   const { user: contextUser } = useAuth()
   const user = propUser || contextUser
+  const { t } = useI18n()
 
   if (!user) {
     return (
       <div className="flex justify-center items-center h-full">
         <p className="text-destructive">
-          Usuário não autenticado. Por favor, faça login para criar um pedido.
+          {t("orders.errors.unauthorized")}
         </p>
       </div>
     )
@@ -57,7 +58,6 @@ export function OrderForm({
   // Use table prop if available, otherwise use initialTableNumber
   const tableNumber = table?.name || initialTableNumber || ''
 
-  const { t } = useI18n()
 
   const [loading, setLoading] = useState(true)
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
@@ -91,12 +91,27 @@ export function OrderForm({
 
   const handleAddItem = () => {
     const menuItem = menuItems.find((item) => item.uid === selectedItem)
-    if (!menuItem) return
+    if (!menuItem) {
+      toast({
+        title: t("orders.errors.menuItemNotFound"),
+        variant: "destructive"
+      })
+      return
+    }
+
+    // Validate quantity
+    if (quantity <= 0) {
+      toast({
+        title: t("orders.errors.invalidQuantity"),
+        variant: "destructive"
+      })
+      return
+    }
 
     const newItem: OrderItem = {
-      uid: menuItem.uid, // Added optional uid
-      itemId: menuItem.uid, // Ensure itemId is set
-      menuItemId: menuItem.uid, // Add menuItemId
+      uid: menuItem.uid,
+      itemId: menuItem.uid,
+      menuItemId: menuItem.uid,
       name: menuItem.name,
       category: menuItem.category || 'uncategorized',
       quantity,
@@ -173,7 +188,7 @@ export function OrderForm({
         if (categoryData && categoryData.items) {
           console.log(`Items in ${category}:`, Object.keys(categoryData.items))
 
-          const categoryItems = Object.values(categoryData.items).map((itemData: any) => {
+          const categoryItems = Object.entries(categoryData.items).map(([itemId, itemData]: [string, any]) => {
             console.group('Item Data Debug')
             console.log('Raw Item Data:', itemData)
             
@@ -186,63 +201,48 @@ export function OrderForm({
               stock = isNaN(parsedStock) ? 0 : parsedStock
             }
 
-            // Parse price with more robust handling
-            let price = 0
-            if (typeof itemData.price === 'number') {
-              price = itemData.price
-            } else if (typeof itemData.price === 'string') {
-              // Remove currency symbols and parse
-              const cleanPrice = itemData.price
-                .replace(/[R$\s]/g, '')  // Remove R$, spaces
-                .replace(',', '.')  // Replace comma with dot for decimal
-              const parsedPrice = parseFloat(cleanPrice)
-              price = isNaN(parsedPrice) ? 0 : parsedPrice
-            }
-
-            const menuItem = {
-              uid: itemData.id || itemData.uid,
-              name: itemData.name,
-              price: price,
+            // Map Firestore item to MenuItem type
+            const menuItem: MenuItem = {
+              uid: itemId,  // Use the Firestore document ID as the unique identifier
+              name: String(itemData.name || ''),
               category: category as MenuItemCategory,
-              description: itemData.description || '',
-              unit: itemData.unit || '',
-              stock: stock
+              price: Number(itemData.price || 0),
+              description: String(itemData.description || ''),
+              unit: String(itemData.unit || ''),
+              stock: stock,
+              minimumStock: Number(itemData.minimumStock || 0),
+              dietaryInfo: {
+                vegetarian: false,  // Add logic if needed
+                vegan: false,       // Add logic if needed
+                glutenFree: false,  // Add logic if needed
+                lactoseFree: false  // Add logic if needed
+              }
             }
 
-            console.log('Processed Menu Item:', menuItem)
+            console.log('Mapped Menu Item:', menuItem)
             console.groupEnd()
-
             return menuItem
           })
 
           menuItems.push(...categoryItems)
-        } else {
-          console.log(`No items found in category: ${category}`)
         }
       }
 
-      console.log('Total Menu Items:', menuItems)
-      console.log('Menu Items Details:', menuItems.map(item => ({
-        name: item.name,
-        category: item.category,
-        stock: item.stock ?? 'undefined',  // Use nullish coalescing to handle undefined
-        price: item.price
-      })))
+      console.log('Total Menu Items:', menuItems.length)
+      console.groupEnd()
 
       setMenuItems(menuItems)
       setLoading(false)
-      console.groupEnd()
     } catch (error) {
-      console.error("Error fetching menu items:", error)
-      setLoading(false)
-      console.groupEnd()
+      console.error('Error fetching menu items:', error)
       toast({
-        title: "Erro ao Buscar Itens",
-        description: error instanceof Error ? error.message : "Não foi possível carregar os itens do menu",
-        variant: "destructive"
+        title: t('orders.errors.fetchMenuItemsFailed'),
+        description: error instanceof Error ? error.message : String(error),
+        variant: 'destructive'
       })
+      setLoading(false)
     }
-  }, [db, user, toast])
+  }, [db, user, t])
 
   // Ensure fetchMenuItems is called when db and user are available
   useEffect(() => {
@@ -345,8 +345,8 @@ export function OrderForm({
     // Early validation checks
     if (orderItems.length === 0) {
       toast({
-        title: "Carrinho Vazio",
-        description: "Adicione itens ao pedido antes de enviar",
+        title: t("orders.errors.emptyOrder"),
+        description: t("orders.errors.emptyOrderDescription"),
         variant: "destructive"
       })
       return
@@ -355,8 +355,8 @@ export function OrderForm({
     // Validate table number based on order type
     if (orderType === 'table' && !tableNumber.trim()) {
       toast({
-        title: "Mesa Não Selecionada",
-        description: "Por favor, selecione ou insira o número da mesa",
+        title: t("orders.errors.noTableSelected"),
+        description: t("orders.errors.noTableSelectedDescription"),
         variant: "destructive"
       })
       return
@@ -446,15 +446,15 @@ export function OrderForm({
 
       // Show success toast
       toast({
-        title: "Pedido Criado",
-        description: `Pedido ${orderType === 'table' ? `da Mesa ${finalTableNumber}` : orderType} criado com sucesso!`,
+        title: t("orders.success.orderCreated"),
+        description: t("orders.success.orderCreatedDescription"),
         variant: "default"
       })
 
     } catch (error) {
       console.error("Erro ao criar pedido:", error)
       toast({
-        title: "Erro ao Criar Pedido",
+        title: t("orders.errors.orderCreationFailed"),
         description: error instanceof Error ? error.message : "Não foi possível criar o pedido",
         variant: "destructive"
       })
@@ -620,9 +620,9 @@ export function OrderForm({
           } catch (error) {
             console.error('Error updating table status:', error)
             toast({
-              title: 'Error',
-              description: 'Could not update table status',
-              variant: 'destructive'
+              title: t("orders.errors.updateTableStatus"),
+              description: error instanceof Error ? error.message : "Não foi possível atualizar o status da mesa",
+              variant: "destructive"
             })
           }
         }
@@ -633,9 +633,9 @@ export function OrderForm({
 
       // Success notification
       toast({
-        title: 'Order Created',
-        description: `Order #${newOrderRef.id} successfully created`,
-        variant: 'default'
+        title: t("orders.success.orderCreated"),
+        description: t("orders.success.orderCreatedDescription"),
+        variant: "default"
       });
 
       // Reset form state
@@ -649,9 +649,9 @@ export function OrderForm({
       console.error('Order Creation Error:', error);
       
       toast({
-        title: 'Order Creation Failed',
-        description: error instanceof Error ? error.message : 'An unexpected error occurred',
-        variant: 'destructive'
+        title: t("orders.errors.orderCreationFailed"),
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive"
       });
     }
   };
@@ -816,7 +816,7 @@ export function OrderForm({
     if (filteredItems.length === 0) {
       return (
         <div className="text-muted-foreground text-sm">
-          Nenhum item encontrado nesta categoria
+          {t("orders.noItemsInCategory")}
         </div>
       )
     }
@@ -827,7 +827,7 @@ export function OrderForm({
         onValueChange={handleSelectedItemChange}
       >
         <SelectTrigger className="w-full">
-          <SelectValue placeholder="Selecione um item" />
+          <SelectValue placeholder={t("orders.selectItem")} />
         </SelectTrigger>
         <SelectContent>
           {filteredItems.map(item => (
@@ -867,7 +867,7 @@ export function OrderForm({
     if (uniqueCategories.length === 0) {
       return (
         <div className="text-muted-foreground text-sm">
-          Nenhuma categoria encontrada
+          {t("orders.noCategoriesFound")}
         </div>
       )
     }
@@ -887,7 +887,7 @@ export function OrderForm({
         }}
       >
         <SelectTrigger className="w-full">
-          <SelectValue placeholder="Selecione uma categoria" />
+          <SelectValue placeholder={t("orders.selectCategory")} />
         </SelectTrigger>
         <SelectContent>
           {uniqueCategories.map(category => (
@@ -913,7 +913,7 @@ export function OrderForm({
 
       return (
         <div className="mb-4">
-          <Label>Mesa</Label>
+          <Label>{t("orders.tableNumber")}</Label>
           <Input 
             type="text" 
             onChange={handleTableNumberChange}
@@ -933,30 +933,29 @@ export function OrderForm({
     return (
       <div className="space-y-4">
         <div>
-          <Label>Tipo de Pedido</Label>
+          <Label>{t("orders.orderType")}</Label>
           <Select 
             value={orderType} 
             onValueChange={handleOrderTypeChange}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Selecione o tipo de pedido" />
+              <SelectValue placeholder={t("orders.selectOrderType")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="table">Mesa</SelectItem>
-              <SelectItem value="counter">Balcão</SelectItem>
-              <SelectItem value="takeaway">Para Viagem</SelectItem>
+              <SelectItem value="table">{t("orders.table")}</SelectItem>
+              <SelectItem value="counter">{t("orders.counter")}</SelectItem>
+              <SelectItem value="takeaway">{t("orders.takeaway")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {orderType === 'table' && (
           <div>
-            <Label>Número da Mesa</Label>
+            <Label>{t("orders.tableNumber")}</Label>
             <Input 
               type="text" 
-              placeholder="Digite o número da mesa" 
+              placeholder={t("orders.tableNumberPlaceholder")} 
               defaultValue={0}
-              value={tableNumber}
               // No need to set tableNumber here
               className="w-full"
               onChange={handleTableNumberChange}
@@ -999,11 +998,11 @@ export function OrderForm({
   const renderMenuUrlInput = () => {
     return (
       <div className="space-y-2">
-        <Label htmlFor="menu-url">{t("menuUrl")}</Label>
+        <Label htmlFor="menu-url">{t("orders.menuUrl")}</Label>
         <Input 
           id="menu-url"
           type="url"
-          placeholder={t("menuUrlPlaceholder")}
+          placeholder={t("orders.menuUrlPlaceholder")}
           value={menuUrl}
           onChange={handleMenuUrlChange}
           className="w-full"
@@ -1016,11 +1015,11 @@ export function OrderForm({
   const renderSpecialRequestsInput = () => {
     return (
       <div className="space-y-2">
-        <Label htmlFor="special-requests">{t("specialRequests")}</Label>
+        <Label htmlFor="special-requests">{t("orders.specialRequests")}</Label>
         <Textarea
           id="special-requests"
           onChange={handleSpecialRequestsChange}
-          placeholder={t("specialRequestsPlaceholder")}
+          placeholder={t("orders.specialRequestsPlaceholder")}
           className="resize-y min-h-[100px]"
           maxLength={500}  // Optional: Limit input length
           defaultValue={specialRequests}
@@ -1032,12 +1031,12 @@ export function OrderForm({
   const renderDiscountInput = () => {
     return (
       <div className="space-y-2">
-        <Label htmlFor="discount">{t("discount")}</Label>
+        <Label htmlFor="discount">{t("orders.discount")}</Label>
         <div className="flex items-center space-x-2">
           <Input 
             id="discount"
             type="number"
-            placeholder={t("discountPlaceholder")}
+            placeholder={t("orders.discountPlaceholder")}
             value={discount}
             onChange={handleDiscountChange}
             className="flex-grow"
@@ -1052,11 +1051,11 @@ export function OrderForm({
             }}
           >
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder={t("discountType")} />
+              <SelectValue placeholder={t("orders.discountType")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="percentage">{t("percentage")}</SelectItem>
-              <SelectItem value="fixed">{t("fixedAmount")}</SelectItem>
+              <SelectItem value="percentage">{t("orders.percentage")}</SelectItem>
+              <SelectItem value="fixed">{t("orders.fixedAmount")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -1080,17 +1079,17 @@ export function OrderForm({
           <div className="space-y-4">
             {renderTableSelector()}
             <div>
-              <Label>{t("selectCategory")}</Label>
+              <Label>{t("orders.selectCategory")}</Label>
               {renderCategorySelector()}
             </div>
 
             <div>
-              <Label>{t("selectItem")}</Label>
+              <Label>{t("orders.selectItem")}</Label>
               {renderMenuItems()}
             </div>
 
             <div>
-              <Label>{t("quantity")}</Label>
+              <Label>{t("orders.quantity")}</Label>
               <div className="flex items-center gap-2">
                 <Button
                   type="button"
@@ -1121,31 +1120,31 @@ export function OrderForm({
             </div>
 
             <div>
-              <Label htmlFor="notes">{t("itemNotes")}</Label>
+              <Label htmlFor="notes">{t("orders.itemNotes")}</Label>
               <Textarea
                 id="notes"
                 value={notes}
                 onChange={handleNotesChange}
-                placeholder={t("itemNotesPlaceholder")}
+                placeholder={t("orders.itemNotesPlaceholder")}
                 className="resize-y min-h-[100px]"
               />
             </div>
 
             <div className="space-y-2">
-              <Label>{t("itemDietaryRestrictions")}</Label>
+              <Label>{t("orders.itemDietaryRestrictions")}</Label>
               {renderDietaryRestrictions()}
             </div>
 
             <Button type="button" onClick={handleAddItem} className="w-full">
               <Plus className="mr-2 h-4 w-4" />
-              {t("addToOrder")}
+              {t("orders.addToOrder")}
             </Button>
           </div>
 
           {/* Right Column: Order Summary */}
           <div className="space-y-4 bg-muted/50 p-4 rounded-lg">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-bold">{t("orderSummary")}</h2>
+              <h2 className="text-xl font-bold">{t("orders.orderSummary")}</h2>
               <div className="flex items-center gap-2">
                 {orderItems.length > 0 && (
                   <Button 
@@ -1155,7 +1154,7 @@ export function OrderForm({
                     className="text-xs"
                   >
                     <Trash className="mr-2 h-4 w-4" />
-                    {t("clearOrder")}
+                    {t("orders.clearOrder")}
                   </Button>
                 )}
                 <Button 
@@ -1165,7 +1164,7 @@ export function OrderForm({
                   className="text-xs flex items-center"
                 >
                   <QrCode className="mr-2 h-4 w-4" />
-                  {showQRCode ? t('hideMenuQr') : t('showMenuQr')}
+                  {showQRCode ? t('orders.hideMenuQr') : t('orders.showMenuQr')}
                 </Button>
               </div>
             </div>
@@ -1184,7 +1183,7 @@ export function OrderForm({
 
             {orderItems.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
-                <p>{t("noItemsInOrder")}</p>
+                <p>{t("orders.noItemsInOrder")}</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -1192,10 +1191,10 @@ export function OrderForm({
                   <Table>
                     <TableHeader className="sticky top-0 bg-background">
                       <TableRow>
-                        <TableHead className="w-[40%]">{t("item")}</TableHead>
-                        <TableHead className="w-[20%] text-center">{t("quantity")}</TableHead>
-                        <TableHead className="w-[20%] text-right">{t("price")}</TableHead>
-                        <TableHead className="w-[20%] text-right">{t("total")}</TableHead>
+                        <TableHead className="w-[40%]">{t("orders.item")}</TableHead>
+                        <TableHead className="w-[20%] text-center">{t("orders.quantity")}</TableHead>
+                        <TableHead className="w-[20%] text-right">{t("orders.price")}</TableHead>
+                        <TableHead className="w-[20%] text-right">{t("orders.total")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1207,6 +1206,13 @@ export function OrderForm({
                               {item.notes && (
                                 <span className="text-xs text-muted-foreground">
                                   {item.notes}
+                                </span>
+                              )}
+                              {item.customDietaryRestrictions && item.customDietaryRestrictions.length > 0 && (
+                                <span className="text-xs text-muted-foreground">
+                                  {item.customDietaryRestrictions.map(restriction => 
+                                    t(restriction)
+                                  ).join(', ')}
                                 </span>
                               )}
                             </div>
@@ -1268,14 +1274,14 @@ export function OrderForm({
 
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span>{t("subtotal")}</span>
+                    <span>{t("orders.subtotal")}</span>
                     <span className="font-semibold">
                       R$ {orderItems.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2)}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <Label>{t("discount")}</Label>
+                    <Label>{t("orders.discount")}</Label>
                     <div className="flex items-center gap-2">
                       <Select 
                         value={discountType} 
@@ -1300,7 +1306,7 @@ export function OrderForm({
                   </div>
 
                   <div className="flex justify-between">
-                    <span>{t("total")}</span>
+                    <span>{t("orders.total")}</span>
                     <span className="text-xl font-bold">
                       R$ {calculateTotal().toFixed(2)}
                     </span>
@@ -1328,16 +1334,16 @@ export function OrderForm({
               className="w-full" 
               disabled={orderItems.length === 0 || (orderType === 'table' && !tableNumber.trim())}
             >
-              {t("createOrder")}
+              {t("orders.createOrder")}
             </Button>
             {orderItems.length === 0 && (
               <p className="text-sm text-red-500 mt-2">
-                {t("errors.noItemsInOrder")}
+                {t("orders.errors.noItemsInOrder")}
               </p>
             )}
             {(orderType === 'table' && !tableNumber.trim()) && (
               <p className="text-sm text-red-500 mt-2">
-                {t("errors.noTableSelected")}
+                {t("orders.errors.noTableSelected")}
               </p>
             )}
           </div>

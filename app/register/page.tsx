@@ -6,7 +6,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
-import { doc, setDoc } from "firebase/firestore"
+import { doc, setDoc, query, collection, where, getDocs } from "firebase/firestore"
 import { useFirebase } from "@/components/firebase-provider"
 import { useI18n } from "@/components/i18n-provider"
 import { useToast } from "@/components/ui/use-toast"
@@ -25,12 +25,14 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
+    establishmentName: "",
   })
   const [acceptTerms, setAcceptTerms] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [suggestedNames, setSuggestedNames] = useState<string[]>([])
 
   const { auth, db } = useFirebase()
   const { t } = useI18n()
@@ -56,39 +58,54 @@ export default function RegisterPage() {
 
     // Username validation
     if (!formData.username.trim()) {
-      newErrors.username = t("usernameRequired")
+      newErrors.username = t("register.error.usernameRequired")
     } else if (formData.username.length < 3) {
-      newErrors.username = t("usernameMinLength")
+      newErrors.username = t("register.error.usernameMinLength")
     }
 
     // Email validation
     if (!formData.email) {
-      newErrors.email = t("emailRequired")
+      newErrors.email = t("register.error.emailRequired")
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = t("emailInvalid")
+      newErrors.email = t("register.error.emailInvalid")
     }
 
     // Password validation
     if (!formData.password) {
-      newErrors.password = t("passwordRequired")
+      newErrors.password = t("register.error.passwordRequired")
     } else if (formData.password.length < 8) {
-      newErrors.password = t("passwordMinLength")
+      newErrors.password = t("register.error.passwordMinLength")
     } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      newErrors.password = t("passwordRequirements")
+      newErrors.password = t("register.error.passwordRequirements")
     }
 
     // Confirm password validation
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = t("passwordsDoNotMatch")
+      newErrors.confirmPassword = t("register.error.passwordsDoNotMatch")
+    }
+
+    // Establishment name validation
+    if (!formData.establishmentName.trim()) {
+      newErrors.establishmentName = t("register.error.establishmentNameRequired")
+    } else if (formData.establishmentName.length < 3) {
+      newErrors.establishmentName = t("register.error.establishmentNameMinLength")
     }
 
     // Terms validation
     if (!acceptTerms) {
-      newErrors.terms = t("acceptTermsRequired")
+      newErrors.terms = t("register.error.acceptTermsRequired")
     }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
+  }
+
+  const generateUniqueRestaurantId = (name: string) => {
+    const sanitizedName = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+    const randomHash = Math.random().toString(36).substring(2, 10)
+    return `${sanitizedName}-${randomHash}`
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -107,41 +124,109 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
+      // Verificar disponibilidad del nombre del establecimiento
+      const establishmentsRef = collection(db, 'establishments')
+      const q = query(
+        establishmentsRef, 
+        where('name', '==', formData.establishmentName)
+      )
+      const querySnapshot = await getDocs(q)
+
+      if (!querySnapshot.empty) {
+        // Generar nombres alternativos
+        const baseSlug = formData.establishmentName
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, '-')
+          .replace(/-+/g, '-')
+          .trim()
+
+        const alternatives = [
+          `${baseSlug}-${Math.random().toString(36).substring(2, 8)}`,
+          `${baseSlug}-${new Date().getFullYear()}${new Date().getMonth() + 1}${new Date().getDate()}`,
+          `${baseSlug}-${Math.floor(Math.random() * 9000) + 1000}`
+        ].map(alt => {
+          // Asegurar que la longitud no exceda un límite razonable
+          return alt.length > 50 ? alt.substring(0, 50) : alt
+        })
+
+        // Verificar que los nombres alternativos no estén ya en uso
+        const checkAlternativesQuery = query(
+          establishmentsRef, 
+          where('name', 'in', alternatives)
+        )
+        const alternativesSnapshot = await getDocs(checkAlternativesQuery)
+
+        // Filtrar nombres que no estén en uso
+        const availableAlternatives = alternatives.filter(alt => 
+          !alternativesSnapshot.docs.some(doc => doc.data().name === alt)
+        )
+
+        if (availableAlternatives.length === 0) {
+          // Si todos los nombres están en uso, generar uno completamente aleatorio
+          const fallbackName = `${baseSlug}-${Date.now()}`
+          availableAlternatives.push(fallbackName)
+        }
+
+        setSuggestedNames(availableAlternatives)
+        setLoading(false)
+        return
+      }
+
       // Create user with Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password)
 
       const user = userCredential.user
-      const userId = user.uid // Explicitly get the uid
+      const userId = user.uid
 
-      // Update profile with username
-      await updateProfile(user, {
-        displayName: formData.username,
-      })
+      // Sanitizar el nombre del establecimiento
+      const baseSlug = formData.establishmentName
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '-')
+        .replace(/-+/g, '-')
+        .trim()
 
-      // Store additional user data in Firestore with nested collection structure
-      await setDoc(doc(db, "restaurants", userId), {
-        uid: userId,
-        username: formData.username,
-        email: formData.email,
-        role: "owner", // First registered user is the owner
-        createdAt: new Date(),
-        lastLogin: new Date(),
-      })
-
-      // Create a users subcollection for the restaurant
-      await setDoc(doc(db, "restaurants", userId, "users", userId), {
+      // Crear documento global de usuario
+      await setDoc(doc(db, 'users', userId), {
         uid: userId,
         username: formData.username,
         email: formData.email,
         role: "owner",
         status: "active",
-        addedBy: userId,
+        establishmentName: formData.establishmentName,
+        createdAt: new Date(),
+      })
+
+      // Crear documento del establecimiento
+      await setDoc(doc(db, 'establishments', baseSlug), {
+        name: formData.establishmentName,
+        slug: baseSlug,
+        createdAt: new Date(),
+      })
+
+      // Crear documento de información del establecimiento
+      await setDoc(doc(db, 'establishments', baseSlug, 'info', 'details'), {
+        name: formData.establishmentName,
+        uid: userId,
+        username: formData.username,
+        email: formData.email,
+        role: "owner",
+        createdAt: new Date(),
+        lastLogin: new Date(),
+      })
+
+      // Crear usuario en la subcolección de usuarios del establecimiento
+      await setDoc(doc(db, 'establishments', baseSlug, 'users', userId), {
+        uid: userId,
+        username: formData.username,
+        email: formData.email,
+        role: "owner",
+        status: "active",
         createdAt: new Date(),
       })
 
       toast({
-        title: t("registrationSuccessful"),
-        description: t("accountCreated"),
+        title: t("register.success.registrationSuccessful"),
+        description: t("register.success.accountCreated"),
       })
 
       // Redirect to dashboard
@@ -151,11 +236,11 @@ export default function RegisterPage() {
 
       // Handle specific Firebase errors
       if (error.code === "auth/email-already-in-use") {
-        setErrors((prev) => ({ ...prev, email: t("emailAlreadyInUse") }))
+        setErrors((prev) => ({ ...prev, email: t("register.error.emailInUse") }))
       } else if (error.code === "auth/invalid-email") {
-        setErrors((prev) => ({ ...prev, email: t("emailInvalid") }))
+        setErrors((prev) => ({ ...prev, email: t("register.error.emailInvalid") }))
       } else if (error.code === "auth/weak-password") {
-        setErrors((prev) => ({ ...prev, password: t("passwordTooWeak") }))
+        setErrors((prev) => ({ ...prev, password: t("register.error.passwordTooWeak") }))
       } else if (error.code === "auth/configuration-not-found") {
         toast({
           title: t("commons.error"),
@@ -164,7 +249,7 @@ export default function RegisterPage() {
         })
       } else {
         toast({
-          title: t("registrationFailed"),
+          title: t("register.error.registrationFailed"),
           description: error.message || t("commons.error.generic"),
           variant: "destructive",
         })
@@ -182,13 +267,13 @@ export default function RegisterPage() {
 
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>{t("register")}</CardTitle>
-          <CardDescription>{t("createAccountDescription")}</CardDescription>
+          <CardTitle>{t("register.title")}</CardTitle>
+          <CardDescription>{t("register.description")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">{t("username")}</Label>
+              <Label htmlFor="username">{t("register.username")}</Label>
               <Input
                 id="username"
                 name="username"
@@ -201,7 +286,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">{t("email")}</Label>
+              <Label htmlFor="email">{t("register.email")}</Label>
               <Input
                 id="email"
                 name="email"
@@ -215,7 +300,20 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">{t("password")}</Label>
+              <Label htmlFor="establishmentName">{t("register.establishmentName")}</Label>
+              <Input
+                id="establishmentName"
+                name="establishmentName"
+                value={formData.establishmentName}
+                onChange={handleChange}
+                className={errors.establishmentName ? "border-red-500" : ""}
+                disabled={loading}
+              />
+              {errors.establishmentName && <p className="text-sm text-red-500">{errors.establishmentName}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">{t("register.password")}</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -240,7 +338,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">{t("confirmPassword")}</Label>
+              <Label htmlFor="confirmPassword">{t("register.confirmPassword")}</Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
@@ -271,28 +369,50 @@ export default function RegisterPage() {
                 disabled={loading}
               />
               <Label htmlFor="terms" className={`text-sm ${errors.terms ? "text-red-500" : ""}`}>
-                {t("acceptTerms")}
+                {t("register.acceptTerms")}
               </Label>
             </div>
             {errors.terms && <p className="text-sm text-red-500">{errors.terms}</p>}
+
+            {suggestedNames.length > 0 && (
+              <div className="mt-4">
+                <p className="text-sm text-yellow-600">
+                  {t("register.error.establishmentNameTaken")}
+                </p>
+                <div className="space-y-2">
+                  {suggestedNames.map((name, index) => (
+                    <Button 
+                      key={index} 
+                      variant="outline" 
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, establishmentName: name }))
+                        setSuggestedNames([])
+                      }}
+                    >
+                      {name}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t("registering")}
+                  {t("register.registering")}
                 </>
               ) : (
-                t("register")
+                t("register.register")
               )}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
-            {t("alreadyHaveAccount")}{" "}
+            {t("register.alreadyHaveAccount")}{" "}
             <Link href="/login" className="text-primary hover:underline">
-              {t("login")}
+              {t("register.login")}
             </Link>
           </p>
         </CardFooter>
