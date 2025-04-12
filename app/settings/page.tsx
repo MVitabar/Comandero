@@ -81,8 +81,8 @@ export default function SettingsPage() {
           
           <TabsContent value="system">
             <div className="space-y-4">
-              <h2 className="text-2xl font-bold">{t("system")}</h2>
-              <p className="text-muted-foreground">{t("systemSettingsDescription")}</p>
+              <h2 className="text-2xl font-bold">{t("settings.system.title")}</h2>
+              <p className="text-muted-foreground">{t("settings.system.description")}</p>
               {/* System settings content */}
             </div>
           </TabsContent>

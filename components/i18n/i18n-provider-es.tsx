@@ -151,7 +151,6 @@ export const esTranslations = {
     "filter": {
       "allStatuses": "Todos los Estados"
     },
-    
     "actions": {
       "view": "Ver",
       "updateStatus": "Actualizar Estado",
@@ -171,7 +170,6 @@ export const esTranslations = {
       "deleteOrderFailed": "Error al eliminar el pedido"
     },
     "orderType": "Tipo de Pedido",
-    "table": "Mesa",
     "tableNumber": "Número de Mesa",
     "selectCategory": "Seleccionar Categoría",
     "selectItem": "Seleccionar Artículo",
@@ -209,8 +207,14 @@ export const esTranslations = {
       "transfer": "Transferencia Bancaria",
       "other": "Otro"
     },
-    "confirmPayment": "Confirmar Pago"
-    
+    "confirmPayment": "Confirmar Pago",
+    "table": {
+      "emptyState": {
+        "title": "No se encontraron pedidos",
+        "description": "Actualmente no hay pedidos en el sistema. Comience a crear nuevos pedidos para verlos aquí."
+      },
+      "loading": "Cargando pedidos..."
+    }
   },
 
   "users": {
@@ -299,7 +303,8 @@ export const esTranslations = {
       "deleteError": "Error al eliminar el mapa de mesas",
       "addTable": "Agregar Mesa",
       "noDescription": "Sin descripción",
-      "viewMap": "Ver Mapa"
+      "viewMap": "Ver Mapa",
+      "loadingTitle": "Cargando Mapa de Mesas"
     },
     "dialog": {
       "title": "Agregar Nueva Mesa",
@@ -361,58 +366,146 @@ export const esTranslations = {
 
   "settings": {
     "title": "Configuraciones",
+    "system": {
+      "title": "Sistema",
+      "description": "Administrar configuraciones y ajustes avanzados del sistema"
+    },
     "profile": {
       "title": "Perfil",
       "description": "Administre su información personal y configuraciones de cuenta",
-      "personalInfo": "Información Personal",
-      "accountSettings": "Configuraciones de Cuenta"
-    },
-    "notifications": {
-      "title": "Notificaciones",
-      "description": "Administre sus preferencias de notificación",
-      "emailNotifications": "Notificaciones por Correo Electrónico",
-      "pushNotifications": "Notificaciones Push",
-      "smsNotifications": "Notificaciones por SMS"
-    },
-    "language": {
-      "title": "Idioma",
-      "description": "Seleccione su idioma preferido para la aplicación",
-      "currentLanguage": "Idioma Actual",
-      "availableLanguages": {
-        "portuguese": "Portugués",
-        "spanish": "Español", 
-        "english": "Inglés"
+      "actions": {
+        "uploadPhoto": "Cargar Foto",
+        "submit": "Guardar Cambios",
+        "submitting": "Guardando...",
+        "profileUpdated": "Perfil Actualizado",
+        "profileUpdateSuccess": "Su perfil ha sido actualizado exitosamente.",
+        "profileUpdateFailed": "Actualización de Perfil Fallida",
+        "profileUpdateError": "Ocurrió un error al actualizar su perfil."
+      },
+      "fields": {
+        "username": "Nombre de Usuario",
+        "email": {
+          "label": "Correo Electrónico",
+          "cannotBeChanged": "Este correo electrónico no puede ser modificado"
+        },
+        "phoneNumber": "Número de Teléfono",
+        "position": {
+          "label": "Cargo",
+          "placeholder": "Ingrese su cargo"
+        },
+        "role": {
+          "label": "Rol",
+          "placeholder": "Seleccione su rol",
+          "options": {
+            "admin": "Administrador",
+            "manager": "Gerente", 
+            "chef": "Chef",
+            "waiter": "Mesero"
+          }
+        }
       }
     },
     "appearance": {
       "title": "Apariencia",
-      "description": "Personalice la apariencia de la aplicación",
-      "theme": {
-        "light": "Claro",
-        "dark": "Oscuro",
-        "system": "Sistema"
+      "description": "Personalice el aspecto de la aplicación",
+      "modes": {
+        "light": {
+          "label": "Modo Claro"
+        },
+        "dark": {
+          "label": "Modo Oscuro"
+        },
+        "system": {
+          "label": "Predeterminado del Sistema"
+        }
       },
-      "colorScheme": "Esquema de Colores"
+      "actions": {
+        "save": "Guardar Cambios",
+        "saving": "Guardando...",
+        "saved": {
+          "title": "Apariencia Actualizada",
+          "description": "Sus preferencias de apariencia han sido actualizadas con éxito."
+        },
+        "failed": {
+          "title": "Actualización Fallida",
+          "description": "Ocurrió un error al actualizar sus preferencias de apariencia."
+        }
+      }
     },
-    "system": {
-      "title": "Sistema",
-      "description": "Configuraciones avanzadas del sistema",
-      "dataUsage": "Uso de Datos",
-      "performanceSettings": "Configuraciones de Rendimiento",
-      "resetSettings": "Restablecer Configuraciones"
+    "language": {
+      "title": "Idioma",
+      "description": "Seleccione su idioma preferido para la aplicación",
+      "languages": {
+        "en": "Inglés",
+        "es": "Español",
+        "pt": "Portugués"
+      },
+      "actions": {
+        "submit": "Guardar Cambios",
+        "saving": "Guardando...",
+        "profileUpdated": "Preferencia de Idioma Actualizada",
+        "profileUpdateSuccess": "Su preferencia de idioma ha sido actualizada con éxito.",
+        "profileUpdateFailed": "Actualización Fallida",
+        "profileUpdateError": "Ocurrió un error al actualizar su preferencia de idioma."
+      }
     },
-    "buttons": {
-      "save": "Guardar Cambios",
-      "cancel": "Cancelar",
-      "reset": "Restablecer"
+    "notifications": {
+      "title": "Notificaciones",
+      "description": "Administre sus preferencias de notificación y métodos de entrega",
+      "types": {
+        "title": "Tipos de Notificaciones",
+        "newOrders": {
+          "label": "Nuevos Pedidos",
+          "description": "Recibir notificaciones de nuevos pedidos entrantes"
+        },
+        "orderUpdates": {
+          "label": "Actualizaciones de Pedidos",
+          "description": "Obtener actualizaciones sobre el estado de los pedidos existentes"
+        },
+        "inventoryAlerts": {
+          "label": "Alertas de Inventario",
+          "description": "Notificaciones sobre stock bajo o cambios en el inventario"
+        },
+        "systemAnnouncements": {
+          "label": "Anuncios del Sistema",
+          "description": "Actualizaciones importantes y anuncios del sistema"
+        },
+        "dailyReports": {
+          "label": "Informes Diarios",
+          "description": "Recibir informes de resumen diarios"
+        }
+      },
+      "deliveryMethods": {
+        "title": "Métodos de Entrega",
+        "emailNotifications": {
+          "label": "Notificaciones por Correo",
+          "description": "Recibir notificaciones por correo electrónico"
+        },
+        "pushNotifications": {
+          "label": "Notificaciones Push",
+          "description": "Recibir alertas en tiempo real en su dispositivo"
+        },
+        "soundAlerts": {
+          "label": "Alertas de Sonido",
+          "description": "Reproducir notificaciones de sonido cuando ocurren nuevos eventos"
+        }
+      },
+      "actions": {
+        "submit": "Guardar Cambios",
+        "submitting": "Guardando...",
+        "profileUpdated": "Preferencias de Notificación Actualizadas",
+        "profileUpdateSuccess": "Sus preferencias de notificación han sido actualizadas con éxito.",
+        "profileUpdateFailed": "Actualización Fallida",
+        "profileUpdateError": "Ocurrió un error al actualizar sus preferencias de notificación."
+      }
     },
-    "success": {
-      "settingsSaved": "Configuraciones guardadas con éxito",
-      "settingsReset": "Configuraciones restablecidas con éxito"
-    },
-    "errors": {
-      "saveSettings": "Error al guardar configuraciones",
-      "resetSettings": "Error al restablecer configuraciones"
+    "userProfile": {
+      "title": "Perfil de Usuario",
+      "username": "Nombre de Usuario",
+      "email": "Correo Electrónico",
+      "role": "Rol",
+      "phoneNumber": "Número de Teléfono",
+      "position": "Posición"
     }
   },
 
@@ -499,6 +592,11 @@ export const esTranslations = {
 
   "dashboard": {
     "title": "Panel de Control",
+    "goodMorning": "Buenos días",
+    "goodAfternoon": "Buenas tardes",
+    "goodEvening": "Buenas noches",
+    "user": "Usuario",
+    "welcomeMessage": "Bienvenido a su panel de control, donde puede gestionar las operaciones de su restaurante y seguir el rendimiento.",
     "salesOverview": {
       "title": "Resumen de Ventas",
       "description": "Ventas totales y rendimiento",
@@ -593,6 +691,74 @@ export const esTranslations = {
     "errors": {
       "sync": "Error al sincronizar el estado de la mesa",
       "closeOrder": "Error al cerrar el pedido"
+    }
+  },
+  "inventory": {
+    "pageTitle": "Inventario",
+    "searchPlaceholder": "Buscar en inventario...",
+    "noItemsFound": "No se encontraron items",
+    "categories": {
+      "drinks": "Bebidas",
+      "food": "Comida",
+      "menu_item": "Item del menú"
+    },
+    "formLabels": {
+      "name": "Nombre",
+      "category": "Categoría", 
+      "quantity": "Cantidad",
+      "unit": "Unidad",
+      "minQuantity": "Stock Mínimo",
+      "price": "Precio",
+      "actions": "Acciones",
+      "status": "Status"
+    },
+    "addItem": {
+      "title": "Agregar Item",
+      "description": "Agregar un nuevo item al inventario",
+      "namePlaceholder": "Ingrese el nombre del item",
+      "categoryPlaceholder": "Selecciona la categoría del item",
+      "quantityPlaceholder": "Ingrese cantidad",
+      "unitPlaceholder": "Ingrese unidad (e.g. kg, pcs)",
+      "minQuantityPlaceholder": "Ingrese cantidad mínima de stock",
+      "pricePlaceholder": "Ingrese precio del item",
+      "successToast": "{{itemName}} agregado al inventario",
+      "errorToast": "Error al agregar item al inventario",
+      "cancel": "Cancelar",
+      "descriptionPlaceholder": "Ingrese descripción del item"
+    },
+    "editItem": {
+      "title": "Editar Item",
+      "description": "Modificar los detalles de un item existente en el inventario",
+      "successToast": "{{itemName}} actualizado",
+      "errorToast": "Error al actualizar item del inventario",
+      "cancel": "Cancelar"
+    },
+    "deleteItem": {
+      "title": "Eliminar Item",
+      "description": "¿Estás seguro de que quieres eliminar {{itemName}}? Esta acción no se puede deshacer.",
+      "successToast": "Item del inventario eliminado",
+      "errorToast": "Error al eliminar item del inventario"
+    },
+    "status": {
+      "lowStock": "Bajo Stock",
+      "inStock": "En Stock"
+    },
+    "buttons": {
+      "addItem": "Agregar Item",
+      "editItem": "Editar Item",
+      "cancel": "Cancelar"
+    },
+    "errors": {
+      "fetchItems": "Error al cargar items del inventario",
+      "addItem": "Error al agregar item al inventario",
+      "deleteItem": "Error al eliminar item del inventario"
+    },
+    "noItems": "No hay items en el inventario",
+    "noMatchingItems": "No se encontraron items",
+    "initialLoad": {
+      "success": "Items del menú cargados exitosamente",
+      "description": "{{count}} items agregados al inventario",
+      "error": "Error al cargar items iniciales"
     }
   }
 };

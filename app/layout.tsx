@@ -76,10 +76,10 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     <LoginPage />
   ) : (
     <div className="flex min-h-screen">
-      <CollapsibleSidebar />
-      <main className="flex-1 overflow-x-hidden pl-0 md:pl-[250px] transition-all duration-300 pt-16 md:pt-0">
+      <main className="flex-1 overflow-x-hidden pl-0 md:pl-[250px] transition-all duration-300 pt-16 md:pt-0 pb-20 md:pb-0">
         {children}
       </main>
+      <CollapsibleSidebar />
     </div>
   )
 }

@@ -54,7 +54,12 @@ export const enTranslations = {
       "emptyState": {
         "title": "No records",
         "description": "No records have been added yet"
-      }
+      },
+      "emptyStateOrders": {
+        "title": "No Orders Found",
+        "description": "There are currently no orders in the system. Start creating new orders to see them here."
+      },
+      "loadingOrders": "Loading orders..."
     },
     "error": {
       "generic": "An error occurred",
@@ -150,7 +155,6 @@ export const enTranslations = {
     "filter": {
       "allStatuses": "All Statuses"
     },
-    
     "actions": {
       "view": "View",
       "updateStatus": "Update Status",
@@ -279,6 +283,7 @@ export const enTranslations = {
   },
 
   "tables": {
+    "actions": "Actions",
     "pageTitle": "Restaurant Tables",
     "tableMaps": {
       "title": "Table Maps",
@@ -296,7 +301,9 @@ export const enTranslations = {
       "deleteError": "Error deleting table map",
       "addTable": "Add Table",
       "noDescription": "No Description",
-      "viewMap": "View Map"
+      "viewMap": "View Map",
+      "loadingTitle": "Loading Table Map",
+      
     }
   },
 
@@ -351,63 +358,156 @@ export const enTranslations = {
 
   "settings": {
     "title": "Settings",
+    "system": {
+      "title": "System",
+      "description": "Manage advanced system settings and configurations"
+    },
     "profile": {
       "title": "Profile",
       "description": "Manage your personal information and account settings",
-      "personalInfo": "Personal Information",
-      "accountSettings": "Account Settings"
-    },
-    "notifications": {
-      "title": "Notifications",
-      "description": "Manage your notification preferences",
-      "emailNotifications": "Email Notifications",
-      "pushNotifications": "Push Notifications",
-      "smsNotifications": "SMS Notifications"
-    },
-    "language": {
-      "title": "Language",
-      "description": "Select your preferred application language",
-      "currentLanguage": "Current Language",
-      "availableLanguages": {
-        "portuguese": "Portuguese",
-        "spanish": "Spanish",
-        "english": "English"
+      "actions": {
+        "uploadPhoto": "Upload Photo",
+        "submit": "Save Changes",
+        "submitting": "Saving...",
+        "profileUpdated": "Profile Updated",
+        "profileUpdateSuccess": "Your profile has been successfully updated.",
+        "profileUpdateFailed": "Profile Update Failed",
+        "profileUpdateError": "An error occurred while updating your profile."
+      },
+      "fields": {
+        "username": "Username",
+        "email": {
+          "label": "Email",
+          "cannotBeChanged": "This email cannot be changed"
+        },
+        "phoneNumber": "Phone Number",
+        "position": {
+          "label": "Position",
+          "placeholder": "Enter your position"
+        },
+        "role": {
+          "label": "Role",
+          "placeholder": "Select your role",
+          "options": {
+            "admin": "Admin",
+            "manager": "Manager", 
+            "chef": "Chef",
+            "waiter": "Waiter"
+          }
+        }
       }
     },
     "appearance": {
       "title": "Appearance",
-      "description": "Customize the application's appearance",
-      "theme": {
-        "light": "Light",
-        "dark": "Dark",
-        "system": "System"
+      "description": "Customize the application's look and feel",
+      "modes": {
+        "light": {
+          "label": "Light Mode"
+        },
+        "dark": {
+          "label": "Dark Mode"
+        },
+        "system": {
+          "label": "System Default"
+        }
       },
-      "colorScheme": "Color Scheme"
+      "actions": {
+        "save": "Save Changes",
+        "saving": "Saving...",
+        "saved": {
+          "title": "Appearance Updated",
+          "description": "Your appearance preferences have been successfully updated."
+        },
+        "failed": {
+          "title": "Update Failed",
+          "description": "An error occurred while updating your appearance preferences."
+        }
+      }
     },
-    "system": {
-      "title": "System",
-      "description": "Advanced system settings",
-      "dataUsage": "Data Usage",
-      "performanceSettings": "Performance Settings",
-      "resetSettings": "Reset Settings"
+    "language": {
+      "title": "Language",
+      "description": "Select your preferred application language",
+      "languages": {
+        "en": "English",
+        "es": "Spanish",
+        "pt": "Portuguese"
+      },
+      "actions": {
+        "submit": "Save Changes",
+        "saving": "Saving...",
+        "profileUpdated": "Language Preference Updated",
+        "profileUpdateSuccess": "Your language preference has been successfully updated.",
+        "profileUpdateFailed": "Update Failed",
+        "profileUpdateError": "An error occurred while updating your language preference."
+      }
     },
-    "buttons": {
-      "save": "Save Changes",
-      "cancel": "Cancel",
-      "reset": "Reset"
+    "notifications": {
+      "title": "Notifications",
+      "description": "Manage your notification preferences and delivery methods",
+      "types": {
+        "title": "Notification Types",
+        "newOrders": {
+          "label": "New Orders",
+          "description": "Receive notifications for new incoming orders"
+        },
+        "orderUpdates": {
+          "label": "Order Updates",
+          "description": "Get updates on the status of existing orders"
+        },
+        "inventoryAlerts": {
+          "label": "Inventory Alerts",
+          "description": "Notifications about low stock or inventory changes"
+        },
+        "systemAnnouncements": {
+          "label": "System Announcements",
+          "description": "Important updates and announcements from the system"
+        },
+        "dailyReports": {
+          "label": "Daily Reports",
+          "description": "Receive daily summary reports"
+        }
+      },
+      "deliveryMethods": {
+        "title": "Delivery Methods",
+        "emailNotifications": {
+          "label": "Email Notifications",
+          "description": "Receive notifications via email"
+        },
+        "pushNotifications": {
+          "label": "Push Notifications",
+          "description": "Get real-time alerts on your device"
+        },
+        "soundAlerts": {
+          "label": "Sound Alerts",
+          "description": "Play sound notifications when new events occur"
+        }
+      },
+      "actions": {
+        "submit": "Save Changes",
+        "submitting": "Saving...",
+        "profileUpdated": "Notification Preferences Updated",
+        "profileUpdateSuccess": "Your notification preferences have been successfully updated.",
+        "profileUpdateFailed": "Update Failed",
+        "profileUpdateError": "An error occurred while updating your notification preferences."
+      }
     },
-    "success": {
-      "settingsSaved": "Settings saved successfully",
-      "settingsReset": "Settings reset successfully"
-    },
-    "errors": {
-      "saveSettings": "Error saving settings",
-      "resetSettings": "Error resetting settings"
+    "userProfile": {
+      "title": "User Profile",
+      "username": "Username",
+      "email": "Email",
+      "role": "Role",
+      "phoneNumber": "Phone Number",
+      "position": "Position"
     }
   },
 
   "dashboard": {
     "title": "Dashboard",
+    "goodMorning": "Good morning",
+    "goodAfternoon": "Good afternoon",
+    "goodEvening": "Good evening",
+    "user": "User",
+    "welcomeMessage": "Welcome to your dashboard, where you can manage your restaurant's operations and track performance.",
     "salesOverview": {
       "title": "Sales Overview",
       "description": "Total sales and performance",
@@ -515,6 +615,74 @@ export const enTranslations = {
     "debit": "Debit Card",
     "transfer": "Bank Transfer",
     "other": "Other"
+  },
+  "inventory": {
+    "pageTitle": "Inventory",
+    "searchPlaceholder": "Search in inventory...",
+    "noItemsFound": "No items found",
+    "categories": {
+      "drinks": "Drinks",
+      "food": "Food",
+      "menu_item": "Menu Item"
+    },
+    "formLabels": {
+      "name": "Name",
+      "category": "Category", 
+      "quantity": "Quantity",
+      "unit": "Unit",
+      "minQuantity": "Minimum Stock",
+      "price": "Price",
+      "actions": "Actions",
+      "status": "Status"
+    },
+    "addItem": {
+      "title": "Add Item",
+      "description": "Add a new item to the inventory",
+      "namePlaceholder": "Enter item name",
+      "categoryPlaceholder": "Select item category",
+      "quantityPlaceholder": "Enter quantity",
+      "unitPlaceholder": "Enter unit (e.g. kg, pcs)",
+      "minQuantityPlaceholder": "Enter minimum stock quantity",
+      "pricePlaceholder": "Enter item price",
+      "successToast": "{{itemName}} was added to inventory",
+      "errorToast": "Failed to add inventory item",
+      "cancel": "Cancel",
+      "descriptionPlaceholder": "Enter item description"
+    },
+    "editItem": {
+      "title": "Edit Item",
+      "description": "Modify the details of an existing inventory item",
+      "successToast": "{{itemName}} was updated",
+      "errorToast": "Failed to update inventory item",
+      "cancel": "Cancel"
+    },
+    "deleteItem": {
+      "title": "Delete Item",
+      "description": "Are you sure you want to delete {{itemName}}? This action cannot be undone.",
+      "successToast": "Inventory item deleted",
+      "errorToast": "Failed to delete inventory item"
+    },
+    "status": {
+      "lowStock": "Low Stock",
+      "inStock": "In Stock"
+    },
+    "buttons": {
+      "addItem": "Add Item",
+      "editItem": "Edit Item",
+      "cancel": "Cancel"
+    },
+    "errors": {
+      "fetchItems": "Failed to fetch inventory items",
+      "addItem": "Failed to add inventory item",
+      "deleteItem": "Failed to delete inventory item"
+    },
+    "noItems": "No items in inventory",
+    "noMatchingItems": "No items found",
+    "initialLoad": {
+      "success": "Menu items loaded successfully",
+      "description": "{{count}} items added to inventory",
+      "error": "Failed to load initial items"
+    }
   },
 
   // Add the rest of the translations following the Portuguese structure

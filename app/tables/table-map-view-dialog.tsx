@@ -163,6 +163,9 @@ export default function TableMapViewDialog({
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="sr-only">{t('tables.tableMaps.loadingTitle')}</DialogTitle>
+          </DialogHeader>
           <div>{t('commons.loading')}</div>
         </DialogContent>
       </Dialog>

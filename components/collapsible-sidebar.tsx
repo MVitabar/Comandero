@@ -230,11 +230,11 @@ export function CollapsibleSidebar() {
       requiredPermission: 'orders'
     },
     {
-      name: t("sidebar.menu"),
-      href: "/menu",
+      name: t("sidebar.tables"),
+      href: "/tables",
       icon: TableIcon,
       mobileIcon: TableIcon,
-      requiredPermission: 'menu'
+      requiredPermission: 'tables'
     },
     {
       name: t("sidebar.inventory"),
@@ -244,11 +244,11 @@ export function CollapsibleSidebar() {
       requiredPermission: 'inventory'
     },
     {
-      name: t("sidebar.staff"),
-      href: "/staff",
+      name: t("sidebar.users"),
+      href: "/users",
       icon: Users,
       mobileIcon: Users,
-      requiredPermission: 'staff'
+      requiredPermission: 'users-management'
     },
     {
       name: t("sidebar.settings"),

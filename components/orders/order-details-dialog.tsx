@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Order } from '@/types'
 import { useRouter } from 'next/navigation'
+import { useI18n } from '@/components/i18n-provider'
 
 interface OrderDetailsDialogProps {
   order: Order
@@ -24,6 +25,7 @@ export function OrderDetailsDialog({
   onOpenChange 
 }: OrderDetailsDialogProps) {
   const router = useRouter()
+  const { t, i18n } = useI18n()
 
   const handleEditOrder = () => {
     // Navigate to order edit page or open edit modal
@@ -34,27 +36,27 @@ export function OrderDetailsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Detalhes do Pedido</DialogTitle>
+          <DialogTitle>{t("orders.details.title")}</DialogTitle>
           <DialogDescription>
-            Informações completas sobre o pedido
+            {t("orders.details.description")}
           </DialogDescription>
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <span className="text-sm font-medium">Número da Mesa:</span>
-            <span className="col-span-3">{order.tableNumber || 'N/A'}</span>
+            <span className="text-sm font-medium">{t("orders.details.tableNumber")}:</span>
+            <span className="col-span-3">{order.tableNumber || t("commons.notAvailable")}</span>
           </div>
           
           <div className="grid grid-cols-4 items-center gap-4">
-            <span className="text-sm font-medium">Status:</span>
+            <span className="text-sm font-medium">{t("orders.details.status")}:</span>
             <span className="col-span-3">{order.status}</span>
           </div>
           
           <div className="grid grid-cols-4 items-center gap-4">
-            <span className="text-sm font-medium">Total:</span>
+            <span className="text-sm font-medium">{t("orders.details.total")}:</span>
             <span className="col-span-3">
-              {new Intl.NumberFormat('pt-BR', { 
+              {new Intl.NumberFormat(i18n.language, { 
                 style: 'currency', 
                 currency: 'BRL' 
               }).format(order.total)}
@@ -62,13 +64,13 @@ export function OrderDetailsDialog({
           </div>
           
           <div className="grid grid-cols-4 items-center gap-4">
-            <span className="text-sm font-medium">Itens:</span>
+            <span className="text-sm font-medium">{t("orders.details.items")}:</span>
             <div className="col-span-3">
               {order.items.map((item, index) => (
                 <div key={index} className="flex justify-between">
                   <span>{item.name}</span>
                   <span>
-                    {item.quantity} x {new Intl.NumberFormat('pt-BR', { 
+                    {item.quantity} x {new Intl.NumberFormat(i18n.language, { 
                       style: 'currency', 
                       currency: 'BRL' 
                     }).format(item.price)}
@@ -84,9 +86,8 @@ export function OrderDetailsDialog({
             variant="outline" 
             onClick={() => onOpenChange(false)}
           >
-            Fechar
+            {t("commons.close")}
           </Button>
-          
         </DialogFooter>
       </DialogContent>
     </Dialog>
