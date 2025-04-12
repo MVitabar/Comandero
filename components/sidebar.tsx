@@ -8,6 +8,7 @@ import { useAuth } from "./auth-provider"
 import { signOut } from "firebase/auth"
 import { useFirebase } from "./firebase-provider"
 import { useToast } from "@/components/ui/use-toast"
+import { usePermissions } from "@/hooks/usePermissions"
 import {
   LayoutDashboard,
   ClipboardList,
@@ -30,6 +31,7 @@ export function Sidebar() {
   const { user } = useAuth()
   const { auth } = useFirebase()
   const { toast } = useToast()
+  const { canView } = usePermissions()
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
 
@@ -97,43 +99,75 @@ export function Sidebar() {
     }
   }
 
+  // Establishment name from user's profile or restaurant settings
+  const establishmentName = user?.name || user?.restaurantName || user?.currentEstablishmentName || "Comandero"
+  
+  // Detailed debug logging
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      console.group('🏠 Sidebar Establishment Name Debug')
+      console.log('Full User Object:', user)
+      console.log('Establishment Name:', establishmentName)
+      console.log('User Properties:', {
+        name: user?.name,
+        restaurantName: user?.restaurantName,
+        currentEstablishmentName: user?.currentEstablishmentName
+      })
+      console.groupEnd()
+    }
+  }, [user])
+
   const navItems = [
     {
-      name: t("sidebar.dashboard"),
+      name: pathname === "/dashboard" 
+        ? `${t("sidebar.welcome")} ${user?.displayName || user?.email?.split('@')[0] || ""}` 
+        : t("sidebar.dashboard"),
       href: "/dashboard",
       icon: LayoutDashboard,
+      requiredPermission: 'dashboard'
     },
     {
       name: t("sidebar.orders"),
       href: "/orders",
       icon: ClipboardList,
+      requiredPermission: 'orders'
     },
     {
       name: t("sidebar.tables"),
       href: "/tables",
       icon: FileSpreadsheet,
+      requiredPermission: 'tables'
     },
     {
       name: t("sidebar.inventory"),
       href: "/inventory",
       icon: Package,
+      requiredPermission: 'inventory'
     },
     {
       name: t("sidebar.users"),
       href: "/users",
       icon: Users,
+      requiredPermission: 'users-management'
     },
     {
       name: t("sidebar.advancedReports"),
       href: "/advanced-reports",
       icon: FileSpreadsheet,
+      requiredPermission: 'reports'
     },
     {
       name: t("sidebar.settings"),
       href: "/settings",
       icon: Settings,
+      requiredPermission: 'settings'
     },
   ]
+
+  // Filter navigation items based on user permissions
+  const filteredNavItems = navItems.filter(item => 
+    canView(item.requiredPermission)
+  )
 
   if (!user) return null
 
@@ -158,11 +192,12 @@ export function Sidebar() {
       >
         <div className="flex flex-col h-full">
           <div className="p-4 border-b">
-            <h2 className="text-xl font-bold">Restaurant PWA</h2>
+            <h2 className="text-xl font-bold">{establishmentName}</h2>
+            <p className="text-sm text-muted-foreground">{user.role?.toUpperCase()}</p>
           </div>
 
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-            {navItems.map((item) => (
+            {filteredNavItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}

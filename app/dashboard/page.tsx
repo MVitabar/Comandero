@@ -178,6 +178,17 @@ export default function DashboardPage() {
     }
   }
 
+  // Determine greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours()
+    if (hour < 12) return t("dashboard.goodMorning")
+    if (hour < 18) return t("dashboard.goodAfternoon")
+    return t("dashboard.goodEvening")
+  }
+
+  // Get user's display name or first part of email
+  const userName = user?.displayName || user?.email?.split('@')[0] || t("dashboard.user")
+
   // Stock status icon component
   const StockStatusIcon = ({ status }: { status: 'critical' | 'warning' | 'healthy' }) => {
     switch (status) {
@@ -196,6 +207,18 @@ export default function DashboardPage() {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Personalized Welcome Section */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">
+          {getGreeting()}, {userName}!
+        </h1>
+        <p className="text-muted-foreground mt-2">
+          {t("dashboard.welcomeMessage", { 
+            restaurantName: user?.currentEstablishmentName || user?.restaurantName || t("dashboard.yourRestaurant") 
+          })}
+        </p>
+      </div>
+
       <h1 className="text-3xl font-bold">{t("dashboard.title")}</h1>
 
       <div className="grid gap-6 md:grid-cols-3">

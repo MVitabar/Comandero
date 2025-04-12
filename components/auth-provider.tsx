@@ -190,14 +190,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const userData = globalUserDoc.data()
+      const currentEstablishmentName = userData?.currentEstablishmentName || 'restaurante-milenio'
+
+      // Fetch establishment details
+      let establishmentName = currentEstablishmentName
+      const establishmentRef = doc(db, 'establishments', establishmentName, 'info', 'details')
+      const establishmentDoc = await getDoc(establishmentRef)
+      
+      if (establishmentDoc.exists()) {
+        // Prioritize the name from the establishment document
+        establishmentName = establishmentDoc.data()?.name || establishmentName
+      }
 
       const customUser: User = {
         ...firebaseUser,
         uid: firebaseUser.uid,
         email: firebaseUser.email || '',
-        username: userData?.username || await generateUniqueUsername(firebaseUser.email || '', userData?.currentEstablishmentName || ''),
+        username: userData?.username || await generateUniqueUsername(firebaseUser.email || '', currentEstablishmentName),
         role: userData?.role || UserRole.Staff,
-        currentEstablishmentName: userData?.currentEstablishmentName,
+        currentEstablishmentName,
+        name: establishmentName, // Use the fetched establishment name
+        restaurantName: establishmentName, // Add this for compatibility
         status: userData?.status || 'active',
         createdAt: userData?.createdAt || new Date(),
         phoneNumber: userData?.phoneNumber || firebaseUser.phoneNumber,
@@ -213,6 +226,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await signUp(email, password, establishmentName)
         }
       }
+
+      console.log('Fetched User Details:', customUser)
 
       return customUser
     } catch (error) {

@@ -52,6 +52,9 @@ export interface User {
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   signUp: (email: string, password: string, establishmentName?: string) => Promise<void>
+  displayName?: string | null
+  restaurantName?: string
+  name?: string
 }
 
 // Inventory Management
