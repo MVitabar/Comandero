@@ -5,8 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { signInWithEmailAndPassword } from "firebase/auth"
-import { useFirebase } from "@/components/firebase-provider"
+import { useAuth } from "@/components/auth-provider"
 import { useI18n } from "@/components/i18n-provider"
 import { useToast } from "@/components/ui/use-toast"
 import { Button } from "@/components/ui/button"
@@ -24,80 +23,76 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const { auth } = useFirebase()
+  const { login } = useAuth()
   const { t } = useI18n()
   const { toast } = useToast()
   const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    // Reset errors
+    setLoading(true)
     setErrors({})
 
     // Validate form
-    let hasErrors = false
     const newErrors: Record<string, string> = {}
 
     if (!email) {
       newErrors.email = t("login.emailRequired")
-      hasErrors = true
+    } else if (!email.includes('@')) {
+      newErrors.email = t("login.invalidEmailFormat")
     }
 
     if (!password) {
       newErrors.password = t("login.passwordRequired")
-      hasErrors = true
     }
 
-    if (hasErrors) {
+    // If validation errors exist, stop and show errors
+    if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
+      setLoading(false)
       return
     }
-
-    if (!auth) {
-      toast({
-        title: t("commons.error"),
-        description: t("commons.auth.serviceUnavailable"),
-        variant: "destructive",
-      })
-      return
-    }
-
-    setLoading(true)
 
     try {
-      await signInWithEmailAndPassword(auth, email, password)
-      router.push("/dashboard")
-    } catch (error: any) {
-      console.error("Login error:", error)
+      const result = await login(email, password)
 
-      // Handle specific Firebase errors
-      if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password") {
+      if (result.success) {
         toast({
-          title: t("login.title"),
-          description: t("login.error.invalidCredentials"),
-          variant: "destructive",
+          title: t("login.success"),
+          description: t("login.welcomeBack"),
+          variant: "default"
         })
-      } else if (error.code === "auth/too-many-requests") {
-        toast({
-          title: t("login.title"),
-          description: t("login.error.tooManyAttempts"),
-          variant: "destructive",
-        })
+        router.push("/dashboard")
       } else {
+        // Handle specific error cases
+        setErrors({ 
+          form: result.error || t("login.unexpectedError")
+        })
+        
         toast({
-          title: t("login.title"),
-          description: t("login.error.unknown"),
-          variant: "destructive",
+          title: t("login.error"),
+          description: result.error || t("login.unexpectedError"),
+          variant: "destructive"
         })
       }
+    } catch (error) {
+      console.error("Login error:", error)
+      setErrors({ 
+        form: t("login.unexpectedError")
+      })
+      
+      toast({
+        title: t("login.error"),
+        description: t("login.unexpectedError"),
+        variant: "destructive"
+      })
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
       </div>
@@ -105,64 +100,82 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>{t("login.title")}</CardTitle>
-          <CardDescription>{t("login.description")}</CardDescription>
+          <CardDescription>{t("login.subtitle")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
+            {errors.form && (
+              <div className="text-red-500 text-sm mb-4">
+                {errors.form}
+              </div>
+            )}
+            
             <div className="space-y-2">
-              <Label htmlFor="email">{t("login.email")}</Label>
+              <Label htmlFor="email">{t("login.emailLabel")}</Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={errors.email ? "border-red-500" : ""}
+                placeholder={t("login.emailPlaceholder")}
                 disabled={loading}
-                required
+                className={errors.email ? "border-red-500" : ""}
               />
-              {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
+              {errors.email && (
+                <p className="text-red-500 text-sm">{errors.email}</p>
+              )}
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="password">{t("login.password")}</Label>
+              <Label htmlFor="password">{t("login.passwordLabel")}</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={errors.password ? "border-red-500 pr-10" : "pr-10"}
+                  placeholder={t("login.passwordPlaceholder")}
                   disabled={loading}
-                  required
+                  className={errors.password ? "border-red-500" : ""}
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
                   onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? t("commons.passwordVisibility.hide") : t("commons.passwordVisibility.show")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
-              {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
+              {errors.password && (
+                <p className="text-red-500 text-sm">{errors.password}</p>
+              )}
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={loading}
+            >
               {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t("commons.login.button.loggingIn")}
-                </>
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t("login.loading")}</>
               ) : (
-                t("login.login")
+                t("login.submit")
               )}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
+          <Link 
+            href="/forgot-password" 
+            className="text-sm text-blue-600 hover:underline"
+          >
             {t("login.forgotPassword")}
           </Link>
-          <Link href="/register" className="text-sm text-blue-600 hover:underline">
-            {t("register.submit")}
+          <Link 
+            href="/register" 
+            className="text-sm text-blue-600 hover:underline"
+          >
+            {t("login.registerLink")}
           </Link>
         </CardFooter>
       </Card>

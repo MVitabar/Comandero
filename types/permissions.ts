@@ -4,7 +4,8 @@ export enum UserRole {
   ADMIN = 'admin',
   MANAGER = 'manager', 
   CHEF = 'chef',
-  WAITER = 'waiter'
+  WAITER = 'waiter',
+  BARMAN = 'barman'
 }
 
 export interface RolePermissions {
@@ -122,6 +123,27 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
       manageTables: false,
       modifyInventory: false,
       viewOrderDetails: true
+    }
+  },
+  [UserRole.BARMAN]: {
+    views: [
+      'orders',
+      'menu-management'
+    ],
+    actions: {
+      createUser: false,
+      deleteUser: false,
+      editUser: false,
+      createOrder: false,
+      cancelOrder: false,
+      modifyMenu: false,
+      modifyPrices: false,
+      generateReports: false,
+      manageTables: false,
+      modifyInventory: false,
+      updateOrderStatus: true,
+      viewOrderDetails: true,
+      prepareDrinks: true
     }
   }
 }

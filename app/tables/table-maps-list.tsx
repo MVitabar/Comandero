@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { collection, getDocs, query, where, doc } from 'firebase/firestore'
+import { collection, getDocs, query, where, doc, onSnapshot, deleteDoc } from 'firebase/firestore'
 import { useFirebase } from '@/components/firebase-provider'
 import { useAuth } from '@/components/auth-provider'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,19 @@ import { Plus, Edit, Trash2, Eye } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import TableDialog from './table-dialog'
 import TableMapViewDialog from './table-map-view-dialog'
+import TableMapDialog from './table-map-dialog'
+import { toast } from '@/components/ui/use-toast'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 // Define TableMap interface
 export interface TableMap {
@@ -31,6 +44,7 @@ export interface RestaurantTable {
   x?: number
   y?: number
   tableMapId: string
+  restaurantId?: string
   status: 'available' | 'occupied' | 'reserved'
 }
 
@@ -47,42 +61,43 @@ export default function TableMapsList({ onCreateMap }: TableMapsListProps) {
   const [selectedTableMap, setSelectedTableMap] = useState<TableMap | null>(null)
   const [isTableDialogOpen, setIsTableDialogOpen] = useState(false)
   const [isTableMapViewDialogOpen, setIsTableMapViewDialogOpen] = useState(false)
+  const [editingMap, setEditingMap] = useState<TableMap | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [tableToDelete, setTableToDelete] = useState<TableMap | null>(null)
 
   useEffect(() => {
-    async function fetchTableMaps() {
-      if (!db || !user) {
-        console.log('Debug: Missing db or user', { db: !!db, user: !!user })
-        setIsLoading(false)
-        return
-      }
+    if (!db || !user) return
 
-      try {
-        const restaurantId = user.uid
-        console.log('Debug: Fetching table maps for restaurantId:', restaurantId)
-        const q = query(collection(db, `restaurants/${restaurantId}/tableMaps`))
-        const querySnapshot = await getDocs(q)
-        
-        console.log('Debug: Query snapshot size:', querySnapshot.size)
-        const maps = querySnapshot.docs.map(doc => {
-          const mapData = {
-            id: doc.id,
-            ...doc.data()
-          } as TableMap
-          console.log('Debug: Individual map:', mapData)
-          return mapData
+    const restaurantId = user.establishmentId || user.uid
+    const tableMapCollectionRef = collection(db, `restaurants/${restaurantId}/tableMaps`)
+
+    // Create a real-time listener
+    const unsubscribe = onSnapshot(
+      tableMapCollectionRef, 
+      (snapshot) => {
+        const fetchedTableMaps: TableMap[] = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as TableMap))
+
+        // Remove debug logging
+        setTableMaps(fetchedTableMaps)
+        setIsLoading(false)
+      },
+      (error) => {
+        console.error('Error fetching table maps in real-time:', error)
+        setIsLoading(false)
+        toast({
+          title: t('common.error'),
+          description: t('tables.tableMaps.fetchError'),
+          variant: 'destructive'
         })
-
-        console.log('Debug: Fetched maps:', maps)
-        setTableMaps(maps)
-        setIsLoading(false)
-      } catch (error) {
-        console.error('Error fetching table maps:', error)
-        setIsLoading(false)
       }
-    }
+    )
 
-    fetchTableMaps()
-  }, [db, user])
+    // Cleanup subscription on component unmount
+    return () => unsubscribe()
+  }, [db, user, t])
 
   const handleAddTables = (tableMap: TableMap) => {
     setSelectedTableMap(tableMap)
@@ -92,6 +107,43 @@ export default function TableMapsList({ onCreateMap }: TableMapsListProps) {
   const handleViewTableMap = (tableMap: TableMap) => {
     setSelectedTableMap(tableMap)
     setIsTableMapViewDialogOpen(true)
+  }
+
+  const handleEditMap = (map: TableMap) => {
+    setEditingMap(map)
+    setIsEditModalOpen(true)
+  }
+
+  const handleCloseEditModal = () => {
+    setEditingMap(null)
+    setIsEditModalOpen(false)
+  }
+
+  const handleDeleteTableMap = async () => {
+    if (!db || !user || !tableToDelete) return
+
+    try {
+      const restaurantId = user.establishmentId || user.uid
+      const tableMapRef = doc(db, `restaurants/${restaurantId}/tableMaps`, tableToDelete.id)
+      
+      await deleteDoc(tableMapRef)
+
+      toast({
+        title: t('tableMaps.delete.success'),
+        description: `${tableToDelete.name} ${t('commons.deleted')}`,
+        variant: 'default'
+      })
+
+      // Reset the tableToDelete state
+      setTableToDelete(null)
+    } catch (error) {
+      console.error('Error deleting table map:', error)
+      toast({
+        title: t('common.error'),
+        description: t('tableMaps.delete.error'),
+        variant: 'destructive'
+      })
+    }
   }
 
   if (isLoading) {
@@ -149,17 +201,43 @@ export default function TableMapsList({ onCreateMap }: TableMapsListProps) {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => {/* Edit map */}}
+                      onClick={() => handleEditMap(map)}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button 
-                      variant="destructive" 
-                      size="sm" 
-                      onClick={() => {/* Delete map */}}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => setTableToDelete(map)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            {t('tableMaps.delete.confirmTitle')}
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            {t('tableMaps.delete.confirmDescription', { 
+                              name: tableToDelete?.name 
+                            })}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>
+                            {t('commons.cancel')}
+                          </AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={handleDeleteTableMap}
+                          >
+                            {t('commons.delete')}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </TableCell>
               </TableRow>
@@ -181,6 +259,14 @@ export default function TableMapsList({ onCreateMap }: TableMapsListProps) {
             tableMap={selectedTableMap}
           />
         </>
+      )}
+
+      {isEditModalOpen && editingMap && (
+        <TableMapDialog 
+          isOpen={isEditModalOpen} 
+          onClose={handleCloseEditModal} 
+          initialData={editingMap} 
+        />
       )}
     </div>
   )

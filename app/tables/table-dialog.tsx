@@ -9,12 +9,14 @@ import { useTranslation } from 'react-i18next'
 import { TableMap, RestaurantTable } from './table-maps-list'
 import { useFirebase } from '@/components/firebase-provider'
 import { useAuth } from '@/components/auth-provider'
-import { addDoc, collection, doc, query, where, getDocs } from 'firebase/firestore'
+import { doc, updateDoc, arrayUnion, getDoc, setDoc, writeBatch } from 'firebase/firestore'
 import { toast } from '@/components/ui/use-toast'
+import { v4 as uuidv4 } from 'uuid'
 
 interface TableDialogProps {
   isOpen: boolean
   onClose: () => void
+  
   tableMap: TableMap
 }
 
@@ -35,12 +37,19 @@ export default function TableDialog({
       if (!db || !user) return
 
       try {
-        const restaurantId = user.uid
-        const tablesCollectionRef = collection(db, `restaurants/${restaurantId}/tables`)
-        const q = query(tablesCollectionRef, where('tableMapId', '==', tableMap.id))
-        const querySnapshot = await getDocs(q)
+        const restaurantId = user.establishmentId || user.uid
+        const tableMapRef = doc(db, `restaurants/${restaurantId}/tableMaps`, tableMap.id)
+        const tableMapSnapshot = await getDoc(tableMapRef)
         
-        const tableCount = querySnapshot.size
+        if (!tableMapSnapshot.exists()) {
+          console.error('Table map not found')
+          return
+        }
+
+        const tableMapData = tableMapSnapshot.data()
+        const existingTables = tableMapData?.layout?.tables || []
+        
+        const tableCount = existingTables.length
         const newTableNumber = tableCount + 1
         setTableName(`Mesa ${newTableNumber}`)
       } catch (error) {
@@ -48,10 +57,82 @@ export default function TableDialog({
       }
     }
 
-    if (isOpen) {
-      generateTableName()
+    generateTableName()
+  }, [db, user, tableMap])
+
+  const handleCreateTable = async () => {
+    if (!db || !user) return
+
+    try {
+      setIsLoading(true)
+      const restaurantId = user.establishmentId || user.uid
+      const tableMapRef = doc(db, `restaurants/${restaurantId}/tableMaps`, tableMap.id)
+      
+      // Fetch the current table map to get the latest layout
+      const tableMapSnapshot = await getDoc(tableMapRef)
+      
+      // If table map doesn't exist, create it with initial layout
+      if (!tableMapSnapshot.exists()) {
+        await setDoc(tableMapRef, {
+          id: tableMap.id,
+          name: tableMap.name,
+          layout: { tables: [] },
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }, { merge: true })
+      }
+
+      // Generate a unique ID for the new table
+      const newTableId = uuidv4()
+
+      // Fetch the updated snapshot to get the latest data
+      const updatedTableMapSnapshot = await getDoc(tableMapRef)
+      const tableMapData = updatedTableMapSnapshot.data()
+      const existingTables = tableMapData?.layout?.tables || []
+      
+      // Determine the next table number
+      const tableCount = existingTables.length
+      const newTableNumber = tableCount + 1
+      const generatedTableName = `Mesa ${newTableNumber}`
+
+      const newTable: RestaurantTable = {
+        id: newTableId,
+        name: tableName || generatedTableName,
+        capacity: tableCapacity,
+        tableMapId: tableMap.id,
+        status: 'available',
+        x: 0, 
+        y: 0, 
+        restaurantId: restaurantId 
+      }
+
+      // Update the table map's layout to include the new table
+      await updateDoc(tableMapRef, {
+        'layout.tables': arrayUnion(newTable),
+        updatedAt: new Date()
+      })
+
+      toast({
+        title: t("tableDialog.success.create"),
+        description: `${newTable.name} ${t("commons.created")}`,
+        variant: 'default'
+      })
+
+      // Reset form and close dialog
+      setTableName('')
+      setTableCapacity(2)
+      onClose()
+    } catch (error) {
+      console.error('Error creating table:', error)
+      toast({
+        title: t("common.error"),
+        description: t("tableDialog.error.create"),
+        variant: 'destructive'
+      })
+    } finally {
+      setIsLoading(false)
     }
-  }, [db, user, isOpen, tableMap.id])
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -105,72 +186,7 @@ export default function TableDialog({
           <Button 
             type="submit" 
             disabled={isLoading} 
-            onClick={async () => {
-              if (!db || !user) {
-                toast({
-                  title: 'Error',
-                  description: t("commons.error.unauthorized"),
-                  variant: 'destructive'
-                })
-                return
-              }
-
-              if (tableCapacity <= 0) {
-                toast({
-                  title: 'Error',
-                  description: t("tableDialog.errors.invalidCapacity"),
-                  variant: 'destructive'
-                })
-                return
-              }
-
-              setIsLoading(true)
-              try {
-                const restaurantId = user.uid
-                const tablesCollectionRef = collection(db, `restaurants/${restaurantId}/tables`)
-                const newTable: RestaurantTable = {
-                  name: tableName,
-                  capacity: tableCapacity,
-                  tableMapId: tableMap.id,
-                  status: 'available'
-                }
-
-                console.log('Debug: Creating Table', {
-                  restaurantId,
-                  collectionPath: tablesCollectionRef.path,
-                  tableData: {
-                    name: tableName,
-                    capacity: tableCapacity,
-                    tableMapId: tableMap.id,
-                    status: 'available'
-                  }
-                })
-
-                const docRef = await addDoc(tablesCollectionRef, newTable)
-
-                console.log('Debug: Table Created', {
-                  docId: docRef.id,
-                  tableData: newTable
-                })
-
-                toast({
-                  title: t("tableDialog.success.create"),
-                  description: `${tableName} ${t("commons.created")}`,
-                  variant: 'default'
-                })
-
-                onClose()
-              } catch (error) {
-                console.error('Error creating table:', error)
-                toast({
-                  title: 'Error',
-                  description: t("tableDialog.errors.create"),
-                  variant: 'destructive'
-                })
-              } finally {
-                setIsLoading(false)
-              }
-            }}
+            onClick={handleCreateTable}
           >
             {t("tableDialog.actions.create")}
           </Button>

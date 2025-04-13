@@ -25,6 +25,30 @@ export default function NewOrderPage() {
   const { toast } = useToast()
   const router = useRouter()
 
+  // Utility function to remove undefined values from an object
+  const removeUndefinedValues = (obj: Record<string, any>): Record<string, any> => {
+    const cleanedObj: Record<string, any> = {};
+    
+    Object.keys(obj).forEach(key => {
+      // Check if the value is not undefined
+      if (obj[key] !== undefined) {
+        // If the value is an object, recursively clean it
+        if (typeof obj[key] === 'object' && obj[key] !== null) {
+          const cleanedNestedObj = removeUndefinedValues(obj[key]);
+          
+          // Only add the nested object if it's not empty
+          if (Object.keys(cleanedNestedObj).length > 0) {
+            cleanedObj[key] = cleanedNestedObj;
+          }
+        } else {
+          cleanedObj[key] = obj[key];
+        }
+      }
+    });
+    
+    return cleanedObj;
+  };
+
   const handleCreateOrder = async (order: Order) => {
     if (!db || !user) {
       toast({
@@ -35,15 +59,38 @@ export default function NewOrderPage() {
       return
     }
 
+    // Validate establishmentId before proceeding
+    if (!user.establishmentId) {
+      console.error('No establishment ID found for user')
+      toast({
+        title: "Erro ao Criar Pedido",
+        description: "Não foi possível criar o pedido: Estabelecimento não identificado",
+        variant: "destructive"
+      })
+      return
+    }
+
     try {
-      const ordersRef = collection(db, 'restaurants', user.uid, 'orders')
-      await addDoc(ordersRef, order)
+      const ordersRef = collection(db, 'restaurants', user.establishmentId, 'orders')
+      
+      // Remove undefined values from the order
+      const cleanedOrder = removeUndefinedValues(order);
+
+      const newOrderRef = await addDoc(ordersRef, {
+        ...cleanedOrder,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        status: cleanedOrder.status || 'pending'
+      })
 
       toast({
         title: "Pedido Criado",
         description: "Pedido criado com sucesso",
         variant: "default"
       })
+
+      // Optional: Navigate back to orders page or show order details
+      router.push('/orders')
     } catch (error) {
       console.error("Error creating order:", error)
       toast({

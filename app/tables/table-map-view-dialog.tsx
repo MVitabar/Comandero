@@ -6,12 +6,13 @@ import { Button } from '@/components/ui/button'
 import { useTranslation } from 'react-i18next'
 import { TableMap } from './table-maps-list'
 import { useFirebase } from '@/components/firebase-provider'
-import { collection, getDocs, query, where } from 'firebase/firestore'
+import { doc, getDoc, collection, addDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { TableCard } from '@/components/table-card'
 import { Order } from '@/types'
 import { useAuth } from '@/components/auth-provider'
 import { useToast } from '@/components/ui/use-toast'
 import { OrderForm } from '@/components/orders/order-form'
+import { v4 as uuidv4 } from 'uuid'
 
 interface RestaurantTable {
   id?: string
@@ -43,115 +44,259 @@ export default function TableMapViewDialog({
 
   useEffect(() => {
     async function fetchTables() {
-      console.log('Debug: Fetching tables', { 
-        isOpen, 
-        tableMap: {
-          id: tableMap.id,
-          name: tableMap.name
-        }, 
-        db: !!db, 
-        user: {
-          uid: user?.uid,
-          email: user?.email
-        }
-      })
-
       if (!db || !user || !isOpen) {
-        console.log('Debug: Conditions not met for fetching tables')
         setIsLoading(false)
         return
       }
 
       try {
-        const restaurantId = user.uid
-        console.log('Debug: Fetching tables for', { 
-          restaurantId, 
-          tableMapId: tableMap.id 
-        })
-
-        // Verify the collection path
-        const tablesCollectionRef = collection(db, `restaurants/${restaurantId}/tables`)
-        console.log('Debug: Tables Collection Reference', tablesCollectionRef.path)
-
-        const q = query(
-          tablesCollectionRef, 
-          where('tableMapId', '==', tableMap.id)
-        )
+        const restaurantId = user.establishmentId || user.uid
         
-        // Log the query details
-        console.log('Debug: Query Details', {
-          collectionPath: tablesCollectionRef.path,
-          whereClause: {
-            field: 'tableMapId',
-            operator: '==',
-            value: tableMap.id
-          },
-          tableMapDetails: {
-            id: tableMap.id,
-            name: tableMap.name
-          }
-        })
-
-        const querySnapshot = await getDocs(q)
+        // Fetch the entire table map document
+        const tableMapRef = doc(db, `restaurants/${restaurantId}/tableMaps`, tableMap.id)
+        const tableMapSnapshot = await getDoc(tableMapRef)
         
-        console.log('Debug: Query snapshot', { 
-          size: querySnapshot.size,
-          empty: querySnapshot.empty
-        })
-
-        // Log each document if any exist
-        if (!querySnapshot.empty) {
-          querySnapshot.docs.forEach((doc, index) => {
-            console.log(`Debug: Document ${index}`, {
-              id: doc.id,
-              data: doc.data()
-            })
-          })
-        } else {
-          console.log('Debug: No documents found. Checking all documents in collection.')
-          
-          // Fetch all documents in the collection to verify
-          const allDocsSnapshot = await getDocs(tablesCollectionRef)
-          console.log('Debug: All documents in collection', {
-            size: allDocsSnapshot.size,
-            documents: allDocsSnapshot.docs.map(doc => ({
-              id: doc.id,
-              data: doc.data()
-            }))
-          })
+        if (!tableMapSnapshot.exists()) {
+          setTables([])
+          setIsLoading(false)
+          return
         }
 
-        const fetchedTables = querySnapshot.docs.map(doc => {
-          const tableData = {
-            id: doc.id,
-            ...doc.data()
-          } as RestaurantTable
-          console.log('Debug: Individual table', tableData)
-          return tableData
-        })
+        const tableMapData = tableMapSnapshot.data()
+        const tablesInMap = tableMapData?.layout?.tables || []
 
-        console.log('Debug: Fetched tables', fetchedTables)
-        setTables(fetchedTables)
+        // Ensure each table has a unique identifier
+        const processedTables = tablesInMap.map((table: { id: any; status: any }) => ({
+          ...table,
+          id: table.id || uuidv4(), // Generate ID if not present
+          status: table.status || 'available' // Default status if not set
+        }))
+
+        setTables(processedTables)
         setIsLoading(false)
       } catch (error) {
         console.error('Error fetching tables:', error)
+        setTables([])
+        setIsLoading(false)
+        
         toast({
-          title: t('commons.error'),
-          description: t('tables.tableMaps.fetchTablesError'),
+          title: t('common.error'),
+          description: t('tables.fetchError'),
           variant: 'destructive'
         })
-        setIsLoading(false)
       }
     }
 
     if (isOpen) {
       fetchTables()
     }
-  }, [db, user, isOpen, tableMap.id])
+  }, [db, user, isOpen, tableMap.id, t])
 
-  const handleCreateOrder = (table: RestaurantTable) => {
+  const handleCreateOrder = async (table: RestaurantTable) => {
     setSelectedTable(table)
     setIsOrderFormOpen(true)
+  }
+
+  const handleOrderCreation = async (order: Order) => {
+    try {
+      // Validate input parameters
+      if (!order) {
+        throw new Error('Cannot create order: Order data is missing')
+      }
+
+      // Validate critical order properties
+      const requiredFields = ['items', 'restaurantId', 'tableId', 'orderType'] as const;
+      const missingFields = requiredFields.filter(field => {
+        switch (field) {
+          case 'items':
+            return !order.items || order.items.length === 0;
+          case 'restaurantId':
+            return !order.restaurantId;
+          case 'tableId':
+            return !order.tableId;
+          case 'orderType':
+            return !order.orderType;
+          default:
+            return false;
+        }
+      });
+
+      if (missingFields.length > 0) {
+        throw new Error(`Cannot create order: Missing fields - ${missingFields.join(', ')}`)
+      }
+
+      // Ensure we have a valid restaurant ID
+      const restaurantId = user?.establishmentId || order.restaurantId
+      if (!restaurantId) {
+        throw new Error('Cannot create order: No restaurant ID')
+      }
+
+      // Prepare Firestore references
+      const ordersRef = collection(db, 'restaurants', restaurantId, 'orders')
+      
+      // Remove undefined values from the order
+      const cleanOrderData = (obj: any): any => {
+        if (obj === null || obj === undefined) return undefined;
+        
+        if (Array.isArray(obj)) {
+          return obj
+            .map(cleanOrderData)
+            .filter(item => item !== undefined);
+        }
+        
+        if (typeof obj === 'object') {
+          const cleanedObj: any = {};
+          Object.entries(obj).forEach(([key, value]) => {
+            const cleanedValue = cleanOrderData(value);
+            if (cleanedValue !== undefined) {
+              cleanedObj[key] = cleanedValue;
+            }
+          });
+          
+          return Object.keys(cleanedObj).length > 0 ? cleanedObj : undefined;
+        }
+        
+        return obj;
+      }
+
+      // Sanitize and validate order data
+      const sanitizedOrderData: Order = {
+        ...order,
+        uid: user?.uid || order.uid || '',
+        restaurantId: restaurantId,
+        status: order.status || 'pending',
+        
+        // Normalize items to match OrderItem interface
+        items: (order.items || []).map(item => {
+          // Convert itemId to string, fallback to empty string
+          const itemId = item.itemId 
+            ? String(item.itemId) 
+            : (item.menuItemId ? String(item.menuItemId) : (item.uid ? String(item.uid) : ''));
+          
+          return {
+            uid: String(item.uid || itemId || ''),
+            itemId: itemId,
+            name: item.name,
+            category: item.category || '',
+            quantity: item.quantity,
+            price: item.price,
+            notes: item.notes || '',
+            unit: item.unit || 'pcs',
+            dietaryInfo: {
+              vegetarian: item.dietaryInfo?.vegetarian ?? item.isVegetarian ?? false,
+              vegan: item.dietaryInfo?.vegan ?? item.isVegan ?? false,
+              glutenFree: item.dietaryInfo?.glutenFree ?? item.isGlutenFree ?? false,
+              lactoseFree: item.dietaryInfo?.lactoseFree ?? item.isLactoseFree ?? false
+            },
+            isVegetarian: item.isVegetarian,
+            isVegan: item.isVegan,
+            isGlutenFree: item.isGlutenFree,
+            isLactoseFree: item.isLactoseFree
+          };
+        }),
+        
+        // Validate total and payment info
+        total: order.total || order.subtotal || 0,
+        subtotal: order.subtotal || order.total || 0,
+        discount: order.discount || 0,
+        paymentInfo: {
+          method: order.paymentInfo?.method || 'other',
+          amount: order.total || order.subtotal || 0
+        },
+
+        // Ensure table-related information is preserved
+        tableId: order.tableId || selectedTable?.id || '',
+        tableNumber: (() => {
+          // Type guard for string
+          const extractNumberFromString = (input: string | null | undefined): number => {
+            if (!input) return 0;
+            
+            const numberMatch = input.match(/\d+/);
+            return numberMatch ? parseInt(numberMatch[0], 10) : 0;
+          };
+          
+          // If order.tableNumber is already a number, use it
+          if (typeof order.tableNumber === 'number' && !isNaN(order.tableNumber)) {
+            return order.tableNumber;
+          }
+          
+          // If order.tableNumber is a string, try to extract number
+          if (typeof order.tableNumber === 'string') {
+            return extractNumberFromString(order.tableNumber);
+          }
+          
+          // If selectedTable.name is a string, try to extract number
+          if (typeof selectedTable?.name === 'string') {
+            return extractNumberFromString(selectedTable.name);
+          }
+          
+          // Fallback to 0 if no number can be extracted
+          return 0;
+        })(),
+        tableMapId: order.tableMapId || '',
+        waiter: order.waiter || user?.email || '',
+        orderType: order.orderType || 'table',
+        type: order.type || 'table',
+        specialRequests: order.specialRequests || '',
+
+        // Preserve debug context
+        debugContext: {
+          userInfo: {
+            uid: user?.uid || order.uid || '',
+            displayName: user?.displayName,
+            email: user?.email,
+            establishmentId: restaurantId
+          },
+          orderContext: {
+            orderType: order.orderType || 'table',
+            tableNumber: `Mesa ${selectedTable?.name || 1}`,
+            tableId: order.tableId || selectedTable?.id || '',
+            tableMapId: order.tableMapId || ''
+          },
+          timestamp: new Date()
+        }
+      }
+
+      // Clean the order data
+      const cleanedOrderData = cleanOrderData(sanitizedOrderData);
+
+      // Save order to Firestore
+      const newOrderRef = await addDoc(ordersRef, {
+        ...cleanedOrderData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        status: cleanedOrderData.status || 'pending'
+      })
+
+      // Update table status
+      if (selectedTable) {
+        const tableRef = doc(db, 'restaurants', restaurantId, 'tables', selectedTable.id || '')
+        await setDoc(tableRef, {
+          status: 'occupied',
+          activeOrderId: newOrderRef.id
+        }, { merge: true })  // Use merge to avoid overwriting existing data
+      }
+
+      toast({
+        title: t('orders.success.orderCreated'),
+        variant: 'default'
+      })
+
+      // Close order form
+      handleCloseOrderForm()
+
+      return newOrderRef.id
+    } catch (error) {
+      console.error('❌ Order Creation Error:', error)
+      
+      toast({
+        title: t('orders.errors.orderCreationFailed'),
+        description: error instanceof Error ? error.message : undefined,
+        variant: 'destructive'
+      })
+
+      throw error
+    }
   }
 
   const handleCloseOrderForm = () => {
@@ -188,8 +333,8 @@ export default function TableMapViewDialog({
               tables
                 .sort((a, b) => {
                   // Extract number from table name (assumes format "Mesa {number}")
-                  const aNumber = parseInt(a.name.replace('Mesa ', ''), 10)
-                  const bNumber = parseInt(b.name.replace('Mesa ', ''), 10)
+                  const aNumber = parseInt(a.name.replace(/\D/g, ''), 10)
+                  const bNumber = parseInt(b.name.replace(/\D/g, ''), 10)
                   return aNumber - bNumber
                 })
                 .map(table => (
@@ -225,10 +370,7 @@ export default function TableMapViewDialog({
             </div>
             <OrderForm 
               initialTableNumber={selectedTable.name}
-              onOrderCreated={(order) => {
-                // Optional: handle order creation if needed
-                handleCloseOrderForm()
-              }}
+              onOrderCreated={(order) => handleOrderCreation(order)}
               table={selectedTable}
               aria-labelledby="order-form-title"
             />

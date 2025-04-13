@@ -66,115 +66,7 @@ export function TableCard({
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null)
 
   // Determine restaurant ID
-  const restaurantId = user?.uid || table.restaurantId || ''
-
-  // Synchronize table status with order status
-  const syncTableWithOrder = async (order?: ImportedOrder | null) => {
-    try {
-      // Determine restaurant ID
-      const restaurantId = user?.uid || table.restaurantId || ''
-      if (!restaurantId) {
-        console.warn('No restaurant ID available for sync')
-        return
-      }
-
-      // Reference to the current table
-      const tableRef = doc(db, `restaurants/${restaurantId}/tables`, table.uid)
-
-      // Status mapping logic
-      const tableStatusMap: Record<string, string> = {
-        'pending': 'occupied',
-        'preparing': 'occupied',
-        'ready': 'occupied',
-        'served': 'occupied',
-        'finished': 'available'
-      }
-
-      // Determine new table status
-      const newTableStatus = order 
-        ? (tableStatusMap[order.status] || 'available')
-        : 'available'
-
-      // Update table document
-      await updateDoc(tableRef, {
-        status: newTableStatus,
-        activeOrderId: order && order.status !== 'finished' ? order.id : null
-      })
-
-      // Log synchronization details
-      console.log('Table-Order Sync:', {
-        tableId: table.uid,
-        currentOrderStatus: order?.status,
-        newTableStatus
-      })
-
-      // Optional toast notification
-      toast({
-        title: 'Table Status Updated',
-        description: `Table ${table.number} is now ${newTableStatus}`,
-        variant: 'default'
-      })
-    } catch (error) {
-      console.error('Table Sync Error:', error)
-      toast({
-        title: 'Sync Error',
-        description: t("tableCard.errors.sync"),
-        variant: 'destructive'
-      })
-    }
-  }
-
-  // Enhanced close table and order handler
-  const handleCloseTableAndOrder = () => {
-    setIsPaymentDialogOpen(true)
-  }
-
-  // Confirm order closure with payment method
-  const confirmCloseOrder = async () => {
-    if (!selectedPaymentMethod) {
-      toast({
-        title: t("orders.errors.selectPaymentMethod"),
-        variant: "destructive"
-      })
-      return
-    }
-
-    try {
-      // Update order with payment method
-      if (activeOrder) {
-        const orderRef = doc(db, `restaurants/${restaurantId}/orders`, activeOrder.id)
-        await updateDoc(orderRef, {
-          status: 'closed',
-          'paymentInfo.method': selectedPaymentMethod,
-          closedAt: serverTimestamp()
-        })
-
-        // Update table status
-        const tableRef = doc(db, `restaurants/${restaurantId}/tables`, table.uid)
-        await updateDoc(tableRef, {
-          status: 'available',
-          activeOrderId: null
-        })
-
-        toast({
-          title: t("orders.success.orderClosed"),
-          description: `${t("orders.paymentMethod")}: ${t(`orders.paymentMethods.${selectedPaymentMethod}`)}`,
-          variant: "default"
-        })
-
-        // Reset states
-        setIsPaymentDialogOpen(false)
-        setSelectedPaymentMethod(null)
-      }
-    } catch (error) {
-      console.error('Error closing order:', error)
-      toast({
-        title: t("orders.errors.closeOrderFailed"),
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive"
-      })
-    }
-  }
+  const restaurantId = user?.establishmentId || user?.uid || table.restaurantId || ''
 
   // Comprehensive order preparation with robust type handling
   const prepareOrderForDialog = (activeOrder: ImportedOrder | null): ImportedOrder => {
@@ -301,7 +193,7 @@ export function TableCard({
         console.group('🍽️ Active Order Fetch')
         console.log('Table Object:', JSON.stringify(table, null, 2))
 
-        const restaurantId = user?.uid || table.restaurantId || ''
+        const restaurantId = user?.establishmentId || user?.uid || table.restaurantId || ''
         if (!restaurantId) {
           console.warn('No restaurant ID available')
           console.groupEnd()
@@ -329,15 +221,9 @@ export function TableCard({
 
           console.log('Found Active Order:', JSON.stringify(orderData, null, 2))
           setActiveOrder(orderData)
-
-          // Sync table status with found order
-          await syncTableWithOrder(orderData)
         } else {
           console.warn('No active orders found for this table', table.uid)
           setActiveOrder(null)
-          
-          // Ensure table is available if no active order
-          await syncTableWithOrder(null)
         }
 
         console.groupEnd()
@@ -369,6 +255,152 @@ export function TableCard({
     'transfer', 
     'other'
   ]
+
+  const handleTableOrderSync = async (order?: ImportedOrder | null) => {
+    try {
+      if (!db || !user) return
+
+      const restaurantId = user.currentEstablishmentName || user.uid
+
+      // Fetch the table map that contains this table
+      const tableMapRef = doc(db, 'restaurants', restaurantId, 'tableMaps', table.mapId || '')
+      const tableMapSnapshot = await getDoc(tableMapRef)
+
+      if (!tableMapSnapshot.exists()) {
+        console.error('Table map not found')
+        return
+      }
+
+      const tableMapData = tableMapSnapshot.data()
+      const tablesInMap = tableMapData?.layout?.tables || []
+
+      // Status mapping logic
+      const tableStatusMap: Record<string, string> = {
+        'pending': 'occupied',
+        'preparing': 'occupied',
+        'ready': 'occupied',
+        'served': 'occupied',
+        'finished': 'available'
+      }
+
+      // Determine new table status
+      const newTableStatus = order 
+        ? (tableStatusMap[order.status] || 'available')
+        : 'available'
+
+      // Update the table in the table map's layout
+      const updatedTables = tablesInMap.map((t: TableItem) => 
+        t.id === table.uid 
+          ? { 
+              ...t, 
+              status: newTableStatus,
+              activeOrderId: order && order.status !== 'finished' ? order.id : null 
+            }
+          : t
+      )
+
+      // Update the entire table map document
+      await updateDoc(tableMapRef, {
+        'layout.tables': updatedTables,
+        updatedAt: new Date()
+      })
+
+      // Log synchronization details
+      console.log('Table-Order Sync:', {
+        tableId: table.uid,
+        currentOrderStatus: order?.status,
+        newTableStatus
+      })
+
+      // Optional toast notification
+      toast({
+        title: 'Table Status Updated',
+        description: `Table ${table.number} is now ${newTableStatus}`,
+        variant: 'default'
+      })
+    } catch (error) {
+      console.error('Table Sync Error:', error)
+      toast({
+        title: 'Sync Error',
+        description: t("tableCard.errors.sync"),
+        variant: 'destructive'
+      })
+    }
+  }
+
+  const confirmCloseOrder = async () => {
+    if (!selectedPaymentMethod) {
+      toast({
+        title: t("orders.errors.selectPaymentMethod"),
+        variant: "destructive"
+      })
+      return
+    }
+
+    try {
+      if (!db || !user || !activeOrder) return
+
+      const restaurantId = user.currentEstablishmentName || user.uid
+
+      // Update order with payment method
+      const orderRef = doc(db, `restaurants/${restaurantId}/orders`, activeOrder.id)
+      await updateDoc(orderRef, {
+        status: 'closed',
+        'paymentInfo.method': selectedPaymentMethod,
+        closedAt: serverTimestamp()
+      })
+
+      // Fetch the table map that contains this table
+      const tableMapRef = doc(db, `restaurants/${restaurantId}/tableMaps`, table.mapId || '')
+      const tableMapSnapshot = await getDoc(tableMapRef)
+
+      if (!tableMapSnapshot.exists()) {
+        console.error('Table map not found')
+        return
+      }
+
+      const tableMapData = tableMapSnapshot.data()
+      const tablesInMap = tableMapData?.layout?.tables || []
+
+      // Update the table in the table map's layout
+      const updatedTables = tablesInMap.map((t: TableItem) => 
+        t.id === table.uid 
+          ? { 
+              ...t, 
+              status: 'available',
+              activeOrderId: null 
+            }
+          : t
+      )
+
+      // Update the entire table map document
+      await updateDoc(tableMapRef, {
+        'layout.tables': updatedTables,
+        updatedAt: new Date()
+      })
+
+      toast({
+        title: t("orders.success.orderClosed"),
+        description: `${t("orders.paymentMethod")}: ${t(`orders.paymentMethods.${selectedPaymentMethod}`)}`,
+        variant: "default"
+      })
+
+      // Reset states
+      setIsPaymentDialogOpen(false)
+      setSelectedPaymentMethod(null)
+    } catch (error) {
+      console.error('Error closing order:', error)
+      toast({
+        title: t("orders.errors.closeOrderFailed"),
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleCloseTableAndOrder = () => {
+    setIsPaymentDialogOpen(true)
+  }
 
   return (
     <>

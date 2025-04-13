@@ -1,15 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { useFirebase } from "@/components/firebase-provider"
 import { useAuth } from "@/components/auth-provider"
-import { doc, setDoc, collection } from "firebase/firestore"
-import { createUserWithEmailAndPassword } from "firebase/auth"
 import { useToast } from "@/components/ui/use-toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { UserRole } from "@/types/permissions"
+import { createTeamMember, CurrentUser } from "@/lib/user-management"
 
 export default function AddTeamMemberPage() {
   const [formData, setFormData] = useState({
@@ -17,12 +16,11 @@ export default function AddTeamMemberPage() {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "waiter" // Default role
+    role: UserRole.WAITER // Default role
   })
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const { db, auth } = useFirebase()
   const { user } = useAuth()
   const { toast } = useToast()
 
@@ -73,11 +71,11 @@ export default function AddTeamMemberPage() {
     // Validate form
     if (!validateForm()) return
 
-    // Ensure we have a logged-in user and Firestore is initialized
-    if (!user || !db || !auth) {
+    // Ensure we have a logged-in user
+    if (!user) {
       toast({
         title: "Error",
-        description: "Authentication or database service is unavailable",
+        description: "You must be logged in to add a team member",
         variant: "destructive"
       })
       return
@@ -86,56 +84,42 @@ export default function AddTeamMemberPage() {
     setLoading(true)
 
     try {
-      // Crear usuario en Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(
-        auth, 
-        formData.email, 
-        formData.password
-      )
+      console.group('🔍 Add Team Member Debug');
+      console.log('Full User Object:', JSON.stringify(user, null, 2));
+      console.log('User Properties:', {
+        uid: user?.uid,
+        establishmentId: user?.establishmentId,
+        currentEstablishmentName: user?.currentEstablishmentName,
+        role: user?.role
+      });
 
-      const newTeamMember = userCredential.user
-
-      // Verificar que el establecimiento actual esté definido
-      if (!user.currentEstablishmentName) {
-        toast({
-          title: "Error",
-          description: "No establishment context found. Please select an establishment.",
-          variant: "destructive"
-        })
-        setLoading(false)
-        return
+      // Validate user object before passing
+      if (!user) {
+        console.error('No user object available');
+        throw new Error('No authenticated user found');
       }
 
-      // Obtener el nombre del establecimiento actual
-      const currentEstablishmentName = user.currentEstablishmentName
-      const baseSlug = currentEstablishmentName
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, '-')
-        .replace(/-+/g, '-')
-        .trim()
+      // Ensure all required properties are present
+      const userToPass = {
+        uid: user.uid,
+        role: user.role,
+        establishmentId: user.establishmentId,
+        currentEstablishmentName: user.currentEstablishmentName,
+        // Add any other properties you know should be present
+      };
 
-      // Crear usuario global
-      await setDoc(doc(db, 'users', newTeamMember.uid), {
-        uid: newTeamMember.uid,
-        username: formData.username,
-        email: formData.email,
-        role: formData.role,
-        status: "active",
-        establishmentName: currentEstablishmentName,
-        addedBy: user.uid,
-        createdAt: new Date()
-      })
+      console.log('Processed User Object:', JSON.stringify(userToPass, null, 2));
 
-      // Crear usuario en la subcolección de usuarios del establecimiento
-      await setDoc(doc(db, 'establishments', baseSlug, 'users', newTeamMember.uid), {
-        uid: newTeamMember.uid,
-        username: formData.username,
+      await createTeamMember(user as unknown as CurrentUser, {
         email: formData.email,
+        password: formData.password,
+        username: formData.username,
         role: formData.role,
-        status: "active",
-        addedBy: user.uid,
-        createdAt: new Date()
-      })
+        establishmentName: user?.currentEstablishmentName || '',
+        establishmentId: user?.establishmentId
+      });
+
+      console.groupEnd(); // Close debug group
 
       toast({
         title: "Team Member Added",
@@ -148,14 +132,15 @@ export default function AddTeamMemberPage() {
         email: "",
         password: "",
         confirmPassword: "",
-        role: "waiter"
+        role: UserRole.WAITER
       })
     } catch (error: any) {
       console.error("Error adding team member:", error)
 
-      const errorMessage = error.code === 'auth/email-already-in-use' 
-        ? "This email is already in use" 
-        : error.message || "Failed to add team member"
+      const errorMessage = 
+        error.code === 'auth/email-already-in-use' 
+          ? "This email is already in use" 
+          : error.message || "Failed to add team member"
 
       toast({
         title: "Error",
@@ -236,13 +221,13 @@ export default function AddTeamMemberPage() {
                 id="role"
                 name="role"
                 value={formData.role}
-                onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as UserRole }))}
                 className="w-full p-2 border rounded"
                 disabled={loading}
               >
-                <option value="waiter">Waiter</option>
-                <option value="chef">Chef</option>
-                <option value="manager">Manager</option>
+                {Object.values(UserRole).map(role => (
+                  <option key={role} value={role}>{role.charAt(0).toUpperCase() + role.slice(1)}</option>
+                ))}
               </select>
             </div>
 

@@ -25,7 +25,16 @@ import { Plus, Search, MoreHorizontal, Edit, Trash, X } from "lucide-react"
 import Link from "next/link"
 import { t, TFunction } from 'i18next';
 import { Order, OrderStatus, FlexibleOrderStatus, BaseOrderStatus } from "@/types"
-import { collection, deleteDoc, doc, getDocs, orderBy, query, updateDoc } from "firebase/firestore";
+import { 
+  collection, 
+  query, 
+  orderBy, 
+  getDocs, 
+  doc, 
+  getDoc, 
+  deleteDoc, 
+  updateDoc 
+} from "firebase/firestore";
 import * as crypto from 'crypto';
 import { useRouter } from "next/navigation";
 import { OrderDetailsDialog } from "@/components/orders/order-details-dialog"
@@ -154,32 +163,111 @@ export default function OrdersPage() {
   const fetchOrders = async () => {
     if (!db || !user) return
 
+    // Validate establishmentId before proceeding
+    if (!user.establishmentId) {
+      console.error('No establishment ID found for user')
+      toast({
+        title: "Orders Fetch Error",
+        description: "Unable to fetch orders: No establishment ID found",
+        variant: "destructive"
+      })
+      setLoading(false)
+      return
+    }
+
     setLoading(true)
     try {
-      // Use restaurant-specific orders subcollection
-      const ordersRef = collection(db, 'restaurants', user.uid, 'orders')
+      // Use restaurant-specific orders subcollection with establishmentId
+      const ordersRef = collection(db, 'restaurants', user.establishmentId, 'orders')
       const q = query(ordersRef, orderBy('createdAt', 'desc'))
       
+      console.group('🍽️ Order Fetching Debug')
+      console.log('Establishment ID:', user.establishmentId)
+      console.log('Orders Collection Path:', `restaurants/${user.establishmentId}/orders`)
+      
       const querySnapshot = await getDocs(q)
+      
+      console.log('Total Orders Found:', querySnapshot.docs.length)
+      
       const fetchedOrders = querySnapshot.docs.map(doc => {
         const data = doc.data();
+        
+        // Precise table number extraction
+        const extractTableNumber = (input: any): number | undefined => {
+          // Check if input is already a valid number
+          if (typeof input === 'number' && !isNaN(input)) return input;
+          
+          // Check if input is a string with numbers
+          if (typeof input === 'string') {
+            const match = input.match(/\d+/);
+            return match ? parseInt(match[0], 10) : undefined;
+          }
+          
+          // Check debugContext for table number
+          if (data.debugContext?.orderContext?.tableNumber) {
+            const match = String(data.debugContext.orderContext.tableNumber).match(/\d+/);
+            return match ? parseInt(match[0], 10) : undefined;
+          }
+          
+          return undefined;
+        };
+        
+        // Normalize items to match OrderItem interface
+        const normalizedItems = Array.isArray(data.items) 
+          ? (data.items || []).map((item: any) => ({
+            uid: item.uid,
+            itemId: item.itemId || item.menuItemId || item.uid,
+            name: item.name,
+            category: item.category || '',
+            quantity: item.quantity,
+            price: item.price,
+            notes: item.notes || '',
+            unit: item.unit,
+            dietaryInfo: {
+              vegetarian: item.dietaryInfo?.vegetarian ?? item.isVegetarian ?? false,
+              vegan: item.dietaryInfo?.vegan ?? item.isVegan ?? false,
+              glutenFree: item.dietaryInfo?.glutenFree ?? item.isGlutenFree ?? false,
+              lactoseFree: item.dietaryInfo?.lactoseFree ?? item.isLactoseFree ?? false
+            },
+            isVegetarian: item.isVegetarian,
+            isVegan: item.isVegan,
+            isGlutenFree: item.isGlutenFree,
+            isLactoseFree: item.isLactoseFree
+          }))
+          : [];
+
         return {
           id: doc.id,
-          tableId: data.tableId || '',
-          tableMapId: data.tableMapId || '',
-          tableNumber: data.tableNumber || 0,
+          tableNumber: extractTableNumber(data.tableNumber),
+          orderType: data.orderType || data.type || 'table',
+          type: data.type || data.orderType || 'table',
           status: data.status || 'pending',
-          waiter: data.waiter || '',
-          items: data.items || [],
-          total: data.total || 0,
+          userId: data.userId || data.uid,
+          uid: data.uid || data.userId,
+          restaurantId: data.restaurantId || user.establishmentId,
+          items: normalizedItems,
+          subtotal: data.subtotal || data.total || 0,
+          total: data.total || data.subtotal || 0,
+          discount: data.discount || 0,
+          tax: data.tax,
           createdAt: data.createdAt?.toDate() || new Date(),
-          uid: data.uid || user.uid
+          updatedAt: data.updatedAt?.toDate() || new Date(),
+          tableId: data.tableId || data.debugContext?.orderContext?.tableId,
+          tableMapId: data.tableMapId || data.debugContext?.orderContext?.tableMapId,
+          waiter: data.waiter || data.debugContext?.userInfo?.uid || user.email,
+          specialRequests: data.specialRequests || '',
+          paymentInfo: {
+            method: data.paymentInfo?.method || 'other',
+            amount: data.paymentInfo?.amount || data.total || 0
+          },
+          debugContext: data.debugContext
         } as Order;
       });
 
       setOrders(fetchedOrders)
     } catch (error) {
       console.error("Error fetching orders:", error)
+      console.groupEnd()
       toast({
         title: t("commons.error"),
         description: t("orders.error.fetchFailed"),
@@ -190,12 +278,148 @@ export default function OrdersPage() {
     }
   }
 
+  // Function to fetch a specific order by ID
+  const fetchOrderById = async (orderId: string) => {
+    try {
+      // Validate inputs
+      if (!orderId) {
+        toast({
+          title: t("commons.error"),
+          description: t("orders.error.invalidOrderId"),
+          variant: "destructive"
+        });
+        return null;
+      }
+
+      // Ensure user and establishment ID exist
+      if (!user || !user.establishmentId) {
+        toast({
+          title: t("commons.error"),
+          description: t("commons.userNotAuthenticated"),
+          variant: "destructive"
+        });
+        return null;
+      }
+
+      // Construct the reference to the specific order document
+      const orderRef = doc(
+        db, 
+        'restaurants', 
+        user.establishmentId, 
+        'orders', 
+        orderId
+      );
+
+      // Fetch the specific order document
+      const orderDoc = await getDoc(orderRef);
+
+      if (!orderDoc.exists()) {
+        toast({
+          title: t("commons.error"),
+          description: t("orders.error.notFound"),
+          variant: "destructive"
+        });
+        return null;
+      }
+
+      const data = orderDoc.data();
+
+      // Use the same normalization logic as in fetchOrders
+      const extractTableNumber = (input: any): number | undefined => {
+        if (typeof input === 'number' && !isNaN(input)) return input;
+        
+        if (typeof input === 'string') {
+          const match = input.match(/\d+/);
+          return match ? parseInt(match[0], 10) : undefined;
+        }
+        
+        if (data.debugContext?.orderContext?.tableNumber) {
+          const match = String(data.debugContext.orderContext.tableNumber).match(/\d+/);
+          return match ? parseInt(match[0], 10) : undefined;
+        }
+        
+        return undefined;
+      };
+
+      const normalizedItems = Array.isArray(data.items) 
+        ? (data.items || []).map((item: any) => ({
+          uid: item.uid,
+          itemId: item.itemId || item.menuItemId || item.uid,
+          name: item.name,
+          category: item.category || '',
+          quantity: item.quantity,
+          price: item.price,
+          notes: item.notes || '',
+          unit: item.unit,
+          dietaryInfo: {
+            vegetarian: item.dietaryInfo?.vegetarian ?? item.isVegetarian ?? false,
+            vegan: item.dietaryInfo?.vegan ?? item.isVegan ?? false,
+            glutenFree: item.dietaryInfo?.glutenFree ?? item.isGlutenFree ?? false,
+            lactoseFree: item.dietaryInfo?.lactoseFree ?? item.isLactoseFree ?? false
+          },
+          isVegetarian: item.isVegetarian,
+          isVegan: item.isVegan,
+          isGlutenFree: item.isGlutenFree,
+          isLactoseFree: item.isLactoseFree
+        }))
+        : [];
+
+      const normalizedOrder: Order = {
+        id: orderDoc.id,
+        tableNumber: extractTableNumber(data.tableNumber),
+        orderType: data.orderType || data.type || 'table',
+        type: data.type || data.orderType || 'table',
+        status: data.status || 'pending',
+        userId: data.userId || data.uid,
+        uid: data.uid || data.userId,
+        restaurantId: data.restaurantId || user.establishmentId,
+        items: normalizedItems,
+        subtotal: data.subtotal || data.total || 0,
+        total: data.total || data.subtotal || 0,
+        discount: data.discount || 0,
+        tax: data.tax,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+        tableId: data.tableId || data.debugContext?.orderContext?.tableId,
+        tableMapId: data.tableMapId || data.debugContext?.orderContext?.tableMapId,
+        waiter: data.waiter || data.debugContext?.userInfo?.uid || user.email,
+        specialRequests: data.specialRequests || '',
+        paymentInfo: {
+          method: data.paymentInfo?.method || 'other',
+          amount: data.paymentInfo?.amount || data.total || 0
+        },
+        debugContext: data.debugContext
+      };
+
+      return normalizedOrder;
+    } catch (error) {
+      console.error("Error fetching specific order:", error);
+      toast({
+        title: t("commons.error"),
+        description: t("orders.error.fetchFailed"),
+        variant: "destructive"
+      });
+      return null;
+    }
+  };
+
   const handleUpdateStatus = async () => {
     if (!db || !user || !selectedOrder || !selectedOrder.id) return
 
+    // Validate establishmentId before proceeding
+    if (!user.establishmentId) {
+      console.error('No establishment ID found for user')
+      toast({
+        title: "Order Update Error",
+        description: "Unable to update order status: No establishment ID found",
+        variant: "destructive"
+      })
+      return
+    }
+
     try {
-      // Use restaurant-specific orders subcollection
-      const orderRef = doc(db, 'restaurants', user.uid, 'orders', String(selectedOrder.id))
+      // Use restaurant-specific orders subcollection with establishmentId
+      const orderRef = doc(db, 'restaurants', user.establishmentId, 'orders', String(selectedOrder.id))
       await updateDoc(orderRef, {
         status: selectedStatus,
         updatedAt: new Date(),
@@ -207,15 +431,18 @@ export default function OrdersPage() {
           order.id === selectedOrder.id 
             ? { ...order, status: selectedStatus, updatedAt: new Date() } 
             : order
-        ),
+        )
       )
 
-      toast({
-        title: t("orders.success.statusUpdated"),
-        description: `${t("orders.table.headers.id")} #${String(selectedOrder.id).substring(0, 6)} ${t("orders.action.updated")} ${translateStatus(selectedStatus, i18n?.language as LanguageCode)}`,
-      })
-
+      // Close the status dialog
       setIsStatusDialogOpen(false)
+
+      // Show success toast
+      toast({
+        title: "Order Status Updated",
+        description: `Order status changed to ${translateStatus(selectedStatus)}`,
+        variant: "default"
+      })
     } catch (error) {
       console.error("Error updating order status:", error)
       toast({
@@ -229,25 +456,39 @@ export default function OrdersPage() {
   const handleDeleteOrder = async () => {
     if (!db || !user || !selectedOrder || !selectedOrder.id) return
 
+    // Validate establishmentId before proceeding
+    if (!user.establishmentId) {
+      console.error('No establishment ID found for user')
+      toast({
+        title: "Order Delete Error",
+        description: "Unable to delete order: No establishment ID found",
+        variant: "destructive"
+      })
+      setIsDeleteDialogOpen(false)
+      return
+    }
+
     try {
       // Use restaurant-specific orders subcollection
-      const orderRef = doc(db, 'restaurants', user.uid, 'orders', String(selectedOrder.id))
+      const orderRef = doc(db, 'restaurants', user.establishmentId, 'orders', String(selectedOrder.id))
       await deleteDoc(orderRef)
 
       // Update local state
       setOrders(orders.filter((order) => order.id !== selectedOrder.id))
 
+      // Close the delete dialog
+      setIsDeleteDialogOpen(false)
+
       toast({
         title: t("orders.success.orderDeleted"),
         description: `${t("orders.table.headers.id")} #${String(selectedOrder.id).substring(0, 6)} ${t("orders.action.deleted")}`,
+        variant: "default"
       })
-
-      setIsDeleteDialogOpen(false)
     } catch (error) {
       console.error("Error deleting order:", error)
       toast({
         title: t("commons.error"),
-        description: t("orders.error.deleteOrderFailed"),
+        description: t("orders.error.deleteFailed"),
         variant: "destructive",
       })
     }

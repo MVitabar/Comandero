@@ -16,7 +16,8 @@ export type FlexibleOrderStatus = BaseOrderStatus;
 export enum UserRole {
   Owner = 'owner',
   Manager = 'manager',
-  Staff = 'staff'
+  Staff = 'staff',
+  WAITER = "WAITER"
 }
 
 export enum MenuItemCategory {
@@ -40,21 +41,83 @@ export enum InventoryCategory {
 // User and Authentication
 export interface User {
   uid: string
+  id?: string
   email: string | null
   username: string
   role: UserRole
+  
+  // Establishment-related properties
+  establishmentId?: string
   currentEstablishmentName?: string
-  status?: 'active' | 'inactive' | 'suspended'
+  restaurantName?: string
+  
+  // Enhanced authentication and status properties
+  status: 'active' | 'inactive' | 'suspended' | 'pending'
+  emailVerified: boolean
+  
+  // Optional personal details
+  displayName?: string | null
   phoneNumber?: string | null
   position?: string
+  
+  // Timestamps
   createdAt?: Date
+  lastLogin?: Date
+  
+  // Authentication methods with enhanced typing
   loading: boolean
-  login: (email: string, password: string) => Promise<void>
-  logout: () => Promise<void>
-  signUp: (email: string, password: string, establishmentName?: string) => Promise<void>
-  displayName?: string | null
-  restaurantName?: string
-  name?: string
+  login: (email: string, password: string) => Promise<{
+    success: boolean
+    error?: string
+  }>
+  logout: () => Promise<{
+    success: boolean
+    error?: string
+  }>
+  signUp: (
+    email: string, 
+    password: string, 
+    options?: {
+      username?: string
+      establishmentName?: string
+      role?: UserRole
+    }
+  ) => Promise<{
+    success: boolean
+    error?: string
+    userId?: string
+  }>
+  
+  // Enhanced activity tracking
+  activity?: UserActivity
+  
+  // Security-related fields
+  twoFactorEnabled?: boolean
+  securityLevel?: 'low' | 'medium' | 'high'
+}
+
+export interface LoginAttempt {
+  timestamp: Date
+  success: boolean
+  error?: string
+  ipAddress?: string
+  location?: {
+    country?: string
+    city?: string
+  }
+  device?: {
+    type?: string
+    os?: string
+    browser?: string
+  }
+}
+
+export interface UserActivity {
+  loginAttempts?: LoginAttempt[]
+  lastSuccessfulLogin?: Date
+  failedLoginCount?: number
+  accountCreated: Date
+  lastPasswordChange?: Date
 }
 
 // Inventory Management
@@ -157,6 +220,21 @@ export interface Order {
   paymentInfo: PaymentInfo;
   closedAt?: Date | null;
   uid?: string;
+  debugContext?: {
+    userInfo?: {
+      uid?: string;
+      displayName?: string | null;
+      email?: string | null;
+      establishmentId?: string;
+    };
+    orderContext?: {
+      orderType?: string;
+      tableNumber?: string | number;
+      tableId?: string;
+      tableMapId?: string;
+    };
+    timestamp?: Date;
+  };
 }
 
 // Table and Seating Management
@@ -481,9 +559,27 @@ export interface FirebaseContextType {
 export interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<{
+    success: boolean
+    error?: string
+  }>
+  logout: () => Promise<{
+    success: boolean
+    error?: string
+  }>
+  signUp: (
+    email: string, 
+    password: string, 
+    options?: {
+      username?: string
+      establishmentName?: string
+      role?: UserRole
+    }
+  ) => Promise<{
+    success: boolean
+    error?: string
+    userId?: string
+  }>
 }
 
 // Tipos de utilidad
@@ -507,13 +603,6 @@ export interface RestaurantSettings {
 }
 
 // Tipos para autenticación y seguridad
-export interface LoginAttempt {
-  timestamp: Date;
-  success: boolean;
-  ipAddress?: string;
-  userAgent?: string;
-}
-
 export interface PasswordPolicy {
   minLength: number;
   requireUppercase: boolean;

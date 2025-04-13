@@ -37,71 +37,97 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
-  const [userToDelete, setUserToDelete] = useState<User | null>(null)
+  const [userToDelete, setUserToDelete] = useState<(User & { id: string }) | null>(null)
 
   useEffect(() => {
     const fetchUsers = async () => {
-      if (!db || !currentUser) return
+      if (!db || !currentUser || !currentUser.establishmentId) {
+        console.error('Cannot fetch users: missing db, user, or establishment ID');
+        setLoading(false);
+        return;
+      }
 
       try {
-        const usersRef = collection(db, "restaurants", currentUser.uid, "users")
-        const q = query(usersRef, orderBy("createdAt", "desc"))
+        // Use the establishment ID to fetch users from the correct subcollection
+        const usersRef = collection(
+          db, 
+          "restaurants", 
+          currentUser.establishmentId, 
+          "users"
+        );
+        const q = query(usersRef, orderBy("createdAt", "desc"));
         
-        const querySnapshot = await getDocs(q)
-        const fetchedUsers = querySnapshot.docs.map(doc => ({
-          uid: doc.id,
-          ...doc.data()
-        })) as User[]
+        const querySnapshot = await getDocs(q);
+        const fetchedUsers = querySnapshot.docs.map(doc => {
+          const userData = doc.data() as User;
+          return {
+            ...userData,
+            id: doc.id,
+            uid: doc.id  // Ensure uid is set to match the document ID
+          } as User;
+        });
 
-        setUsers(fetchedUsers)
+        // Optional: Filter users based on search query
+        const filteredUsers = searchQuery 
+          ? fetchedUsers.filter(user => 
+              (user.username || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+              (user.email || '').toLowerCase().includes(searchQuery.toLowerCase())
+            )
+          : fetchedUsers;
+
+        setUsers(filteredUsers);
+        setLoading(false);
       } catch (error) {
-        console.error("Error fetching users:", error)
+        console.error('Error fetching users:', error);
         toast({
-          title: t("users.errors.fetchUsers"),
-          description: error instanceof Error ? error.message : "Unknown error",
-          variant: "destructive",
-        })
-      } finally {
-        setLoading(false)
+          title: "Error",
+          description: "Could not fetch users",
+          variant: "destructive"
+        });
+        setLoading(false);
       }
-    }
+    };
 
-    fetchUsers()
-  }, [db, currentUser])
+    fetchUsers();
+  }, [db, currentUser, searchQuery]);
 
   const handleDeleteUser = async () => {
-    if (!canDo('deleteUser') || !userToDelete || !db) return
+    if (!canDo('deleteUser') || !userToDelete || !db || !currentUser?.establishmentId) {
+      toast({
+        title: "Error",
+        description: "Cannot delete user: insufficient permissions or missing establishment",
+        variant: "destructive"
+      });
+      return;
+    }
 
     try {
-      await deleteDoc(doc(db, "restaurants", currentUser!.uid, "users", userToDelete.uid))
+      await deleteDoc(doc(
+        db, 
+        "restaurants", 
+        currentUser.establishmentId, 
+        "users", 
+        userToDelete.id
+      ));
       
-      setUsers(prevUsers => prevUsers.filter(u => u.uid !== userToDelete.uid))
+      setUsers(prevUsers => prevUsers.filter(u => u.id !== userToDelete.id));
       
       toast({
         title: t("users.deleteSuccess"),
         description: `${userToDelete.username} ${t("users.hasBeenDeleted")}`,
-      })
+        variant: "default"
+      });
 
-      setUserToDelete(null)
+      setUserToDelete(null);
     } catch (error) {
-      console.error("Error deleting user:", error)
+      console.error("Error deleting user:", error);
       toast({
         title: t("users.errors.deleteUser"),
         description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
-      })
+        variant: "destructive"
+      });
     }
-  }
-
-  // Filter users based on search query
-  const filteredUsers = users.filter(user => {
-    const query = searchQuery.toLowerCase()
-    return (
-      (user.username || '').toLowerCase().includes(query) ||
-      (user.email || '').toLowerCase().includes(query) ||
-      (user.role || '').toLowerCase().includes(query)
-    )
-  });
+  };
 
   // Render loading state
   if (loading) {
@@ -147,15 +173,15 @@ export default function UsersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredUsers.length === 0 ? (
+              {users.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center">
                     {t("users.noUsers")}
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredUsers.map((user) => (
-                  <TableRow key={user.uid}>
+                users.map((user) => (
+                  <TableRow key={user.id}>
                     <TableCell>{user.username}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
@@ -180,7 +206,7 @@ export default function UsersPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem 
-                            onClick={() => navigator.clipboard.writeText(user.uid)}
+                            onClick={() => navigator.clipboard.writeText(user.id || user.uid)}
                           >
                             {t("users.copyId")}
                           </DropdownMenuItem>
@@ -201,11 +227,14 @@ export default function UsersPage() {
                             <>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem 
-                                onSelect={() => setUserToDelete(user)}
-                                className="text-destructive focus:text-destructive"
+                                className="text-destructive focus:text-destructive/90"
+                                onSelect={() => setUserToDelete({
+                                  ...user,
+                                  id: user.id || user.uid
+                                })}
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
-                                {t("users.deleteUser")}
+                                {t("users.delete")}
                               </DropdownMenuItem>
                             </>
                           )}

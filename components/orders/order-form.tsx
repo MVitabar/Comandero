@@ -12,7 +12,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Separator } from "@/components/ui/separator"
-import { doc, collection, getDocs, query, orderBy, where, setDoc, updateDoc, serverTimestamp } from "firebase/firestore"
+import { 
+  doc, 
+  collection, 
+  getDocs, 
+  query, 
+  orderBy, 
+  where, 
+  setDoc, 
+  updateDoc, 
+  serverTimestamp 
+} from "firebase/firestore"
 import { Loader2, Plus, Minus, Trash, QrCode } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
 import QRCode from 'qrcode.react'
@@ -26,7 +36,8 @@ import {
   User,
   RestaurantTable,
   PaymentInfo,
-  PaymentMethod
+  PaymentMethod,
+  TableItem
 } from "@/types"
 
 export function OrderForm({ 
@@ -36,7 +47,7 @@ export function OrderForm({
   table
 }: { 
   initialTableNumber?: string, 
-  onOrderCreated?: (order: Order) => void,
+  onOrderCreated?: (order: Order) => void | Promise<any>,
   user?: User | null,
   table?: RestaurantTable
 }) {
@@ -56,8 +67,7 @@ export function OrderForm({
   }
 
   // Use table prop if available, otherwise use initialTableNumber
-  const tableNumber = table?.name || initialTableNumber || ''
-
+  const [tableNumber, setTableNumber] = useState(table?.name || initialTableNumber || '')
 
   const [loading, setLoading] = useState(true)
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
@@ -167,80 +177,90 @@ export function OrderForm({
       return;
     }
 
+    // Add type-safe check for establishmentId
+    if (!user.establishmentId) {
+      console.error('No establishment ID found for user')
+      toast({
+        title: "Inventory Error",
+        description: "Unable to load inventory: No establishment ID found",
+        variant: "destructive"
+      })
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
       const menuItems: MenuItem[] = []
 
-      // Fetch inventory reference
-      const inventoryRef = collection(db, 'restaurants', user.uid, 'inventory')
+      // Fetch inventory reference using establishmentId
+      const inventoryRef = collection(db, 'restaurants', user.establishmentId, 'inventory')
       console.log('Inventory Reference:', inventoryRef.path)
 
+      // Fetch all category documents
       const categoriesSnapshot = await getDocs(inventoryRef)
       console.log('Categories Found:', categoriesSnapshot.docs.map(doc => doc.id))
 
       // Iterate through categories
       for (const categoryDoc of categoriesSnapshot.docs) {
         const category = categoryDoc.id
-        const categoryData = categoryDoc.data()
-        console.log(`Processing Category: ${category}`, categoryData)
+        console.log(`Processing Category: ${category}`)
 
-        // Check if the category has items
-        if (categoryData && categoryData.items) {
-          console.log(`Items in ${category}:`, Object.keys(categoryData.items))
+        // Reference to items subcollection for this category
+        const itemsRef = collection(db, 'restaurants', user.establishmentId, 'inventory', category, 'items')
+        
+        // Fetch items for this category
+        const itemsSnapshot = await getDocs(itemsRef)
+        console.log(`Items in ${category}:`, itemsSnapshot.docs.length)
 
-          const categoryItems = Object.entries(categoryData.items).map(([itemId, itemData]: [string, any]) => {
-            console.group('Item Data Debug')
-            console.log('Raw Item Data:', itemData)
-            
-            // Determine stock, with more flexible parsing
-            let stock = 0
-            if (typeof itemData.quantity === 'number') {
-              stock = itemData.quantity
-            } else if (typeof itemData.quantity === 'string') {
-              const parsedStock = parseInt(itemData.quantity, 10)
-              stock = isNaN(parsedStock) ? 0 : parsedStock
-            }
+        // Process each item in the category
+        const categoryItems = itemsSnapshot.docs.map(itemDoc => {
+          const itemData = itemDoc.data()
+          console.group('Item Data Debug')
+          console.log('Raw Item Data:', itemData)
+          
+          // Determine stock, with more flexible parsing
+          let stock = 0
+          if (typeof itemData.quantity === 'number') {
+            stock = itemData.quantity
+          } else if (typeof itemData.quantity === 'string') {
+            const parsedStock = parseInt(itemData.quantity, 10)
+            stock = !isNaN(parsedStock) ? parsedStock : 0
+          }
 
-            // Map Firestore item to MenuItem type
-            const menuItem: MenuItem = {
-              uid: itemId,  // Use the Firestore document ID as the unique identifier
-              name: String(itemData.name || ''),
-              category: category as MenuItemCategory,
-              price: Number(itemData.price || 0),
-              description: String(itemData.description || ''),
-              unit: String(itemData.unit || ''),
-              stock: stock,
-              minimumStock: Number(itemData.minimumStock || 0),
-              dietaryInfo: {
-                vegetarian: false,  // Add logic if needed
-                vegan: false,       // Add logic if needed
-                glutenFree: false,  // Add logic if needed
-                lactoseFree: false  // Add logic if needed
-              }
-            }
+          // Create menu item
+          const menuItem: MenuItem = {
+            uid: itemDoc.id,
+            name: itemData.name || 'Unnamed Item',
+            category: category as MenuItemCategory,
+            price: Number(itemData.price || 0),
+            stock: stock,
+            unit: itemData.unit || '',
+            description: itemData.description || '',
+            // Add any other relevant fields
+          }
 
-            console.log('Mapped Menu Item:', menuItem)
-            console.groupEnd()
-            return menuItem
-          })
+          console.log('Processed Menu Item:', menuItem)
+          console.groupEnd()
 
-          menuItems.push(...categoryItems)
-        }
+          return menuItem
+        })
+
+        // Add category items to menu items
+        menuItems.push(...categoryItems)
       }
 
       console.log('Total Menu Items:', menuItems.length)
-      console.groupEnd()
-
       setMenuItems(menuItems)
       setLoading(false)
     } catch (error) {
       console.error('Error fetching menu items:', error)
-      toast({
-        title: t('orders.errors.fetchMenuItemsFailed'),
-        description: error instanceof Error ? error.message : String(error),
-        variant: 'destructive'
-      })
       setLoading(false)
+      toast({
+        title: t("orders.errors.fetchMenuItemsFailed"),
+        description: error instanceof Error ? error.message : "Não foi possível carregar os itens do menu",
+        variant: "destructive"
+      })
     }
   }, [db, user, t])
 
@@ -257,17 +277,34 @@ export function OrderForm({
     if (!db || !user) return
 
     try {
-      const q = query(
-        collection(db, 'restaurants', user.uid, 'tables'),
-        where('status', 'in', ['available', 'ordering'])
-      );
-      const querySnapshot = await getDocs(q)
+      const restaurantId = user?.uid || ''
 
-      const availableTables = querySnapshot.docs.map(doc => ({
-        uid: doc.id,
-        mapId: doc.data().mapId,
-        number: doc.data().number as number
-      }))
+      // Fetch all table maps for the restaurant
+      const tableMapsRef = collection(db, `restaurants/${restaurantId}/tableMaps`)
+      const tableMapsSnapshot = await getDocs(tableMapsRef)
+
+      const availableTables: { uid: string, mapId: string, number: number }[] = []
+
+      // Iterate through table maps and collect available tables
+      tableMapsSnapshot.docs.forEach(mapDoc => {
+        const tableMapData = mapDoc.data()
+        const tablesInMap = tableMapData?.layout?.tables || []
+
+        const mapAvailableTables = tablesInMap
+          .filter((table: TableItem) => 
+            table.status === 'available' || 
+            table.status === 'ordering'
+          )
+          .map((table: TableItem) => ({
+            uid: table.id,
+            mapId: mapDoc.id,
+            number: table.name 
+              ? parseInt(table.name.replace('Mesa ', ''), 10) 
+              : table.number || 0
+          }))
+
+        availableTables.push(...mapAvailableTables)
+      })
 
       setTables(availableTables)
       
@@ -276,6 +313,11 @@ export function OrderForm({
       }
     } catch (error) {
       console.error("Error fetching tables:", error)
+      toast({
+        title: t('common.error'),
+        description: t('tables.fetchError'),
+        variant: 'destructive'
+      })
     }
   }
 
@@ -417,12 +459,12 @@ export function OrderForm({
         items: safeOrderItems,
         subtotal: calculateTotal(),
         total: calculateTotal(),
-        discount: 0,
+        discount: discount,
         createdAt: new Date(),
         updatedAt: new Date(),
         waiter: user.username,
         userId: user?.uid,
-        restaurantId: user?.uid || '',
+        restaurantId: user?.establishmentId || user.uid || '',
         paymentInfo: {
           method: 'other' as PaymentMethod,
           amount: 0,
@@ -439,17 +481,45 @@ export function OrderForm({
       }
 
       // Call onSubmit prop with cleaned order data
-      onOrderCreated && onOrderCreated(orderData)
+      if (onOrderCreated) {
+        try {
+          console.group('🍽️ Order Creation Debug')
+          console.log('Raw Order Data:', orderData)
+          console.log('User Details:', {
+            uid: user?.uid,
+            username: user?.username,
+            establishmentId: user?.establishmentId
+          })
+          
+          const result = onOrderCreated(orderData)
+          
+          // Check if the result is a Promise-like object
+          if (result != null && typeof result === 'object' && 'then' in result) {
+            await (result as Promise<any>)
+          }
 
-      // Reset form after successful submission
-      resetForm()
+          // Reset form after successful submission
+          resetForm()
 
-      // Show success toast
-      toast({
-        title: t("orders.success.orderCreated"),
-        description: t("orders.success.orderCreatedDescription"),
-        variant: "default"
-      })
+          // Show success toast
+          toast({
+            title: t("orders.success.orderCreated"),
+            description: t("orders.success.orderCreatedDescription"),
+            variant: "default"
+          })
+        } catch (error) {
+          console.error('❌ Order Creation Error:', error)
+          console.log('Detailed Order Object:', JSON.stringify(orderData, null, 2))
+          toast({
+            title: "Order Creation Failed",
+            description: error instanceof Error ? error.message : "Unknown error occurred",
+            variant: "destructive"
+          })
+          throw error
+        } finally {
+          console.groupEnd()
+        }
+      }
 
     } catch (error) {
       console.error("Erro ao criar pedido:", error)
@@ -462,199 +532,208 @@ export function OrderForm({
   }
 
   const handleCreateOrder = async () => {
-    try {
-      // Prepare clean order data, removing undefined values
-      const orderData: Partial<Order> = {
-        restaurantId: user.uid,
-        type: orderType || 'dine-in',
-        orderType: orderType || 'dine-in',
-        
-        // Use type-safe status with explicit typing
-        status: 'active' as BaseOrderStatus,
-        
-        // Safely handle table-related fields
-        ...(table?.id && { tableId: table.id }),
-        ...(table?.tableMapId && { tableMapId: table.tableMapId }),
-        
-        // Process selected items
-        items: orderItems.map(item => {
-          // Ensure itemId is always a non-optional string
-          const safeItemId = item.uid || item.itemId || 'unknown';
-          
-          return {
-            menuItemId: item.uid,
-            itemId: safeItemId, // Use a non-optional string
-            quantity: item.quantity,
-            price: item.price,
-            name: item.name,
-            category: item.category || 'uncategorized',
-            notes: item.notes || '',
-            customDietaryRestrictions: item.customDietaryRestrictions || [],
-            isVegetarian: !!item.isVegetarian,
-            isVegan: !!item.isVegan,
-            isGlutenFree: !!item.isGlutenFree,
-            isLactoseFree: !!item.isLactoseFree,
-            dietaryInfo: item.dietaryInfo || {
-              vegetarian: false,
-              vegan: false,
-              glutenFree: false,
-              lactoseFree: false
-            }
-          }
-        }),
-        
-        // Calculate totals with fallback
-        total: calculateTotal(),
-        subtotal: calculateTotal(),
-        tax: 0,
-        
-        // Timestamp management
-        createdAt: new Date(),
-        
-        // Optional fields from original orderData
-        ...(specialRequests && { specialRequests }),
-        ...(dietaryRestrictions && { dietaryRestrictions }),
-        
-        // Payment information with defaults
-        paymentInfo: {
-          method: 'other' as PaymentMethod,
-          amount: 0,
+    // Validate order creation
+    if (orderItems.length === 0) {
+      toast({
+        title: t("orders.errors.noItemsInOrder"),
+        variant: "destructive"
+      })
+      return
+    }
+
+    // Validate table for table orders
+    if (orderType === 'table' && !tableNumber.trim()) {
+      toast({
+        title: t("orders.errors.noTableSelected"),
+        variant: "destructive"
+      })
+      return
+    }
+
+    // Prepare order object
+    const newOrder: Order = {
+      id: '', // Will be set by Firestore
+      uid: user?.uid || '',
+      restaurantId: user?.establishmentId || '',
+      tableId: table?.id || '',
+      tableNumber: orderType === 'table' ? parseInt(tableNumber) : 0,
+      tableMapId: table?.tableMapId || '',
+      waiter: user?.displayName || user?.email || user?.uid || 'Owner',
+      items: orderItems,
+      total: calculateTotal(),
+      subtotal: calculateTotal(),
+      status: 'pending',
+      orderType: orderType,
+      type: orderType,
+      specialRequests: specialRequests || '',
+      discount: discount || 0,
+      paymentInfo: {
+        method: 'other',
+        amount: calculateTotal()
+      },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      // Add additional context for debugging
+      debugContext: {
+        userInfo: {
+          uid: user?.uid,
+          displayName: user?.displayName,
+          establishmentId: user?.establishmentId
         },
-        
-        // User and waiter information
-        ...(user.uid && { userId: user.uid }),
-        ...(user.username && { waiter: user.username })
-      };
-
-      // Remove any remaining undefined values
-      const cleanOrderData = Object.fromEntries(
-        Object.entries(orderData).filter(([_, v]) => v !== undefined)
-      ) as unknown as Order;
-
-      // Construct a comprehensive order object with all required properties
-      const finalOrderData: Order = {
-        id: '', // Will be set by Firestore
-        tableNumber: parseInt(
-          table?.name?.replace(/\D/g, '') || // Extract number from table name
-          initialTableNumber || '0', // Fallback to initialTableNumber 
-          10
-        ),
-        orderType: orderType || 'table',
-        status: 'pending' as BaseOrderStatus,
-        userId: user.uid || undefined,
-        restaurantId: user.uid,
-        type: orderType || 'table',
-        
-        // Spread existing order data with type checking
-        ...Object.fromEntries(
-          Object.entries(orderData)
-            .filter(([_, v]) => v !== undefined)
-            .map(([k, v]) => {
-              // Ensure type safety for critical properties
-              switch (k) {
-                case 'items':
-                  return [k, v as OrderItem[]];
-                case 'subtotal':
-                case 'total':
-                case 'discount':
-                case 'tax':
-                  return [k, Number(v)];
-                case 'createdAt':
-                case 'updatedAt':
-                  return [k, v instanceof Date ? v : new Date()];
-                default:
-                  return [k, v];
-              }
-            })
-        ),
-        
-        // Ensure critical properties are present and type-safe
-        items: (orderData.items || []) as OrderItem[],
-        subtotal: calculateTotal(),
-        total: calculateTotal(),
-        discount: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        tableId: table?.id || '',
-        tableMapId: table?.tableMapId || '',
-        waiter: user.username,
-        
-        // Payment information
-        paymentInfo: {
-          method: 'other' as PaymentMethod,
-          amount: 0,
-        },
-        closedAt: null,  // Now compatible with Date | null
-        tax: 0
-      };
-
-      // Remove undefined values from the final order data
-      const firestoreOrderData = Object.fromEntries(
-        Object.entries(finalOrderData).filter(([_, v]) => 
-          v !== undefined && 
-          !(typeof v === 'object' && v !== null && Object.keys(v).length === 0)
-        )
-      );
-
-      // Generate a unique order ID
-      const newOrderRef = doc(collection(db, `restaurants/${user.uid}/orders`));
-
-      // Save the order to Firestore
-      await setDoc(newOrderRef, {
-        ...firestoreOrderData,
-        id: newOrderRef.id,  // Include the generated ID in the document
-        createdAt: serverTimestamp()  // Use server timestamp for consistency
-      });
-
-      // Update table status when creating an order
-      const updateTableStatus = async () => {
-        if (orderType === 'table' && selectedTable) {
-          try {
-            const restaurantId = user?.uid || ''
-            const tableRef = doc(db, `restaurants/${restaurantId}/tables`, selectedTable.uid)
-            
-            await updateDoc(tableRef, {
-              status: 'occupied',
-              activeOrderId: newOrderRef.id
-            })
-          } catch (error) {
-            console.error('Error updating table status:', error)
-            toast({
-              title: t("orders.errors.updateTableStatus"),
-              description: error instanceof Error ? error.message : "Não foi possível atualizar o status da mesa",
-              variant: "destructive"
-            })
-          }
+        orderContext: {
+          orderType,
+          tableNumber,
+          tableId: table?.id,
+          tableMapId: table?.tableMapId
         }
       }
+    };
 
-      // Call update table status after order creation
-      await updateTableStatus()
+    // Comprehensive order data cleaning
+    const cleanOrder = Object.fromEntries(
+      Object.entries(newOrder)
+        .filter(([_, v]) => 
+          v !== undefined && 
+          v !== null && 
+          // Remove empty objects and arrays
+          (typeof v !== 'object' || 
+           (Array.isArray(v) ? v.length > 0 : Object.keys(v).length > 0))
+        )
+        .map(([k, v]) => {
+          // Recursively clean nested objects
+          if (typeof v === 'object' && !Array.isArray(v)) {
+            return [k, Object.fromEntries(
+              Object.entries(v)
+                .filter(([_, nestedV]) => 
+                  nestedV !== undefined && 
+                  nestedV !== null && 
+                  nestedV !== ''
+                )
+            )];
+          }
+          return [k, v];
+        })
+    ) as Order;
 
-      // Success notification
+    console.log('🧹 Cleaned Order Object:', JSON.stringify(cleanOrder, null, 2));
+
+    // Validate order before creation
+    console.log('Debug: Order Creation Attempt', {
+      orderItems: orderItems.length,
+      orderType,
+      tableNumber,
+      userExists: !!user,
+      userEstablishmentId: user?.establishmentId
+    })
+
+    // Ensure order has at least some meaningful data
+    if (orderItems.length === 0) {
+      console.error('Order creation failed: No items in order', {
+        orderType,
+        tableNumber,
+        user: user?.uid
+      })
       toast({
-        title: t("orders.success.orderCreated"),
-        description: t("orders.success.orderCreatedDescription"),
-        variant: "default"
-      });
-
-      // Reset form state
-      resetForm();
-
-      // Optional: Close order form
-      onOrderCreated?.(finalOrderData);
-
-    } catch (error) {
-      // Comprehensive error handling
-      console.error('Order Creation Error:', error);
-      
-      toast({
-        title: t("orders.errors.orderCreationFailed"),
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        title: t("orders.errors.noItemsInOrder"),
         variant: "destructive"
-      });
+      })
+      return
     }
-  };
+
+    // Use onOrderCreated callback if provided
+    if (onOrderCreated) {
+      try {
+        // Log the order being passed to onOrderCreated
+        console.log('Debug: Passing Order to onOrderCreated', {
+          order: {
+            ...cleanOrder,
+            items: cleanOrder.items.map((item: { name: any; quantity: any; price: any }) => ({
+              name: item.name,
+              quantity: item.quantity,
+              price: item.price
+            }))
+          }
+        })
+
+        const result = onOrderCreated(cleanOrder)
+        
+        // Check if the result is a Promise-like object
+        if (result != null && typeof result === 'object' && 'then' in result) {
+          await (result as Promise<any>)
+        }
+
+        // Reset form after successful submission
+        resetForm()
+
+        // Show success toast
+        toast({
+          title: t("orders.success.orderCreated"),
+          description: t("orders.success.orderCreatedDescription"),
+          variant: "default"
+        })
+      } catch (error) {
+        console.error("Error creating order via onOrderCreated:", {
+          error,
+          orderDetails: {
+            itemCount: newOrder.items.length,
+            orderType: newOrder.orderType,
+            tableNumber: newOrder.tableNumber
+          }
+        })
+        
+        toast({
+          title: t("orders.errors.orderCreationFailed"),
+          description: error instanceof Error ? error.message : "Não foi possível criar o pedido",
+          variant: "destructive"
+        })
+      }
+    } else {
+      // Fallback: Direct order creation if no callback is provided
+      try {
+        if (!db || !user?.establishmentId) {
+          toast({
+            title: t("orders.errors.noEstablishmentId"),
+            variant: "destructive"
+          })
+          return
+        }
+
+        const ordersRef = collection(db, 'restaurants', user.establishmentId, 'orders')
+        const orderDocRef = doc(ordersRef)
+        
+        // Save order directly to Firestore
+        await setDoc(orderDocRef, {
+          ...cleanOrder,
+          id: orderDocRef.id,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        })
+
+        // Reset form after successful order creation
+        resetForm()
+        
+        toast({
+          title: t("orders.success.orderCreated"),
+          variant: "default"
+        })
+      } catch (error) {
+        console.error("Direct order creation error:", {
+          error,
+          orderDetails: {
+            itemCount: newOrder.items.length,
+            orderType: newOrder.orderType,
+            tableNumber: newOrder.tableNumber
+          }
+        })
+        
+        toast({
+          title: t("orders.errors.orderCreationFailed"),
+          description: error instanceof Error ? error.message : undefined,
+          variant: "destructive"
+        })
+      }
+    }
+  }
 
   // Modify resetForm to handle new state
   const resetForm = () => {
@@ -926,7 +1005,7 @@ export function OrderForm({
     }
 
     function handleTableNumberChange(event: ChangeEvent<HTMLInputElement>): void {
-      throw new Error("Function not implemented.")
+      setTableNumber(event.target.value);
     }
 
     // Custom table selection when no table is predefined
@@ -955,10 +1034,9 @@ export function OrderForm({
             <Input 
               type="text" 
               placeholder={t("orders.tableNumberPlaceholder")} 
-              defaultValue={0}
-              // No need to set tableNumber here
-              className="w-full"
+              value={tableNumber}
               onChange={handleTableNumberChange}
+              className="w-full"
             />
           </div>
         )}
