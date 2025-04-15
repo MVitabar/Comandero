@@ -123,7 +123,9 @@ export function OrderForm({
       itemId: menuItem.uid,
       menuItemId: menuItem.uid,
       name: menuItem.name,
-      category: menuItem.category || 'uncategorized',
+      category: menuItem.category 
+        ? t(`orders.categories.${menuItem.category}`) 
+        : t('orders.categories.uncategorized'),
       quantity,
       price: menuItem.price,
       notes: notes || "",
@@ -974,7 +976,7 @@ export function OrderForm({
               key={category} 
               value={category}
             >
-              {category}
+              {t(`orders.categories.${category}`)}
             </SelectItem>
           ))}
         </SelectContent>

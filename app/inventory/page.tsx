@@ -488,12 +488,12 @@ export default function InventoryPage() {
                         </SelectTrigger>
                         <SelectContent>
                           {/* Add your categories here */}
-                          <SelectItem value="drinks">Drinks</SelectItem>
-                          <SelectItem value="appetizers">Appetizers</SelectItem>
-                          <SelectItem value="main_courses">Main Courses</SelectItem>
-                          <SelectItem value="desserts">Desserts</SelectItem>
-                          <SelectItem value="salads">Salads</SelectItem>
-                          <SelectItem value="sides">Sides</SelectItem>
+                          <SelectItem value="drinks">{t('dashboard.salesByCategory.categories.drinks')}</SelectItem>
+                          <SelectItem value="appetizers">{t('dashboard.salesByCategory.categories.appetizers')}</SelectItem>
+                          <SelectItem value="main_courses">{t('dashboard.salesByCategory.categories.main_courses')}</SelectItem>
+                          <SelectItem value="desserts">{t('dashboard.salesByCategory.categories.desserts')}</SelectItem>
+                          <SelectItem value="salads">{t('dashboard.salesByCategory.categories.salads')}</SelectItem>
+                          <SelectItem value="sides">{t('dashboard.salesByCategory.categories.sides')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -612,7 +612,7 @@ export default function InventoryPage() {
               {filteredInventory.map((item) => (
                 <TableRow key={item.uid}>
                   <TableCell>{item.name}</TableCell>
-                  <TableCell>{item.category}</TableCell>
+                  <TableCell>{t(`inventory.categories.${item.category}`)}</TableCell>
                   <TableCell>
                     <Badge 
                       variant={

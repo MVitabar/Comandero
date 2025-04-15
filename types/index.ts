@@ -50,6 +50,7 @@ export interface User {
   establishmentId?: string
   currentEstablishmentName?: string
   restaurantName?: string
+  currency?: string
   
   // Enhanced authentication and status properties
   status: 'active' | 'inactive' | 'suspended' | 'pending'
@@ -774,9 +775,10 @@ export interface TableMapViewerProps {
 
 // Dashboard-related types
 export type SalesByCategory = {
-  category: string
-  totalSales: number
-  color: string
+  category: string;
+  totalSales: number;
+  totalQuantity: number;
+  color: string;
 }
 
 export type DailySalesData = {
@@ -820,4 +822,10 @@ export type DashboardData = {
   salesByCategory: SalesByCategory[]
   dailySalesData: DailySalesData[]
   topSellingItems: TopSellingItem[]
+  salesList: {
+    orderId: string
+    date: Date
+    total: number
+    paymentMethod: string
+  }[]
 }

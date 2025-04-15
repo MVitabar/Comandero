@@ -202,36 +202,52 @@ export const ptTranslations = {
     "goodEvening": "Good evening",
     "user": "User",
     "welcomeMessage": "Welcome to your dashboard, where you can manage the operations of your restaurant and track performance.",
-    "salesOverview": {
-      "title": "Sales Overview",
-      "description": "Total sales and performance",
-      "totalSales": "Total Sales",
-      "monthlyGrowth": "+{percentage}% of last month"
+    
+    "totalSales": {
+      "title": "Total Sales",
+      "performance": "Performance this month",
+      "trend": "Sales trend",
+      "comparedToLastMonth": "compared to last month"
     },
-    "topSellingItems": {
-      "title": "Top Selling Items",
-      "description": "Popular items",
-      "orderCount": "{{count, number}} orders"
+    
+    "dailySales": {
+      "title": "Daily Sales"
     },
-    "stockLevel": {
-      "title": "Stock Level",
-      "description": "Inventory status",
-      "percentage": "{percentage}%",
-      "lowStockItems": "{count} items with low stock",
-      "totalItems": "Total Items",
-      "inStock": "In Stock",
-      "lowStock": "Low Stock",
-      "status": {
-        "critical": "Critical Stock",
-        "warning": "Low Stock",
-        "healthy": "Healthy Stock"
+    
+    "salesByCategory": {
+      "title": "Sales by Category",
+      "description": "Breakdown of sales performance by product category",
+      "noSalesData": "No sales data available",
+      "categories": {
+        "main_courses": "Main Courses",
+        "drinks": "Drinks", 
+        "desserts": "Desserts",
+        "appetizers": "Appetizers",
+        "salads": "Salads",
+        "sides": "Sides",
+        "uncategorized": "Uncategorized"
       }
     },
-    "recentOrders": "Recent Orders",
-    "categories": "Categories",
-    "errors": {
-      "fetchFailed": "Failed to load dashboard data. Please try again later."
+    
+    "topSellingItems": {
+      "title": "Top Selling Items",
+      "subtitle": "Most popular products",
+      "description": "Popular items",
+      "orderCount": "{{count, number}} orders",
+      "quantity": "Quantity: {{value}}"
     },
+    
+    "recentOrders": {
+      "title": "Recent Orders",
+      "orderNumber": "Order #{{number}}",
+      "table": "Table"
+    },
+    
+    "additionalInsights": {
+      "title": "Additional Insights",
+      "placeholder": "No additional insights available"
+    },
+    
     "inventory": {
       "title": "Inventory Overview",
       "totals": "Totals",
@@ -243,14 +259,38 @@ export const ptTranslations = {
       "itemName": "Item Name",
       "category": "Category",
       "status": {
+        "label": "Status",
         "critical": "Critical Stock",
         "warning": "Low Stock",
         "healthy": "Healthy Stock"
+      }
+    },
+    
+    "errors": {
+      "fetchFailed": "Failed to load dashboard data. Please try again later."
+    },
+    "salesList": {
+      "title": "Sales History",
+      "noSales": "No sales recorded",
+      "columns": {
+        "date": "Date",
+        "orderId": "Order ID",
+        "total": "Total",
+        "paymentMethod": "Payment Method"
       }
     }
   },
 
   "orders": {
+    "categories": {
+      "main_courses": "Main Courses",
+      "drinks": "Drinks", 
+      "desserts": "Desserts",
+      "appetizers": "Appetizers",
+      "salads": "Salads",
+      "sides": "Sides",
+      "uncategorized": "Uncategorized"
+    },
     "title": "Orders",
     "newOrder": "New Order",
     "createOrder": "Create Order",
@@ -463,7 +503,7 @@ export const ptTranslations = {
   },
 
   "inventory": {
-    "title": "Inventory",
+    "title": "Inventory Overview",
     "subtitle": "Manage your restaurant's inventory",
     "searchPlaceholder": "Search in inventory...",
     "noItemsFound": "No items found",
@@ -474,13 +514,17 @@ export const ptTranslations = {
     "minQuantity": "Minimum Stock",
     "price": "Price",
     "actions": "Actions",
-    "status": "Status",
+    "status": {
+      "label": "Status",
+      "lowStock": "Low Stock",
+      "inStock": "In Stock"
+    },
     "addItem": "Add Item",
     "addItemTitle": "Add Item",
     "addItemDescription": "Add a new item to inventory",
     "description": "Item description",
     "supplier": "Supplier",
-    "selectCategory": "Select Category",
+    "selectCategory": "Select a category",
     "add": "Add",
     "cancel": "Cancel",
     "update": "Update",
@@ -520,6 +564,14 @@ export const ptTranslations = {
       "edit": "Edit Item",
       "cancel": "Cancel",
       "delete": "Delete Item"
+    },
+    "categories": {
+      "main_courses": "Main Courses",
+      "drinks": "Drinks", 
+      "desserts": "Desserts",
+      "appetizers": "Appetizers",
+      "salads": "Salads",
+      "sides": "Sides"
     }
   },
 

@@ -197,40 +197,68 @@ export const ptTranslations = {
   "dashboard": {
     "title": "Painel de Controle",
     "goodMorning": "Bom dia",
-    "goodAfternoon": "Boa tarde",
+    "goodAfternoon": "Boa tarde", 
     "goodEvening": "Boa noite",
     "user": "Usuário",
     "welcomeMessage": "Bem-vindo ao seu painel de controle, onde você pode gerenciar as operações do seu restaurante e acompanhar o desempenho.",
-    "salesOverview": {
-      "title": "Resumo de Vendas",
-      "description": "Vendas totais e desempenho",
-      "totalSales": "Vendas Totais",
-      "monthlyGrowth": "+{percentage}% do mês passado"
+  
+    "totalSales": {
+      "title": "Vendas Totais",
+      "performance": "Desempenho este mês",
+      "trend": "Comparado com o mês anterior",
+      "comparedToLastMonth": "comparado com o mês passado"
     },
-    "topSellingItems": {
-      "title": "Itens Mais Vendidos",
-      "description": "Itens populares",
-      "orderCount": "{{count, number}} pedidos"
+  
+    "dailySales": {
+      "title": "Vendas Diárias"
     },
-    "stockLevel": {
-      "title": "Níveis de Estoque",
-      "description": "Status do inventário",
-      "percentage": "{percentage}%",
-      "lowStockItems": "{count} itens com estoque baixo",
-      "totalItems": "Total de Itens",
-      "inStock": "Em Estoque",
-      "lowStock": "Estoque Baixo",
-      "status": {
-        "critical": "Estoque Crítico",
-        "warning": "Estoque Baixo",
-        "healthy": "Estoque Saudável"
+  
+    "salesByCategory": {
+      "title": "Vendas por Categoria",
+      "description": "Distribuição de vendas entre diferentes categorias de produtos",
+      "noSalesData": "Não há dados de vendas disponíveis",
+      "categories": {
+        "main_courses": "Pratos Principais",
+        "drinks": "Bebidas", 
+        "desserts": "Sobremesas",
+        "appetizers": "Aperitivos",
+        "salads": "Saladas",
+        "sides": "Acompanhamentos",
+        "uncategorized": "Sem Categoria"
       }
     },
-    "recentOrders": "Pedidos Recentes",
-    "categories": "Categorias",
-    "errors": {
-      "fetchFailed": "Falha ao carregar os dados do painel. Tente novamente mais tarde."
+  
+    "topSellingItems": {
+      "title": "Itens Mais Vendidos",
+      "subtitle": "Produtos mais populares",
+      "description": "Itens populares",
+      "orderCount": "{{count, number}} pedidos",
+      "quantity": "Vendas Totais: {{value}}",
+      "noItems": "Nenhum item em destaque encontrado"
     },
+  
+    "recentOrders": {
+      "title": "Pedidos Recentes",
+      "orderNumber": "Pedido #{{number}}",
+      "table": "Mesa"
+    },
+  
+    "additionalInsights": {
+      "title": "Informações Adicionais",
+      "placeholder": "Não há informações adicionais disponíveis"
+    },
+  
+    "salesList": {
+      "title": "Histórico de Vendas",
+      "noSales": "Nenhuma venda registrada",
+      "columns": {
+        "date": "Data",
+        "orderId": "ID do Pedido",
+        "total": "Total",
+        "paymentMethod": "Método de Pagamento"
+      }
+    },
+  
     "inventory": {
       "title": "Visão Geral do Inventário",
       "totals": "Totais",
@@ -242,14 +270,28 @@ export const ptTranslations = {
       "itemName": "Nome do Item",
       "category": "Categoria",
       "status": {
+        "label": "Status",
         "critical": "Estoque Crítico",
         "warning": "Estoque Baixo",
         "healthy": "Estoque Saudável"
       }
+    },
+  
+    "errors": {
+      "fetchFailed": "Falha ao carregar os dados do painel. Tente novamente mais tarde."
     }
   },
 
   "orders": {
+    "categories": {
+      "main_courses": "Pratos Principais",
+      "drinks": "Bebidas", 
+      "desserts": "Sobremesas",
+      "appetizers": "Aperitivos",
+      "salads": "Saladas",
+      "sides": "Acompanhamentos",
+      "uncategorized": "Sem Categoria"
+    },
     "title": "Pedidos",
     "newOrder": "Novo Pedido",
     "createOrder": "Criar Pedido",
@@ -471,7 +513,12 @@ export const ptTranslations = {
     "minQuantity": "Estoque Mínimo",
     "price": "Preço",
     "actions": "Ações",
-    "status": "Status",
+    "status": {
+      "label": "Status",
+      "critical": "Estoque Crítico",
+      "warning": "Estoque Baixo",
+      "healthy": "Estoque Saudável"
+    },
     "addItem": "Adicionar Item",
     "addItemDetails": {
       "title": "Adicionar Item",
@@ -506,6 +553,14 @@ export const ptTranslations = {
       "edit": "Editar Item",
       "cancel": "Cancelar",
       "delete": "Excluir Item"
+    },
+    "categories": {
+      "main_courses": "Pratos Principais",
+      "drinks": "Bebidas", 
+      "desserts": "Sobremesas",
+      "appetizers": "Entradas",
+      "salads": "Saladas",
+      "sides": "Acompanhamentos"
     }
   },
 

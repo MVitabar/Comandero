@@ -197,39 +197,68 @@ export const esTranslations = {
   "dashboard": {
     "title": "Panel de Control",
     "goodMorning": "Buenos días",
-    "goodAfternoon": "Buenas tardes",
+    "goodAfternoon": "Buenas tardes", 
     "goodEvening": "Buenas noches",
     "user": "Usuario",
     "welcomeMessage": "Bienvenido a su panel de control, donde puede administrar las operaciones de su restaurante y seguir el rendimiento.",
-    "salesOverview": {
-      "title": "Resumen de Ventas",
-      "description": "Ventas totales y rendimiento",
-      "totalSales": "Ventas Totales",
-      "monthlyGrowth": "+{percentage}% del mes pasado"
+  
+    "totalSales": {
+      "title": "Ventas Totales",
+      "performance": "Rendimiento este mes",
+      "trend": "Comparado con el mes anterior",
+      "comparedToLastMonth": "comparado con el mes pasado"
     },
-    "topSellingItems": {
-      "title": "Artículos Más Vendidos",
-      "description": "Artículos populares",
-      "orderCount": "{{count, number}} pedidos"
+  
+    "dailySales": {
+      "title": "Ventas Diarias"
     },
-    "stockLevel": {
-      "title": "Niveles de Inventario",
-      "description": "Estado del inventario",
-      "percentage": "{percentage}%",
-      "lowStockItems": "{count} artículos con stock bajo",
-      "totalItems": "Total de Artículos",
-      "inStock": "En Stock",
-      "lowStock": "Stock Bajo",
-      "status": {
-        "critical": "Stock Crítico",
-        "warning": "Stock Bajo",
-        "healthy": "Stock Saludable"
+  
+    "salesByCategory": {
+      "title": "Ventas por Categoría",
+      "description": "Distribución de ventas entre diferentes categorías de productos",
+      "noSalesData": "No hay datos de ventas disponibles",
+      "categories": {
+        "main_courses": "Platos Principales",
+        "drinks": "Bebidas", 
+        "desserts": "Postres",
+        "appetizers": "Entradas",
+        "salads": "Ensaladas",
+        "sides": "Guarniciones",
+        "uncategorized": "Sin Categoría"
       }
     },
-    "recentOrders": "Pedidos Recientes",
-    "categories": "Categorías",
-    "errors": {
-      "fetchFailed": "Error al cargar los datos del panel. Intente nuevamente más tarde."
+  
+    "topSellingItems": {
+      "title": "Artículos Más Vendidos",
+      "subtitle": "Productos más populares",
+      "description": "Artículos populares",
+      "orderCount": "{{count, number}} pedidos",
+      "quantity": "Ventas Totales: {{value}}",
+      "noData": "No se encontraron productos destacados",
+      "noItems": "No hay artículos para mostrar"
+    },
+  
+    "recentOrders": {
+      "title": "Pedidos Recientes",
+      "orderNumber": "Pedido #{{number}}",
+      "table": "Mesa"
+    },
+  
+    "additionalInsights": {
+      "title": "Información Adicional",
+      "comingSoon": "Más información próximamente!",
+      "placeholder": "Las perspectivas estarán disponibles en futuras actualizaciones"
+    },
+  
+    "salesList": {
+      "title": "Historial de Ventas",
+      "noSales": "No se registraron ventas",
+      "columns": {
+        "date": "Fecha",
+        "orderId": "ID de Pedido",
+        "total": "Total",
+        "paymentMethod": "Método de Pago"
+      }
     },
     "inventory": {
       "title": "Resumen de Inventario",
@@ -242,14 +271,28 @@ export const esTranslations = {
       "itemName": "Nombre del Artículo",
       "category": "Categoría",
       "status": {
+        "label": "Estado",
         "critical": "Stock Crítico",
         "warning": "Stock Bajo",
         "healthy": "Stock Saludable"
       }
+    },
+  
+    "errors": {
+      "fetchFailed": "Error al cargar los datos del panel. Intente nuevamente más tarde."
     }
   },
 
   "orders": {
+    "categories": {
+      "main_courses": "Platos Principales",
+      "drinks": "Bebidas", 
+      "desserts": "Postres",
+      "appetizers": "Entradas",
+      "salads": "Ensaladas",
+      "sides": "Guarniciones",
+      "uncategorized": "Sin Categoría"
+    },
     "title": "Pedidos",
     "newOrder": "Nuevo Pedido",
     "createOrder": "Crear Pedido",
@@ -470,7 +513,12 @@ export const esTranslations = {
     "minQuantity": "Cantidad Mínima",
     "price": "Precio",
     "actions": "Acciones",
-    "status": "Status",
+    "status": {
+      "label": "Estado",
+      "critical": "Stock Crítico",
+      "warning": "Stock Bajo",
+      "healthy": "Stock Saludable"
+    },
     "addItem": "Agregar Item",
     "addItemDetails": {
       "title": "Agregar Item",
@@ -505,6 +553,14 @@ export const esTranslations = {
       "edit": "Editar Item",
       "cancel": "Cancelar",
       "delete": "Eliminar Item"
+    },
+    "categories": {
+      "main_courses": "Platos Principales",
+      "drinks": "Bebidas", 
+      "desserts": "Postres",
+      "appetizers": "Entradas",
+      "salads": "Ensaladas",
+      "sides": "Guarniciones"
     }
   },
 
@@ -715,7 +771,7 @@ export const esTranslations = {
     },
     "notifications": {
       "title": "Notificaciones",
-      "description": "Gerencie suas preferências de notificação e métodos de entrega",
+      "description": "Gerencie suas preferências de notificação y métodos de entrega",
       "types": {
         "title": "Tipos de Notificaciones",
         "newOrders": {

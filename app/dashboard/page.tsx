@@ -5,7 +5,16 @@ import { useI18n } from "@/components/i18n-provider"
 import { useFirebase } from "@/components/firebase-provider"
 import { useAuth } from "@/components/auth-provider"
 import {Badge} from "@/components/ui/badge"
-import { collection, query, orderBy, limit, getDocs, getCountFromServer, where, Timestamp } from "firebase/firestore"
+import { 
+  collection, 
+  query, 
+  orderBy, 
+  limit, 
+  getDocs, 
+  getCountFromServer, 
+  where, 
+  Timestamp 
+} from "firebase/firestore"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BarChart, LineChart, Table } from "lucide-react"
@@ -59,7 +68,8 @@ export default function DashboardPage() {
     },
     salesByCategory: [],
     dailySalesData: [],
-    topSellingItems: []
+    topSellingItems: [],
+    salesList: []
   })
 
   const [inventoryViewMode, setInventoryViewMode] = useState<'totals' | 'by_category' | 'by_item'>('totals')
@@ -105,7 +115,7 @@ export default function DashboardPage() {
       const inventoryDetails: InventoryItemDetail[] = allInventoryItems.map(data => ({
         id: data.id as string,
         name: data.name || 'Unknown',
-        category: data.category || 'Uncategorized',
+        category: data.category || 'uncategorized',
         total: data.quantity || 0,
         inStock: data.quantity || 0,
         lowStock: Math.max(0, (data.quantity || 0) - (data.quantity || 0)),
@@ -197,42 +207,6 @@ export default function DashboardPage() {
         ? ((currentMonthTotalSales - lastMonthTotalSales) / lastMonthTotalSales * 100)
         : 0
 
-      setDashboardData({
-        totalOrders: currentMonthOrdersSnapshot.size,
-        totalSales: currentMonthTotalSales,
-        lowStockItems: totalLowStockItems,
-        recentOrders: ordersSnapshot.docs.map(doc => ({
-          ...doc.data() as Order,
-          id: doc.id
-        })),
-        monthlyGrowth,
-        totalInventoryItems,
-        inventoryItems: {
-          total: totalInventoryItems,
-          inStock: totalInStockItems,
-          lowStock: totalLowStockItems,
-          details: inventoryDetails
-        },
-        salesByCategory: [],
-        dailySalesData: [],
-        topSellingItems: []
-      })
-    } catch (error) {
-      console.error("Dashboard data fetch error:", error)
-    }
-  }
-
-  const fetchComprehensiveDashboardData = async () => {
-    try {
-      const ordersRef = collection(db, `restaurants/${user?.establishmentId}/orders`)
-      const inventoryRef = collection(db, `restaurants/${user?.establishmentId}/inventory`)
-
-      // Existing month calculations
-      const currentMonthStart = Timestamp.fromDate(startOfMonth(new Date()))
-      const currentMonthEnd = Timestamp.fromDate(endOfMonth(new Date()))
-      const lastMonthStart = Timestamp.fromDate(startOfMonth(subMonths(new Date(), 1)))
-      const lastMonthEnd = Timestamp.fromDate(endOfMonth(subMonths(new Date(), 1)))
-
       // Consulta de Sales by Category
       const salesByCategoryQuery = query(
         ordersRef, 
@@ -247,9 +221,11 @@ export default function DashboardPage() {
         const categoryColors: Record<string, string> = {
           'appetizers': '#0088FE',   // Azul claro
           'main_courses': '#00C49F', // Verde menta
+          'salads': '#32CD32',       // Lima verde
+          'sides': '#9370DB',        // Púrpura medio
           'desserts': '#FFBB28',     // Amarillo
           'drinks': '#FF8042',       // Naranja
-          'Uncategorized': '#8884D8' // Púrpura
+          'uncategorized': '#8884D8' // Púrpura
         }
         return categoryColors[category] || '#FF6384'  // Color por defecto rosa
       }
@@ -265,7 +241,7 @@ export default function DashboardPage() {
         const orderData = doc.data() as Order
         
         orderData.items.forEach((item: OrderItem) => {
-          const category = item.category || 'Uncategorized'
+          const category = item.category || 'uncategorized'
           const itemTotal = item.price * item.quantity
 
           const existingCategoryData = categorySalesMap.get(category) || { 
@@ -281,37 +257,35 @@ export default function DashboardPage() {
       })
 
       // Transformar datos para visualización
-      const salesByCategoryData: SalesByCategory[] = Array.from(categorySalesMap, 
-        ([category, data]) => ({
-          category, 
+      const translatedCategorySales = Array.from(categorySalesMap.entries()).map(([category, data]) => {
+        // Map full category names to translation keys
+        const categoryKeyMap: Record<string, string> = {
+          'Main Courses': 'main_courses',
+          'Drinks': 'drinks',
+          'Desserts': 'desserts',
+          'Appetizers': 'appetizers',
+          'Salads': 'salads',
+          'Sides': 'sides',
+          'Uncategorized': 'uncategorized'
+        }
+        
+        const translationKey = categoryKeyMap[category] || category.toLowerCase()
+        
+        return {
+          category: t(`${translationKey}`),
+          originalCategory: category,
           totalSales: data.totalSales,
           totalQuantity: data.totalQuantity,
-          color: getCategoryColor(category)
-        })
-      ).sort((a, b) => b.totalSales - a.totalSales)
+          color: getCategoryColor(category.toLowerCase())
+        }
+      }).sort((a, b) => b.totalSales - a.totalSales)
 
       // Diagnóstico detallado
       console.log("🍽️ Sales by Category Diagnóstico", {
         totalOrders: salesByCategorySnapshot.size,
-        categorySalesDetails: salesByCategoryData,
-        totalCategorySales: salesByCategoryData.reduce((sum, cat) => sum + cat.totalSales, 0)
+        categorySalesDetails: translatedCategorySales,
+        totalCategorySales: translatedCategorySales.reduce((sum, cat) => sum + cat.totalSales, 0)
       })
-
-      // Daily Sales Calculation
-      const dailySalesMap = new Map<string, number>()
-      salesByCategorySnapshot.docs.forEach(doc => {
-        const orderData = doc.data()
-        const orderDate = format(orderData.createdAt.toDate(), 'yyyy-MM-dd')
-        const orderTotal = orderData.total || 0
-        dailySalesMap.set(
-          orderDate, 
-          (dailySalesMap.get(orderDate) || 0) + orderTotal
-        )
-      })
-
-      const dailySalesData: DailySalesData[] = Array.from(dailySalesMap, 
-        ([date, sales]) => ({ date, sales }))
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
       // Calculate Top Selling Items from Orders
       const topSellingItemsMap = new Map<string, {
@@ -381,6 +355,78 @@ export default function DashboardPage() {
       console.log("Top Selling Items Map Size:", topSellingItemsMap.size)
       console.log("Top Selling Items:", JSON.stringify(topSellingItems, null, 2))
 
+      setDashboardData({
+        totalOrders: currentMonthOrdersSnapshot.size,
+        totalSales: currentMonthTotalSales,
+        lowStockItems: totalLowStockItems,
+        recentOrders: ordersSnapshot.docs.map(doc => ({
+          ...doc.data() as Order,
+          id: doc.id
+        })),
+        monthlyGrowth,
+        totalInventoryItems,
+        inventoryItems: {
+          total: totalInventoryItems,
+          inStock: totalInStockItems,
+          lowStock: totalLowStockItems,
+          details: inventoryDetails
+        },
+        salesByCategory: translatedCategorySales,
+        dailySalesData: [],
+        topSellingItems,
+        salesList: []
+      })
+    } catch (error) {
+      console.error("Dashboard data fetch error:", error)
+    }
+  }
+
+  const fetchComprehensiveDashboardData = async () => {
+    try {
+      // Hardcoded establishment ID for debugging
+      const hardcodedEstablishmentId = 'restaurante-milenio-f7a872'
+      
+      // Use hardcoded ID if user's establishmentId is undefined or empty
+      const establishmentId = user?.establishmentId || hardcodedEstablishmentId
+      
+      console.log("🔍 Establishment ID Debug:", {
+        userEstablishmentId: user?.establishmentId,
+        usedEstablishmentId: establishmentId
+      })
+
+      const ordersRef = collection(db, `restaurants/${establishmentId}/orders`)
+      
+      // Log the exact path being used
+      console.log("📂 Orders Collection Path:", `restaurants/${establishmentId}/orders`)
+      
+      // Fetch sales list (last 50 completed orders)
+      const salesQuery = query(
+        ordersRef, 
+        where('status', '==', 'finished'),
+        orderBy('createdAt', 'desc'),
+        limit(50)
+      )
+      
+      const salesSnapshot = await getDocs(salesQuery)
+      
+      // Log number of orders found
+      console.log("🧾 Orders Found:", salesSnapshot.docs.length)
+      
+      const salesList = salesSnapshot.docs.map(doc => {
+        const orderData = doc.data() as Order
+        // Check if createdAt is a Timestamp and convert if necessary
+        const createdAt = orderData.createdAt instanceof Timestamp 
+          ? orderData.createdAt.toDate() 
+          : orderData.createdAt
+
+        return {
+          orderId: doc.id,
+          date: createdAt,
+          total: orderData.total,
+          paymentMethod: orderData.paymentInfo?.method || 'Unknown'
+        }
+      })
+
       // Modify state update to preserve existing data
       setDashboardData(prevData => {
         console.log("Previous Dashboard Data (Detailed):", {
@@ -392,11 +438,10 @@ export default function DashboardPage() {
         
         const newData = {
           ...prevData,
-          salesByCategory: salesByCategoryData,
-          dailySalesData,
-          topSellingItems: topSellingItems.length > 0 
-            ? topSellingItems 
-            : (prevData.topSellingItems || [])
+          salesByCategory: prevData.salesByCategory,
+          dailySalesData: prevData.dailySalesData,
+          topSellingItems: prevData.topSellingItems,
+          salesList: salesList
         }
 
         console.log("New Dashboard Data (Detailed):", {
@@ -409,8 +454,33 @@ export default function DashboardPage() {
 
         return newData
       })
-    } catch (error) {
-      console.error("Comprehensive dashboard data fetch error:", error)
+    } catch (error: unknown) {
+      // Type guard to check if error is an Error object
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : typeof error === 'string' 
+          ? error 
+          : 'An unknown error occurred'
+      
+      const errorStack = error instanceof Error 
+        ? error.stack 
+        : undefined
+
+      console.error("Comprehensive dashboard data fetch error:", errorMessage)
+      
+      // Log detailed error information
+      console.error("🚨 Detailed Error:", {
+        message: errorMessage,
+        stack: errorStack,
+        establishmentId: user?.establishmentId
+      })
+      
+      setDashboardData(prevData => {
+        return {
+          ...prevData,
+          salesList: []
+        }
+      })
     }
   }
 
@@ -509,49 +579,6 @@ export default function DashboardPage() {
                 : t("dashboard.noSalesData")
               }
             </div>
-            {dashboardData.salesByCategory && dashboardData.salesByCategory.length > 0 && (
-              <div className="mt-4 h-[250px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={dashboardData.salesByCategory.map(category => ({
-                        name: category.category,
-                        value: category.totalSales,
-                        fill: category.color
-                      }))}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      fill="#8884d8"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {dashboardData.salesByCategory.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={entry.color} 
-                          stroke="#ffffff"  
-                          strokeWidth={2}   
-                          opacity={0.85}    
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value, name) => [
-                        `$${Number(value).toLocaleString('es-CL', { minimumFractionDigits: 2 })}`, 
-                        name
-                      ]}
-                    />
-                    <Legend 
-                      layout="horizontal" 
-                      verticalAlign="bottom" 
-                      align="center"
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            )}
           </CardContent>
         </Card>
 
@@ -644,7 +671,7 @@ export default function DashboardPage() {
                     <div className="space-y-4">
                       {Object.entries(
                         dashboardData.inventoryItems.details.reduce((acc, item) => {
-                          const category = item.category || 'Uncategorized'
+                          const category = item.category || 'uncategorized'
                           
                           if (!acc[category]) {
                             acc[category] = {
@@ -709,7 +736,9 @@ export default function DashboardPage() {
                                         key={key} 
                                         className="text-xs sm:text-sm font-semibold text-gray-600 py-3"
                                       >
-                                        {t(`dashboard.inventory.${key}`)}
+                                        {key === 'status' 
+                                          ? t('dashboard.inventory.status.label') 
+                                          : t(`dashboard.inventory.${key}`)}
                                       </TableHead>
                                     ))}
                                   </TableRow>
@@ -756,7 +785,7 @@ export default function DashboardPage() {
                       <div className="w-full border rounded-lg overflow-hidden">
                         <div className="max-h-64 overflow-y-auto">
                           <table className="w-full min-w-full">
-                            <thead className="bg-gray-50 sticky top-0 z-10">
+                            <thead className="sticky top-0 bg-white z-10">
                               <tr>
                                 {[
                                   "itemName", 
@@ -767,9 +796,11 @@ export default function DashboardPage() {
                                 ].map(key => (
                                   <th 
                                     key={key} 
-                                    className="px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider sticky top-0 bg-gray-50"
+                                    className="px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider sticky top-0 bg-white"
                                   >
-                                    {t(`dashboard.inventory.${key}`)}
+                                    {key === 'status' 
+                                      ? t('dashboard.inventory.status.label') 
+                                      : t(`dashboard.inventory.${key}`)}
                                   </th>
                                 ))}
                               </tr>
@@ -820,107 +851,170 @@ export default function DashboardPage() {
             </CardHeader>
           </Card>
         </div>
-
-        {/* Top Selling Items - Bottom Left */}
-        <Card>
+         {/* Top Selling Items */}
+         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {t("dashboard.topSellingItems.title")}
-            </CardTitle>
-            <CardDescription>
-              {t("dashboard.topSellingItems.subtitle")}
-            </CardDescription>
+            <CardTitle>{t('dashboard.topSellingItems.title')}</CardTitle>
+            <CardDescription>{t('dashboard.topSellingItems.subtitle')}</CardDescription>
           </CardHeader>
           <CardContent>
-            {(() => {
-              // Force conversion to array and ensure items exist
-              const topItems = Array.isArray(dashboardData.topSellingItems) 
-                ? dashboardData.topSellingItems 
-                : []
-
-              console.log("Rendering Top Selling Items:", {
-                items: topItems,
-                length: topItems.length
-              })
-
-              return topItems.length > 0 ? (
-                topItems.map((item) => (
-                  <div 
-                    key={item.id} 
-                    className="flex justify-between items-center py-2 border-b last:border-b-0"
-                  >
-                    <span>{item.name}</span>
-                    <div className="flex space-x-2">
-                      <span className="text-muted-foreground text-sm">
-                        {t("dashboard.topSellingItems.quantity", { quantity: item.quantity })}
-                      </span>
-                      <span className="font-bold">
-                        {t("commons.currency", { 
-                          value: item.totalSales.toLocaleString(i18n.language, { 
-                            minimumFractionDigits: 2, 
-                            maximumFractionDigits: 2 
-                          }) 
-                        })}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-4 text-muted-foreground">
-                  {t("dashboard.topSellingItems.noItems")}
-                </div>
-              )
-            })()}
-          </CardContent>
-        </Card>
-
-        {/* Recent Orders - Bottom Center */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {t("dashboard.recentOrders.title")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {dashboardData.recentOrders.map((order) => (
+            {dashboardData.topSellingItems.map((item) => (
               <div 
-                key={order.id} 
+                key={item.id} 
                 className="flex justify-between items-center py-2 border-b last:border-b-0"
               >
-                <span>
-                  {t("dashboard.recentOrders.orderNumber", { number: order.id })}
-                </span>
-                <div className="flex space-x-2">
-                  <span className="text-muted-foreground text-sm">
-                    {order.orderType}
-                  </span>
-                  <span className="font-bold">
-                    {t("commons.currency", { 
-                      value: order.total.toLocaleString(i18n.language, { 
-                        minimumFractionDigits: 2, 
-                        maximumFractionDigits: 2 
-                      }) 
-                    })}
-                  </span>
+                <div>
+                  <div className="font-medium">{item.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {t('dashboard.topSellingItems.quantity', { value: item.totalSales.toLocaleString(i18n.language, { minimumFractionDigits: 2 }) })}
+                  </div>
                 </div>
+                <Badge variant="secondary">{item.quantity}</Badge>
               </div>
             ))}
           </CardContent>
         </Card>
 
-        {/* Additional Insights or Placeholder - Bottom Right */}
-        <Card>
+        {/* Sales by Category */}
+        <Card className="col-span-2">
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {t("dashboard.additionalInsights.title")}
-            </CardTitle>
+            <CardTitle>{t('dashboard.salesByCategory.title')}</CardTitle>
+            <CardDescription>{t('dashboard.salesByCategory.description')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-xs text-muted-foreground">
-              {t("dashboard.additionalInsights.placeholder")}
+            {dashboardData.salesByCategory && dashboardData.salesByCategory.length > 0 ? (
+              <ResponsiveContainer width="100%" height={350}>
+                <PieChart>
+                  <Pie
+                    data={dashboardData.salesByCategory}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={120}
+                    fill="#8884d8"
+                    dataKey="totalSales"
+                    nameKey="category"
+                  >
+                    {dashboardData.salesByCategory.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value, name) => [
+                      `${new Intl.NumberFormat(i18n.language, { style: 'currency', currency: user?.currency || 'USD' }).format(value as number)}`, 
+                      t(`dashboard.salesByCategory.categories.${name}`)
+                    ]}
+                  />
+                  <Legend 
+                    formatter={(value) => t(`dashboard.salesByCategory.categories.${value}`)}
+                    layout="vertical" 
+                    verticalAlign="middle" 
+                    align="right"
+                    iconType="circle"
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="text-center text-muted-foreground p-4">
+                {t('dashboard.salesByCategory.noSalesData')}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        {/* Recent Orders */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('dashboard.recentOrders.title')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {dashboardData.recentOrders.map((order, index) => (
+              <div 
+                key={order.id} 
+                className="flex justify-between items-center py-2 border-b last:border-b-0"
+              >
+                <div>
+                  <div className="font-medium">
+                    {t('dashboard.recentOrders.orderNumber', { number: index + 1 })}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {t('dashboard.recentOrders.table')} {order.tableNumber || '-'}
+                  </div>
+                </div>
+                <Badge variant="outline">
+                  {order.total.toLocaleString(i18n.language, { style: 'currency', currency: 'USD' })}
+                </Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Sales List */}
+        <div className="md:col-span-3">
+          <Card className="h-full flex flex-col">
+            <CardHeader>
+              <CardTitle>{t('dashboard.salesList.title')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {dashboardData.salesList.length > 0 ? (
+                <div className="overflow-auto">
+                  <table className="w-full">
+                    <thead className="sticky top-0 bg-white z-10">
+                      <tr className="border-b">
+                        <th className="px-4 py-2 text-left">{t('dashboard.salesList.columns.date')}</th>
+                        <th className="px-4 py-2 text-left">{t('dashboard.salesList.columns.orderId')}</th>
+                        <th className="px-4 py-2 text-right">{t('dashboard.salesList.columns.total')}</th>
+                        <th className="px-4 py-2 text-left">{t('dashboard.salesList.columns.paymentMethod')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dashboardData.salesList.map((sale) => (
+                        <tr key={sale.orderId} className="border-b last:border-b-0">
+                          <td className="px-4 py-2">
+                            {new Date(sale.date).toLocaleDateString(i18n.language, {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </td>
+                          <td className="px-4 py-2">{sale.orderId}</td>
+                          <td className="px-4 py-2 text-right">
+                            {sale.total.toLocaleString(i18n.language, { 
+                              style: 'currency', 
+                              currency: user?.currency || 'USD' 
+                            })}
+                          </td>
+                          <td className="px-4 py-2">{sale.paymentMethod}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center text-muted-foreground p-4">
+                  {t('dashboard.salesList.noSales')}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+       
+
+        
+
+        {/* Additional Insights */}
+        <div className="md:col-span-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('dashboard.additionalInsights.title')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center text-muted-foreground">
+              {t('dashboard.additionalInsights.placeholder')}
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   )
