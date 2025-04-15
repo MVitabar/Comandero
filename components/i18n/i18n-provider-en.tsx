@@ -231,6 +231,22 @@ export const ptTranslations = {
     "categories": "Categories",
     "errors": {
       "fetchFailed": "Failed to load dashboard data. Please try again later."
+    },
+    "inventory": {
+      "title": "Inventory Overview",
+      "totals": "Totals",
+      "byCategory": "By Category",
+      "byItem": "By Item",
+      "total": "Total Items",
+      "inStock": "In Stock",
+      "lowStock": "Low Stock",
+      "itemName": "Item Name",
+      "category": "Category",
+      "status": {
+        "critical": "Critical Stock",
+        "warning": "Low Stock",
+        "healthy": "Healthy Stock"
+      }
     }
   },
 

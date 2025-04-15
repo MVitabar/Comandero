@@ -230,6 +230,22 @@ export const ptTranslations = {
     "categories": "Categorias",
     "errors": {
       "fetchFailed": "Falha ao carregar os dados do painel. Tente novamente mais tarde."
+    },
+    "inventory": {
+      "title": "Visão Geral do Inventário",
+      "totals": "Totais",
+      "byCategory": "Por Categoria",
+      "byItem": "Por Item",
+      "total": "Total de Itens",
+      "inStock": "Em Estoque",
+      "lowStock": "Estoque Baixo",
+      "itemName": "Nome do Item",
+      "category": "Categoria",
+      "status": {
+        "critical": "Estoque Crítico",
+        "warning": "Estoque Baixo",
+        "healthy": "Estoque Saudável"
+      }
     }
   },
 

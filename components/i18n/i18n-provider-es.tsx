@@ -230,6 +230,22 @@ export const esTranslations = {
     "categories": "Categorías",
     "errors": {
       "fetchFailed": "Error al cargar los datos del panel. Intente nuevamente más tarde."
+    },
+    "inventory": {
+      "title": "Resumen de Inventario",
+      "totals": "Totales",
+      "byCategory": "Por Categoría",
+      "byItem": "Por Artículo",
+      "total": "Total de Artículos",
+      "inStock": "En Stock",
+      "lowStock": "Bajo Stock",
+      "itemName": "Nombre del Artículo",
+      "category": "Categoría",
+      "status": {
+        "critical": "Stock Crítico",
+        "warning": "Stock Bajo",
+        "healthy": "Stock Saludable"
+      }
     }
   },
 

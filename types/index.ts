@@ -771,3 +771,53 @@ export interface TableMapViewerProps {
   maxZoom?: number;
   initialZoom?: number;
 }
+
+// Dashboard-related types
+export type SalesByCategory = {
+  category: string
+  totalSales: number
+  color: string
+}
+
+export type DailySalesData = {
+  date: string
+  sales: number
+}
+
+export type TopSellingItem = {
+  id: string
+  name: string
+  quantity: number
+  totalSales: number
+  category?: string
+}
+
+export type InventoryItemStatus = 'critical' | 'warning' | 'healthy'
+
+export type InventoryItemDetail = {
+  name: string
+  category?: string
+  total: number
+  inStock: number
+  lowStock: number
+  status: InventoryItemStatus
+  id?: string
+}
+
+export type DashboardData = {
+  totalOrders: number
+  totalSales: number
+  lowStockItems: number
+  recentOrders: Order[]
+  monthlyGrowth: number
+  totalInventoryItems: number
+  inventoryItems: {
+    total: number
+    lowStock: number
+    inStock: number
+    details: InventoryItemDetail[]
+  }
+  salesByCategory: SalesByCategory[]
+  dailySalesData: DailySalesData[]
+  topSellingItems: TopSellingItem[]
+}
