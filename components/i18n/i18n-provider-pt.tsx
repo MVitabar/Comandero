@@ -14,6 +14,7 @@ export const ptTranslations = {
     "filter": "Filtrar",
     "actions": "Ações",
     "tableNumber": "Mesa N°",
+    "close": "Fechar",
     "button": {
       "add": "Adicionar",
       "edit": "Editar",
@@ -64,7 +65,8 @@ export const ptTranslations = {
         "invalidCredentials": "E-mail ou senha inválidos",
         "tooManyAttempts": "Muitas tentativas falhas. Tente novamente mais tarde."
       }
-    }
+    },
+    "deleted": "Excluído"
   },
 
   "tableMaps": {
@@ -82,6 +84,12 @@ export const ptTranslations = {
     "updateError": "Erro ao atualizar o mapa de mesas",
     "deleteError": "Erro ao excluir o mapa de mesas",
     "loadingTitle": "Carregando Mapa de Mesas",
+    "delete": {
+      "confirmTitle": "Excluir Mapa de Mesa",
+      "confirmDescription": "Tem certeza de que deseja excluir o mapa de mesa '{{name}}'?",
+      "success": "Mapa de Mesa Excluído",
+      "error": "Erro ao excluir o mapa de mesa"
+    }
   },
 
   "tableDialog": {
@@ -115,7 +123,9 @@ export const ptTranslations = {
     "edit": "Editar",
     "delete": "Excluir",
     "created": "criado",
-    "close": "Fechar"
+    "close": "Fechar",
+    "error": "Erro",
+    "deleted": "Excluído"
   },
 
   "tables": {
@@ -138,6 +148,9 @@ export const ptTranslations = {
       "mapName": "Nome do Mapa",
       "mapDescription": "Descrição do Mapa",
       "noMapsFound": "Nenhum Mapa de Mesas Encontrado",
+      "createMapDescription": "Criar um novo mapa de mesas para o seu restaurante",
+      "mapNamePlaceholder": "Digite o nome do mapa",
+      "mapDescriptionPlaceholder": "Digite a descrição do mapa",
       "layout": "Layout",
       "addTable": "Adicionar Mesa",
       "tablePosition": "Posição da Mesa",
@@ -151,15 +164,23 @@ export const ptTranslations = {
       "mapCreated": "Mapa de Mesas Criado",
       "mapUpdated": "Mapa de Mesas Atualizado",
       "mapDeleted": "Mapa de Mesas Excluído",
+      "delete": {
+        "confirmTitle": "Excluir Mapa de Mesa",
+        "confirmDescription": "Tem certeza de que deseja excluir o mapa de mesa '{{name}}'?",
+        "success": "Mapa de Mesa Excluído",
+        "error": "Erro ao excluir o mapa de mesa"
+      },
+      "fetchError": "Erro ao buscar mapas de mesas"
     }
   },
+  
 
   "sidebar": {
     "appName": "Comandero",
     "dashboard": "Painel de Controle",
     "orders": "Pedidos",
     "tables": "Mesas",
-    "inventory": "Estoque",
+    "inventory": "Inventário",
     "users": "Usuários",
     "settings": "Configurações",
     "advancedReports": "Relatórios Avançados",
@@ -216,7 +237,24 @@ export const ptTranslations = {
     "title": "Pedidos",
     "newOrder": "Novo Pedido",
     "createOrder": "Criar Pedido",
+    "tableNumberPlaceholder": "Insira o número da mesa",
     "noOrdersFound": "Nenhum pedido encontrado",
+    "table": "Mesa",
+    "counter": "Balcão",
+    "waiter": "Garçom",
+    "takeaway": "Delivery",
+    "details":{
+      "title": "Detalhes do Pedido",
+      "description": "Detalhes do Pedido",
+      "id": "ID do Pedido",
+      "tableNumber": "Número da Mesa",
+      "waiter": "Garçom",
+      "counter": "Balcão",
+      "items": "Itens",
+      "total": "Total",
+      "status": "Status",
+      "actions": "Ações"
+    },
     "search": {
       "placeholder": "Buscar pedidos por ID, mesa ou garçom"
     },
@@ -243,7 +281,7 @@ export const ptTranslations = {
       "deleteOrderFailed": "Falha ao excluir pedido"
     },
     "orderType": "Tipo de Pedido",
-    "table": "Mesa",
+    
     "tableNumber": "Número da Mesa",
     "selectCategory": "Selecionar Categoria",
     "selectItem": "Selecionar Item",
@@ -406,151 +444,110 @@ export const ptTranslations = {
   },
 
   "inventory": {
-    "pageTitle": "Gestão de Inventário",
-    "searchPlaceholder": "Buscar no inventário...",
-    "noItemsFound": "Nenhum item encontrado no inventário",
-    "categories": {
-      "drinks": "Bebidas",
-      "food": "Comida",
-      "menu_item": "Item de Menú"
-    },
-    "formLabels": {
-      "name": "Nome",
-      "category": "Categoria", 
-      "quantity": "Quantidade",
-      "unit": "Unidade",
-      "minQuantity": "Quantidade Mínima",
-      "price": "Preço",
-      "actions": "Ações",
-      "status": "Status"
-    },
-    "addItem": {
+    "title": "Inventário",
+    "subtitle": "Gerencie o inventário do seu restaurante",
+    "searchPlaceholder": "Pesquisar no inventário...",
+    "noItemsFound": "Nenhum item encontrado",
+    "name": "Nome",
+    "category": "Categoria", 
+    "quantity": "Quantidade",
+    "unit": "Unidade",
+    "minQuantity": "Estoque Mínimo",
+    "price": "Preço",
+    "actions": "Ações",
+    "status": "Status",
+    "addItem": "Adicionar Item",
+    "addItemDetails": {
       "title": "Adicionar Item",
       "description": "Adicionar um novo item ao inventário",
-      "namePlaceholder": "Insira o nome do item",
+      "namePlaceholder": "Digite o nome do item",
       "categoryPlaceholder": "Selecione a categoria do item",
-      "quantityPlaceholder": "Insira a quantidade",
-      "unitPlaceholder": "Insira a unidade (ex. kg, pçs)",
-      "minQuantityPlaceholder": "Insira a quantidade mínima de estoque",
-      "pricePlaceholder": "Insira o preço do item",
+      "quantityPlaceholder": "Digite a quantidade",
+      "unitPlaceholder": "Digite a unidade (ex. kg, pçs)",
+      "minQuantityPlaceholder": "Digite a quantidade mínima de estoque",
+      "pricePlaceholder": "Digite o preço do item",
       "successToast": "{{itemName}} foi adicionado ao inventário",
-      "errorToast": "Falha ao adicionar item de inventário",
-      "cancel": "Cancelar",
-      "actions": "Ações",
-      "descriptionPlaceholder": "Insira a descrição do item"
+      "errorToast": "Falha ao adicionar item ao inventário"
     },
-    "editItem": {
+    "editItemDetails": {
       "title": "Editar Item",
-      "description": "Modificar os detalhes de um item de inventário existente",
+      "description": "Editar detalhes do item de inventário",
       "successToast": "{{itemName}} foi atualizado",
-      "errorToast": "Falha ao atualizar item de inventário",
-      "cancel": "Cancelar"
+      "errorToast": "Falha ao atualizar item de inventário"
     },
-    "deleteItem": {
+    "deleteItemDetails": {
       "title": "Excluir Item",
       "description": "Tem certeza de que deseja excluir {{itemName}}? Esta ação não pode ser desfeita.",
-      "successToast": "Item de inventário foi excluído",
+      "successToast": "Item de inventário excluído",
       "errorToast": "Falha ao excluir item de inventário"
     },
-    "status": {
+    "stockStatus": {
       "lowStock": "Estoque Baixo",
       "inStock": "Em Estoque"
     },
     "buttons": {
-      "addItem": "Adicionar Item",
-      "editItem": "Editar Item",
-      "cancel": "Cancelar"
-    },
-    "errors": {
-      "fetchItems": "Falha ao buscar itens de inventário",
-      "addItem": "Falha ao adicionar item de inventário",
-      "deleteItem": "Falha ao excluir item de inventário"
-    },
-    "noItems": "Nenhum item no inventário",
-    "noMatchingItems": "Nenhum item encontrado",
-    "initialLoad": {
-      "success": "Itens do menu carregados com sucesso",
-      "description": "{{count}} itens foram adicionados ao inventário",
-      "error": "Erro ao carregar itens iniciais"
+      "add": "Adicionar Item",
+      "edit": "Editar Item",
+      "cancel": "Cancelar",
+      "delete": "Excluir Item"
     }
   },
 
   "users": {
     "pageTitle": "Usuários",
     "addUser": "Adicionar Usuário",
+    "searchPlaceholder": "Pesquisar usuários...",
     "userList": "Lista de Usuários",
-    "searchPlaceholder": "Buscar usuários...",
-    "noUsers": "Nenhum usuário encontrado",
     "username": "Nome de Usuário",
     "email": "E-mail",
     "role": "Função",
     "status": "Status",
-    "actions": "Ações",
-    "openMenu": "Abrir menu",
-    "copyId": "Copiar ID",
+    "deleteSuccess": "Usuário Excluído",
+    "hasBeenDeleted": "foi excluído",
+    "errors": {
+      "deleteUser": "Erro ao Excluir Usuário"
+    },
+    "noUsers": "Nenhum usuário encontrado",
+    "roles": {
+      "owner": "Proprietário",
+      "admin": "Administrador", 
+      "manager": "Gerente",
+      "staff": "Funcionário",
+      "waiter": "Garçom",
+      "default": "Usuário"
+    },
     "userStatus": {
       "active": "Ativo",
       "inactive": "Inativo",
       "suspended": "Suspenso"
     },
-    "roles": {
-      "owner": "Propietario",
-      "admin": "Administrador",
-      "manager": "Gerente",
-      "staff": "Funcionário",
-      "waiter": "Garçom"
-      
-    },
-    "errors": {
-      "fetchUsers": "Erro ao carregar usuários",
-      "createUser": "Erro ao criar usuário",
-      "updateUser": "Erro ao atualizar usuário",
-      "deleteUser": "Erro ao excluir usuário"
-    },
-    "success": {
-      "userCreated": "Usuário criado com sucesso",
-      "userUpdated": "Usuário atualizado com sucesso",
-      "userDeleted": "Usuário excluído com sucesso"
-    },
-    "form": {
-      "createTitle": "Criar Novo Usuário",
-      "editTitle": "Editar Usuário",
-      "labels": {
-        "username": "Nome de Usuário",
-        "email": "E-mail",
-        "role": "Função",
-        "status": "Status",
-        "password": "Senha",
-        "confirmPassword": "Confirmar Senha"
-      },
-      "placeholders": {
-        "username": "Digite o nome de usuário",
-        "email": "Digite o e-mail",
-        "role": "Selecione a função",
-        "status": "Selecione o status",
-        "password": "Digite a senha",
-        "confirmPassword": "Confirme a senha"
-      },
-      "validation": {
-        "usernameRequired": "Nome de usuário é obrigatório",
-        "emailRequired": "E-mail é obrigatório",
-        "emailInvalid": "E-mail inválido",
-        "roleRequired": "Função é obrigatória",
-        "statusRequired": "Status é obrigatório",
-        "passwordRequired": "Senha é obrigatória",
-        "passwordMinLength": "Senha deve ter no mínimo 8 caracteres",
-        "passwordsMatch": "As senhas devem coincidir"
-      }
-    }
+    "openMenu": "Abrir menu",
+    "copyId": "Copiar ID",
+    "editUser": "Editar Usuário",
+    "delete": "Excluir",
+    "confirmDelete": "Confirmar Exclusão",
+    "confirmDeleteDescription": "Tem certeza de que deseja excluir o usuário '{{username}}'?",
+    "deleteUser": "Excluir Usuário"
   },
 
   "login": {
     "title": "Entrar",
-    "description": "Insira suas credenciais para acessar sua conta",
-    "email": "E-mail",
-    "password": "Senha",
+    "subtitle": "Insira suas credenciais para acessar sua conta",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "Insira seu e-mail",
+    "passwordLabel": "Senha",
+    "passwordPlaceholder": "Insira sua senha",
     "login": "Entrar",
     "forgotPassword": "Esqueceu sua senha?",
+    "sendPasswordReset": "Enviar Restabelecimento de Senha",
+    "passwordResetSuccess": "Restabelecimento de senha e-mail enviado com sucesso",
+    "passwordResetError": "Não foi possível enviar e-mail de restabelecimento de senha",
+    "passwordResetTitle": "Restabelecimento de Senha",
+    "passwordResetDescription": "Insira seu e-mail para receber instruções de restabelecimento de senha",
+    "registerLink": "Não tem uma conta? Registre-se aqui",
+    "submit": "Enviar",
+    "send": "Enviar",
+    "loading": "Cargando...",
     "error": {
       "invalidCredentials": "E-mail ou senha inválidos",
       "tooManyAttempts": "Muitas tentativas de login. Tente novamente mais tarde.",
@@ -562,13 +559,26 @@ export const ptTranslations = {
 
   "register": {
     "title": "Registrar-se",
-    "description": "Crie uma nova conta para acessar o sistema de gestão de restaurantes",
+    "subtitle": "Crie uma nova conta para acessar o sistema de gestão de restaurantes",
     "username": "Nome de usuário",
+    "usernameLabel": "Nome de usuário",
+    "usernamePlaceholder": "Insira seu nome de usuário",
     "email": "E-mail",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "Insira seu e-mail",
     "password": "Senha",
+    "passwordLabel": "Senha",
+    "passwordPlaceholder": "Insira sua senha",
     "confirmPassword": "Confirmar senha",
+    "confirmPasswordLabel": "Confirmar senha",
+    "confirmPasswordPlaceholder": "Confirme sua senha",
     "establishmentName": "Nome do estabelecimento",
+    "establishmentNameLabel": "Nome do estabelecimento",
+    "establishmentNamePlaceholder": "Insira o nome do seu estabelecimento",
     "submit": "Registrar-se",
+    "acceptTerms": "Aceitar Termos",
+    "termsLink": "Termos de Uso",
+    "loginLink": "Já tem uma conta? Faça login aqui",
     "error": {
       "passwordsDoNotMatch": "As senhas não coincidem",
       "emailInUse": "Este e-mail já está em uso",
@@ -821,7 +831,7 @@ export const ptTranslations = {
       "description": "Atualmente não há pedidos no sistema. Comece a criar novos pedidos para vê-los aqui."
     },
     "loading": "Carregando pedidos..."
-  },
+  }
 };
 
 export default ptTranslations;

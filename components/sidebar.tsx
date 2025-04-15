@@ -100,7 +100,7 @@ export function Sidebar() {
   }
 
   // Establishment name from user's profile or restaurant settings
-  const establishmentName = user?.name || user?.restaurantName || user?.currentEstablishmentName || "Comandero"
+  const establishmentName = user?.username || user?.restaurantName || user?.currentEstablishmentName || "Comandero"
   
   // Detailed debug logging
   useEffect(() => {
@@ -109,7 +109,7 @@ export function Sidebar() {
       console.log('Full User Object:', user)
       console.log('Establishment Name:', establishmentName)
       console.log('User Properties:', {
-        name: user?.name,
+        username: user?.username,
         restaurantName: user?.restaurantName,
         currentEstablishmentName: user?.currentEstablishmentName
       })
@@ -120,7 +120,7 @@ export function Sidebar() {
   const navItems = [
     {
       name: pathname === "/dashboard" 
-        ? `${t("sidebar.welcome")} ${user?.displayName || user?.email?.split('@')[0] || ""}` 
+        ? `${t("sidebar.welcome")} ${user?.username || user?.email?.split('@')[0] || ""}` 
         : t("sidebar.dashboard"),
       href: "/dashboard",
       icon: LayoutDashboard,
@@ -193,7 +193,7 @@ export function Sidebar() {
         <div className="flex flex-col h-full">
           <div className="p-4 border-b">
             <h2 className="text-xl font-bold">{establishmentName}</h2>
-            <p className="text-sm text-muted-foreground">{user.role?.toUpperCase()}</p>
+            <p className="text-sm text-muted-foreground">{t("sidebar.role")} {user.role?.toUpperCase()}</p>
           </div>
 
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">

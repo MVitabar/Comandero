@@ -1,4 +1,4 @@
-export const enTranslations = {
+export const ptTranslations = {
   "commons": {
     "yes": "Yes",
     "no": "No",
@@ -7,12 +7,14 @@ export const enTranslations = {
     "save": "Save",
     "edit": "Edit",
     "delete": "Delete",
+    "loading": "Loading...",
     "success": "Success",
     "warning": "Warning",
     "search": "Search",
     "filter": "Filter",
     "actions": "Actions",
-    "tableNumber": "Table #",
+    "tableNumber": "Table Number",
+    "close": "Close",
     "button": {
       "add": "Add",
       "edit": "Edit",
@@ -20,7 +22,6 @@ export const enTranslations = {
       "cancel": "Cancel",
       "save": "Save",
       "submit": "Submit",
-      "loading": "Loading...",
       "sending": "Sending...",
       "create": "Create",
       "created": "Created"
@@ -36,39 +37,19 @@ export const enTranslations = {
         "category": "Category",
         "quantity": "Quantity",
         "unit": "Unit",
-        "minQuantity": "Min. Quantity",
+        "minQuantity": "Minimum Quantity",
         "price": "Price",
         "status": "Status",
         "actions": "Actions"
-      },
-      "pagination": {
-        "rowsPerPage": "Rows per page",
-        "of": "of",
-        "first": "First",
-        "last": "Last",
-        "next": "Next",
-        "previous": "Previous"
-      },
-      "noData": "No data available",
-      "loading": "Loading data...",
-      "emptyState": {
-        "title": "No records",
-        "description": "No records have been added yet"
-      },
-      "emptyStateOrders": {
-        "title": "No Orders Found",
-        "description": "There are currently no orders in the system. Start creating new orders to see them here."
-      },
-      "loadingOrders": "Loading orders..."
+      }
     },
     "error": {
       "generic": "An error occurred",
       "required": "This field is required",
       "invalid": "Invalid input",
       "configurationError": "Firebase configuration error. Please contact support",
-      "serviceUnavailable": "Authentication service unavailable. Please try again later"
+      "serviceUnavailable": "Authentication service unavailable. Try again later"
     },
-    "loading": "Loading...",
     "noItemsFound": "No items found",
     "searchPlaceholder": "Search...",
     "confirmDelete": "Are you sure you want to delete this item? This action cannot be undone.",
@@ -80,230 +61,34 @@ export const enTranslations = {
       "error": {
         "emailRequired": "Email is required",
         "passwordRequired": "Password is required",
+        
         "invalidCredentials": "Invalid email or password",
-        "tooManyAttempts": "Too many failed attempts. Please try again later."
-      }
-    }
-  },
-
-  "login": {
-    "title": "Login",
-    "description": "Enter your credentials to access your account",
-    "email": "Email",
-    "password": "Password",
-    "login": "Login",
-    "forgotPassword": "Forgot Password?",
-    "error": {
-      "invalidCredentials": "Invalid email or password",
-      "tooManyAttempts": "Too many login attempts. Please try again later.",
-      "emailRequired": "Email is required",
-      "passwordRequired": "Password is required",
-      "serviceUnavailable": "Authentication service unavailable. Please try again later"
-    }
-  },
-
-  "register": {
-    "title": "Register",
-    "description": "Create a new account to access the restaurant management system",
-    "username": "Username",
-    "email": "Email",
-    "password": "Password",
-    "confirmPassword": "Confirm Password",
-    "establishmentName": "Establishment Name",
-    "submit": "Register",
-    "error": {
-      "passwordsDoNotMatch": "Passwords do not match",
-      "emailInUse": "This email is already in use",
-      "weakPassword": "Password is too weak",
-      "establishmentNameRequired": "Establishment name is required",
-      "establishmentNameMinLength": "Establishment name must be at least 3 characters long",
-      "establishmentNameTaken": "This establishment name is already in use",
-      "suggestedAlternatives": "Suggested alternative names:",
-      "selectAlternative": "Please select an alternative name or modify the current one"
-    },
-    "suggestedNames": {
-      "title": "Suggested Establishment Names",
-      "description": "The name you entered is already in use. Please choose an alternative:",
-      "selectButton": "Select",
-      "modifyButton": "Modify Name"
-    }
-  },
-
-  "forgotPassword": {
-    "title": "Recover Password",
-    "description": "Enter your email to receive password reset instructions",
-    "email": "Email",
-    "sendInstructions": "Send Instructions",
-    "error": {
-      "emailRequired": "Email is required",
-      "userNotFound": "No account found with this email address",
-      "generic": "Failed to send reset email"
-    },
-    "success": {
-      "emailSent": "Password reset instructions sent"
-    }
-  },
-
-  "orders": {
-    "title": "Orders",
-    "newOrder": "New Order",
-    "createOrder": "Create Order",
-    "noOrdersFound": "No orders found",
-    "search": {
-      "placeholder": "Search orders by ID, table, or waiter"
-    },
-    "filter": {
-      "allStatuses": "All Statuses"
-    },
-    "actions": {
-      "view": "View",
-      "updateStatus": "Update Status",
-      "delete": "Delete"
-    },
-    "action": {
-      "updated": "updated",
-      "deleted": "deleted"
-    },
-    "success": {
-      "statusUpdated": "Status Updated",
-      "orderDeleted": "Order Deleted"
-    },
-    "error": {
-      "fetchFailed": "Failed to fetch orders",
-      "updateStatusFailed": "Failed to update order status",
-      "deleteOrderFailed": "Failed to delete order"
-    },
-    "orderType": "Order Type",
-    "table": "Table",
-    "tableNumber": "Table Number",
-    "selectCategory": "Select Category",
-    "selectItem": "Select Item",
-    "noItemsInCategory": "No items in this category",
-    "quantity": "Quantity",
-    "itemNotes": "Item Notes",
-    "itemNotesPlaceholder": "Any special instructions?",
-    "itemDietaryRestrictions": "Dietary Restrictions",
-    "addToOrder": "Add to Order",
-    "orderSummary": "Order Summary",
-    "showMenuQr": "Show Menu QR",
-    "noItemsInOrder": "No items in order",
-    "specialRequests": "Special Requests",
-    "specialRequestsPlaceholder": "Any special requests for the kitchen?",
-    "menuUrl": "Menu URL",
-    "discount": "Discount",
-    "percentage": "Percentage",
-    "errors": {
-      "noItemsInOrder": "Please add items to the order",
-      "noTableSelected": "Please select a table",
-      "headers": {
-        "id": "Order ID",
-        "tableNumber": "Table",
-        "waiter": "Waiter", 
-        "items": "Items",
-        "total": "Total",
-        "actions": "Actions"
+        "tooManyAttempts": "Too many failed attempts. Try again later."
       }
     },
-    "paymentMethods": {
-      "cash": "Cash",
-      "credit": "Credit Card",
-      "debit": "Debit Card",
-      "transfer": "Bank Transfer",
-      "other": "Other"
-    },
-    "confirmPayment": "Confirm Payment"
+    "deleted": "Deleted"
   },
 
-  "users": {
-    "pageTitle": "Users",
-    "addUser": "Add User",
-    "userList": "User List",
-    "searchPlaceholder": "Search users...",
-    "noUsers": "No users found",
-    "username": "Username",
-    "email": "Email",
-    "role": "Role",
-    "status": "Status",
-    "actions": "Actions",
-    "openMenu": "Open menu",
-    "copyId": "Copy ID",
-    "userStatus": {
-      "active": "Active",
-      "inactive": "Inactive",
-      "suspended": "Suspended"
-    },
-    "roles": {
-      "owner": "Owner",
-      "admin": "Administrator",
-      "manager": "Manager",
-      "staff": "Staff",
-      "waiter": "Waiter"
-    },
-    "errors": {
-      "fetchUsers": "Error loading users",
-      "createUser": "Error creating user",
-      "updateUser": "Error updating user",
-      "deleteUser": "Error deleting user"
-    },
-    "success": {
-      "userCreated": "User created successfully",
-      "userUpdated": "User updated successfully",
-      "userDeleted": "User deleted successfully"
-    },
-    "form": {
-      "createTitle": "Create New User",
-      "editTitle": "Edit User",
-      "labels": {
-        "username": "Username",
-        "email": "Email",
-        "role": "Role",
-        "status": "Status",
-        "password": "Password",
-        "confirmPassword": "Confirm Password"
-      },
-      "placeholders": {
-        "username": "Enter username",
-        "email": "Enter email",
-        "role": "Select role",
-        "status": "Select status",
-        "password": "Enter password",
-        "confirmPassword": "Confirm password"
-      },
-      "validation": {
-        "usernameRequired": "Username is required",
-        "emailRequired": "Email is required",
-        "emailInvalid": "Invalid email",
-        "roleRequired": "Role is required",
-        "statusRequired": "Status is required",
-        "passwordRequired": "Password is required",
-        "passwordMinLength": "Password must be at least 8 characters",
-        "passwordsMatch": "Passwords must match"
-      }
-    }
-  },
-
-  "tables": {
-    "actions": "Actions",
-    "pageTitle": "Restaurant Tables",
-    "tableMaps": {
-      "title": "Table Maps",
-      "description": "Manage your restaurant's table layouts",
-      "createMap": "Create Table Map",
-      "editMap": "Edit Table Map",
-      "mapName": "Map Name",
-      "mapDescription": "Map Description",
-      "mapDescriptionPlaceholder": "Describe the table map layout",
-      "addNew": "Add New Map",
-      "noMapsFound": "No Table Maps Found",
-      "saveError": "Error saving table map",
-      "createError": "Error creating table map",
-      "updateError": "Error updating table map",
-      "deleteError": "Error deleting table map",
-      "addTable": "Add Table",
-      "noDescription": "No Description",
-      "viewMap": "View Map",
-      "loadingTitle": "Loading Table Map",
-      
+  "tableMaps": {
+    "title": "Table Maps",
+    "description": "Manage the layouts of tables in your restaurant",
+    "createMap": "Create Table Map",
+    "editMap": "Edit Table Map",
+    "mapName": "Map Name",
+    "mapDescription": "Map Description",
+    "mapDescriptionPlaceholder": "Describe the table map layout",
+    "addNew": "Add New Map",
+    "noMapsFound": "No table maps found",
+    "saveError": "Error saving table map",
+    "createError": "Error creating table map",
+    "updateError": "Error updating table map",
+    "deleteError": "Error deleting table map",
+    "loadingTitle": "Loading Table Map",
+    "delete": {
+      "confirmTitle": "Delete Table Map",
+      "confirmDescription": "Are you sure you want to delete the table map '{{name}}'?",
+      "success": "Table Map Deleted",
+      "error": "Error deleting table map"
     }
   },
 
@@ -338,21 +123,508 @@ export const enTranslations = {
     "edit": "Edit",
     "delete": "Delete",
     "created": "created",
-    "close": "Close"
+    "close": "Close",
+    "error": "Error",
+    "deleted": "Deleted"
   },
 
-  "dialog": {
-    "confirm": {
-      "title": "Confirm Action",
-      "description": "Are you sure you want to perform this action?",
-      "confirmButton": "Confirm",
-      "cancelButton": "Cancel"
+  "tables": {
+    "pageTitle": "Tables in Restaurant",
+    "addTable": "Add New Table",
+    "tableName": "Table Name",
+    "tableCapacity": "Table Capacity",
+    "tableStatus": "Status",
+    "search": "Search Tables",
+    "sortBy": "Sort by",
+    "tableNumber": "Table Number",
+    "seats": "Seats",
+    "noTablesMatchFilter": "No tables match filter",
+    "noTablesInMap": "No tables in map",
+    "actions": "Actions",
+    "tableMaps": {
+      "title": "Table Maps",
+      "createMap": "Create Table Map",
+      "editMap": "Edit Table Map",
+      "mapName": "Map Name",
+      "mapDescription": "Map Description",
+      "noMapsFound": "No Table Maps Found",
+      "createMapDescription": "Create a new table map for your restaurant",
+      "mapNamePlaceholder": "Enter map name",
+      "mapDescriptionPlaceholder": "Enter map description",
+      "layout": "Layout",
+      "addTable": "Add Table",
+      "tablePosition": "Table Position",
+      "tableCapacity": "Table Capacity",
+      "viewMap": "View Table Map",
+      "addMap": "Add Map",
+      "deleteMap": "Delete Map",
+      "mapCreationFailed": "Error creating table map",
+      "mapUpdateFailed": "Error updating table map",
+      "mapDeletionFailed": "Error deleting table map",
+      "mapCreated": "Table map created",
+      "mapUpdated": "Table map updated",
+      "mapDeleted": "Table map deleted",
+      "delete": {
+        "confirmTitle": "Delete Table Map",
+        "confirmDescription": "Are you sure you want to delete the table map '{{name}}'?",
+        "success": "Table map deleted",
+        "error": "Error deleting table map"
+      },
+      "fetchError": "Error fetching table maps"
+    }
+  },
+  
+
+  "sidebar": {
+    "appName": "Comandero",
+    "role": "Role",
+    "dashboard": "Dashboard",
+    "orders": "Orders",
+    "tables": "Tables",
+    "inventory": "Inventory",
+    "users": "Users",
+    "settings": "Settings",
+    "advancedReports": "Advanced Reports",
+    "logout": "Logout",
+    "language": "Language",
+    "installApp": "Download App",
+    "languages": {
+      "english": "English",
+      "spanish": "Spanish", 
+      "portuguese": "Portuguese"
+    }
+  },
+
+  "dashboard": {
+    "title": "Dashboard",
+    "goodMorning": "Good morning",
+    "goodAfternoon": "Good afternoon",
+    "goodEvening": "Good evening",
+    "user": "User",
+    "welcomeMessage": "Welcome to your dashboard, where you can manage the operations of your restaurant and track performance.",
+    "salesOverview": {
+      "title": "Sales Overview",
+      "description": "Total sales and performance",
+      "totalSales": "Total Sales",
+      "monthlyGrowth": "+{percentage}% of last month"
     },
-    "delete": {
-      "title": "Delete Record",
-      "description": "Are you sure you want to delete this record? This action cannot be undone.",
-      "confirmButton": "Delete",
-      "cancelButton": "Cancel"
+    "topSellingItems": {
+      "title": "Top Selling Items",
+      "description": "Popular items",
+      "orderCount": "{{count, number}} orders"
+    },
+    "stockLevel": {
+      "title": "Stock Level",
+      "description": "Inventory status",
+      "percentage": "{percentage}%",
+      "lowStockItems": "{count} items with low stock",
+      "totalItems": "Total Items",
+      "inStock": "In Stock",
+      "lowStock": "Low Stock",
+      "status": {
+        "critical": "Critical Stock",
+        "warning": "Low Stock",
+        "healthy": "Healthy Stock"
+      }
+    },
+    "recentOrders": "Recent Orders",
+    "categories": "Categories",
+    "errors": {
+      "fetchFailed": "Failed to load dashboard data. Please try again later."
+    }
+  },
+
+  "orders": {
+    "title": "Orders",
+    "newOrder": "New Order",
+    "createOrder": "Create Order",
+    "tableNumberPlaceholder": "Enter table number",
+    "noOrdersFound": "No orders found",
+    "subtotal": "Subtotal",
+    "total": "Total",
+    "table": "Table",
+    "counter": "Counter",
+    "waiter": "Waiter",
+    "takeaway": "Delivery",
+    "details":{
+      "title": "Order Details",
+      "description": "Order Details",
+      "id": "Order ID",
+      "tableNumber": "Table Number",
+      "waiter": "Waiter",
+      "counter": "Counter",
+      "items": "Items",
+      "total": "Total",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "search": {
+      "placeholder": "Search orders by ID, table or waiter"
+    },
+    "filter": {
+      "allStatuses": "All Statuses"
+    },
+    
+    "actions": {
+      "view": "View",
+      "updateStatus": "Update Status",
+      "delete": "Delete"
+    },
+    "action": {
+      "updated": "updated",
+      "deleted": "deleted"
+    },
+    "success": {
+      "statusUpdated": "Status Updated",
+      "orderDeleted": "Order Deleted"
+    },
+    "error": {
+      "fetchFailed": "Failed to fetch orders",
+      "updateStatusFailed": "Failed to update order status",
+      "deleteOrderFailed": "Failed to delete order"
+    },
+    "orderType": "Order Type",
+    
+    "tableNumber": "Table Number",
+    "selectCategory": "Select Category",
+    "selectItem": "Select Item",
+    "noItemsInCategory": "No items in this category",
+    "quantity": "Quantity",
+    "itemNotes": "Item Notes",
+    "itemNotesPlaceholder": "Any special instructions?",
+    "itemDietaryRestrictions": "Dietary Restrictions",
+    "addToOrder": "Add to Order",
+    "orderSummary": "Order Summary",
+    "showMenuQr": "Show Menu QR",
+    "noItemsInOrder": "No items in order",
+    "specialRequests": "Special Requests",
+    "specialRequestsPlaceholder": "Any special requests for the kitchen?",
+    "menuUrl": "Menu URL",
+    "discount": "Discount",
+    "percentage": "Percentage",
+    "errors": {
+      "noItemsInOrder": "Please add items to the order",
+      "noTableSelected": "Please select a table",
+      "headers": {
+        "id": "Order ID",
+        "tableNumber": "Table Number",
+        "waiter": "Waiter", 
+        "items": "Items",
+        "status": "Status",
+        "total": "Total",
+        "actions": "Actions"
+      },
+      "paymentMethods": {
+        "cash": "Cash",
+        "credit": "Credit Card",
+        "debit": "Debit Card",
+        "transfer": "Bank Transfer",
+        "other": "Other"
+      }
+    },
+    "confirmPayment": "Confirm Payment"
+  },
+
+  "ordersPage": {
+    "pageTitle": "Orders",
+    "newOrder": "New Order",
+    "searchPlaceholder": "Search orders...",
+    "noOrdersFound": "No orders found",
+    "orderStatus": {
+      "01": "Pending",
+      "02": "In Preparation",
+      "03": "Ready to Serve",
+      "04": "Delivered",
+      "05": "Cancelled",
+      "06": "Paid",
+      "07": "Sent",
+      "08": "In Transit",
+      "09": "Completed",
+      "10": "Refunded",
+      "11": "Pending",
+      "12": "Scheduled",
+      "13": "Partially Paid",
+      "14": "Payment Error",
+      "15": "Rejected",
+      "16": "Processing",
+      "17": "Confirmed",
+      "18": "Preparation Started",
+      "19": "Almost Ready",
+      "20": "Waiting for Customer",
+      "21": "Table Service",
+      "22": "For Travel",
+      "23": "Delivery",
+      "24": "Reservation",
+      "25": "Urgent",
+      "70": "Final Status"
+    },
+    "table": {
+      "id": "ID", 
+      "table": "Table",
+      "waiter": "Waiter",
+      "items": "Items",
+      "status": "Status",
+      "total": "Total",
+      "actions": "Actions"
+    },
+    "actions": {
+      "updateStatus": "Update Status",
+      "updateStatusDescription": "Update order status {{orderId}}",
+      "selectStatus": "Select new status",
+      "delete": "Delete Order",
+      "view": "View Order",
+      "deleteOrderConfirmation": "Are you sure you want to delete order {{orderId}}?"
+    },
+    "error": {
+      "fetchFailed": "Failed to load orders",
+      "updateStatusFailed": "Failed to update order status",
+      "deleteFailed": "Failed to delete order"
+    },
+    "success": {
+      "statusUpdated": "Order status updated",
+      "orderDeleted": "Order deleted"
+    }
+  },
+
+  "newOrder": {
+    "title": "Create New Order",
+    "orderDetails": "Order Details",
+    "currentOrder": "Current Order",
+    "tableNumber": "Table Number",
+    "tableNumberPlaceholder": "Enter table number",
+    "selectItem": "Select Item",
+    "selectItemPlaceholder": "Choose an item to add",
+    "quantity": "Quantity",
+    "notes": "Notes",
+    "notesPlaceholder": "Special instructions",
+    "addToOrder": "Add to Order",
+    "noItemsInOrder": "No items added to order yet",
+    "total": "Total",
+    "createOrder": "Create Order",
+    "table": {
+      "item": "Item",
+      "quantity": "Quantity",
+      "price": "Price",
+      "total": "Total",
+      "actions": "Actions"
+    },
+    "error": {
+      "title": "Error",
+      "noItem": "Please select an item",
+      "noTable": "Please enter table number",
+      "noItems": "Please add at least one item to the order",
+      "orderCreationFailed": "Failed to create order"
+    },
+    "success": {
+      "orderCreated": "Order Created",
+      "orderCreatedDescription": "The order for Table {{tableNumber}} was created successfully"
+    }
+  },
+
+  "newOrderPage": {
+    "title": "Create New Order",
+    "errors": {
+      "unauthorized": "You are not authorized to create this order",
+      "menuItemNotFound": "Selected menu item not found",
+      "invalidQuantity": "Enter a valid quantity",
+      "missingTableNumber": "Select or enter table number",
+      "missingMenuItem": "Select a menu item",
+      "insufficientStock": "Insufficient stock for the selected item",
+      "orderCreationFailed": "Failed to create order. Please try again.",
+      "fetchOrders": "Error loading orders",
+      "createOrder": "Error creating order",
+      "updateOrder": "Error updating order",
+      "deleteOrder": "Error deleting order",
+      "updateStatus": "Error updating order status"
+    },
+    "success": {
+      "orderCreated": "Order created successfully",
+      "orderUpdated": "Order updated successfully",
+      "orderDeleted": "Order deleted successfully",
+      "statusUpdated": "Order status updated successfully",
+      "itemAdded": "Item added to order"
+    },
+  },
+
+  "inventory": {
+    "title": "Inventory",
+    "subtitle": "Manage your restaurant's inventory",
+    "searchPlaceholder": "Search in inventory...",
+    "noItemsFound": "No items found",
+    "name": "Name",
+    "category": "Category", 
+    "quantity": "Quantity",
+    "unit": "Unit",
+    "minQuantity": "Minimum Stock",
+    "price": "Price",
+    "actions": "Actions",
+    "status": "Status",
+    "addItem": "Add Item",
+    "addItemTitle": "Add Item",
+    "addItemDescription": "Add a new item to inventory",
+    "description": "Item description",
+    "supplier": "Supplier",
+    "selectCategory": "Select Category",
+    "add": "Add",
+    "cancel": "Cancel",
+    "update": "Update",
+    "save": "Save",
+    "editItemTitle": "Edit Item",
+    "editItemDescription": "Edit item details",
+    "addItemDetails": {
+      "title": "Add Item",
+      "description": "Add a new item to inventory",
+      "namePlaceholder": "Enter item name",
+      "categoryPlaceholder": "Select item category",
+      "quantityPlaceholder": "Enter quantity",
+      "unitPlaceholder": "Enter unit (ex. kg, pcs)",
+      "minQuantityPlaceholder": "Enter minimum stock quantity",
+      "pricePlaceholder": "Enter item price",
+      "successToast": "{{itemName}} was added to inventory",
+      "errorToast": "Failed to add item to inventory"
+    },
+    "editItemDetails": {
+      "title": "Edit Item",
+      "description": "Edit item details",
+      "successToast": "{{itemName}} was updated",
+      "errorToast": "Failed to update item details"
+    },
+    "deleteItemDetails": {
+      "title": "Delete Item",
+      "description": "Are you sure you want to delete {{itemName}}? This action cannot be undone.",
+      "successToast": "Item from inventory deleted",
+      "errorToast": "Failed to delete item from inventory"
+    },
+    "stockStatus": {
+      "lowStock": "Low Stock",
+      "inStock": "In Stock"
+    },
+    "buttons": {
+      "add": "Add Item",
+      "edit": "Edit Item",
+      "cancel": "Cancel",
+      "delete": "Delete Item"
+    }
+  },
+
+  "users": {
+    "pageTitle": "Users",
+    "actions": "Actions",
+    "addUser": "Add User",
+    "searchPlaceholder": "Search users...",
+    "userList": "User List",
+    "username": "Username",
+    "email": "Email",
+    "role": "Role",
+    "status": "Status",
+    "deleteSuccess": "User deleted",
+    "hasBeenDeleted": "has been deleted",
+    "errors": {
+      "deleteUser": "Failed to delete user"
+    },
+    "noUsers": "No users found",
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin", 
+      "manager": "Manager",
+      "staff": "Staff",
+      "waiter": "Waiter",
+      "barman": "Barman",
+      "default": "User"
+    },
+    "userStatus": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "suspended": "Suspended"
+    },
+    "openMenu": "Open menu",
+    "copyId": "Copy ID",
+    "editUser": "Edit User",
+    "delete": "Delete",
+    "confirmDelete": "Confirm Delete",
+    "confirmDeleteDescription": "Are you sure you want to delete user '{{username}}'?",
+    "deleteUser": "Delete User"
+  },
+
+  "login": {
+    "title": "Login",
+    "subtitle": "Enter your credentials to access your account",
+    "emailLabel": "Email",
+    "emailPlaceholder": "Enter your email",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "login": "Login",
+    "forgotPassword": "Forgot password?",
+    "sendPasswordReset": "Send Password Reset",
+    "passwordResetSuccess": "Password reset email sent successfully",
+    "passwordResetError": "Failed to send password reset email",
+    "passwordResetTitle": "Password Reset",
+    "passwordResetDescription": "Enter your email to receive password reset instructions",
+    "registerLink": "Don't have an account? Register here",
+    "submit": "Submit",
+    "send": "Send",
+    "loading": "Loading...",
+    "error": {
+      "invalidCredentials": "Invalid email or password",
+      "tooManyAttempts": "Too many login attempts. Try again later.",
+      "emailRequired": "Email is required",
+      "passwordRequired": "Password is required",
+      "serviceUnavailable": "Authentication service unavailable. Try again later"
+    }
+  },
+
+  "register": {
+    "title": "Register",
+    "subtitle": "Create a new account to access the restaurant management system",
+    "username": "Username",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "Enter your username",
+    "email": "Email",
+    "emailLabel": "Email",
+    "emailPlaceholder": "Enter your email",
+    "password": "Password",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "confirmPassword": "Confirm Password",
+    "confirmPasswordLabel": "Confirm Password",
+    "confirmPasswordPlaceholder": "Confirm your password",
+    "establishmentName": "Establishment Name",
+    "establishmentNameLabel": "Establishment Name",
+    "establishmentNamePlaceholder": "Enter your establishment name",
+    "submit": "Register",
+    "acceptTerms": "Accept Terms",
+    "termsLink": "Terms of Use",
+    "loginLink": "Already have an account? Login here",
+    "error": {
+      "passwordsDoNotMatch": "Passwords do not match",
+      "emailInUse": "This email is already in use",
+      "weakPassword": "Password is too weak",
+      "establishmentNameRequired": "Establishment name is required",
+      "establishmentNameMinLength": "Establishment name must be at least 3 characters long",
+      "establishmentNameTaken": "This establishment name is already in use",
+      "suggestedAlternatives": "Suggested establishment names:",
+      "selectAlternative": "Please select an alternative name or modify the current one"
+    },
+    "suggestedNames": {
+      "title": "Suggested Establishment Names",
+      "description": "The name you entered is already in use. Please select an alternative:",
+      "selectButton": "Select",
+      "modifyButton": "Modify Name"
+    }
+  },
+
+  "forgotPassword": {
+    "title": "Forgot Password",
+    "description": "Enter your email to receive password reset instructions",
+    "email": "Email",
+    "sendInstructions": "Send Instructions",
+    "error": {
+      "emailRequired": "Email is required",
+      "userNotFound": "No account found with this email address",
+      "generic": "Failed to send password reset email"
+    },
+    "success": {
+      "emailSent": "Password reset instructions sent"
     }
   },
 
@@ -360,7 +632,7 @@ export const enTranslations = {
     "title": "Settings",
     "system": {
       "title": "System",
-      "description": "Manage advanced system settings and configurations"
+      "description": "Manage system settings and advanced system adjustments"
     },
     "profile": {
       "title": "Profile",
@@ -370,8 +642,8 @@ export const enTranslations = {
         "submit": "Save Changes",
         "submitting": "Saving...",
         "profileUpdated": "Profile Updated",
-        "profileUpdateSuccess": "Your profile has been successfully updated.",
-        "profileUpdateFailed": "Profile Update Failed",
+        "profileUpdateSuccess": "Your profile was updated successfully.",
+        "profileUpdateFailed": "Failed to update profile",
         "profileUpdateError": "An error occurred while updating your profile."
       },
       "fields": {
@@ -399,7 +671,7 @@ export const enTranslations = {
     },
     "appearance": {
       "title": "Appearance",
-      "description": "Customize the application's look and feel",
+      "description": "Personalize the appearance of the app",
       "modes": {
         "light": {
           "label": "Light Mode"
@@ -426,7 +698,7 @@ export const enTranslations = {
     },
     "language": {
       "title": "Language",
-      "description": "Select your preferred application language",
+      "description": "Select your preferred language for the app",
       "languages": {
         "en": "English",
         "es": "Spanish",
@@ -435,8 +707,8 @@ export const enTranslations = {
       "actions": {
         "submit": "Save Changes",
         "saving": "Saving...",
-        "profileUpdated": "Language Preference Updated",
-        "profileUpdateSuccess": "Your language preference has been successfully updated.",
+        "profileUpdated": "Language preference updated",
+        "profileUpdateSuccess": "Your language preference was successfully updated.",
         "profileUpdateFailed": "Update Failed",
         "profileUpdateError": "An error occurred while updating your language preference."
       }
@@ -448,11 +720,11 @@ export const enTranslations = {
         "title": "Notification Types",
         "newOrders": {
           "label": "New Orders",
-          "description": "Receive notifications for new incoming orders"
+          "description": "Receive notifications for new orders received"
         },
         "orderUpdates": {
           "label": "Order Updates",
-          "description": "Get updates on the status of existing orders"
+          "description": "Get updates about the status of existing orders"
         },
         "inventoryAlerts": {
           "label": "Inventory Alerts",
@@ -460,7 +732,7 @@ export const enTranslations = {
         },
         "systemAnnouncements": {
           "label": "System Announcements",
-          "description": "Important updates and announcements from the system"
+          "description": "Important updates and system announcements"
         },
         "dailyReports": {
           "label": "Daily Reports",
@@ -475,7 +747,7 @@ export const enTranslations = {
         },
         "pushNotifications": {
           "label": "Push Notifications",
-          "description": "Get real-time alerts on your device"
+          "description": "Receive real-time alerts on your device"
         },
         "soundAlerts": {
           "label": "Sound Alerts",
@@ -501,86 +773,43 @@ export const enTranslations = {
     }
   },
 
-  "dashboard": {
-    "title": "Dashboard",
-    "goodMorning": "Good morning",
-    "goodAfternoon": "Good afternoon",
-    "goodEvening": "Good evening",
-    "user": "User",
-    "welcomeMessage": "Welcome to your dashboard, where you can manage your restaurant's operations and track performance.",
-    "salesOverview": {
-      "title": "Sales Overview",
-      "description": "Total sales and performance",
-      "totalSales": "Total Sales",
-      "monthlyGrowth": "+{percentage}% from last month"
+  "orderForm": {
+    "title": "Create Order",
+    "selectTable": "Select Table",
+    "noTableSelected": "No table selected",
+    "menuCategories": {
+      "title": "Menu Categories"
     },
-    "topSellingItems": {
-      "title": "Top Selling Items",
-      "description": "Popular items",
-      "orderCount": "{{count, number}} orders"
+    "menuItems": {
+      "search": "Search items",
+      "noResults": "No items found"
     },
-    "stockLevel": {
-      "title": "Stock Levels",
-      "description": "Inventory status",
-      "percentage": "{percentage}%",
-      "lowStockItems": "{count} items low in stock",
-      "totalItems": "Total Items",
-      "inStock": "In Stock",
-      "lowStock": "Low Stock",
-      "status": {
-        "critical": "Critical Stock",
-        "warning": "Low Stock",
-        "healthy": "Healthy Stock"
-      }
+    "orderDetails": {
+      "title": "Order Details",
+      "items": "Order Items",
+      "total": "Total",
+      "subtotal": "Subtotal",
+      "discount": "Discount",
+      "tax": "Tax",
+      "noItems": "No items added"
     },
-    "recentOrders": "Recent Orders",
-    "categories": "Categories",
-    "errors": {
-      "fetchFailed": "Failed to load dashboard data. Please try again later."
-    }
-  },
-
-  "sidebar": {
-    "appName": "Comandero",
-    "dashboard": "Dashboard",
-    "orders": "Orders",
-    "tables": "Tables",
-    "inventory": "Inventory",
-    "users": "Users",
-    "settings": "Settings",
-    "advancedReports": "Advanced Reports",
-    "logout": "Logout",
-    "language": "Language",
-    "installApp": "Install App",
-    "languages": {
-      "english": "English",
-      "spanish": "Spanish", 
-      "portuguese": "Portuguese"
-    }
-  },
-
-  "newOrderPage": {
-    "title": "New Order",
-    "errors": {
-      "unauthorized": "You are not authorized to create this order",
-      "menuItemNotFound": "Selected menu item not found",
-      "invalidQuantity": "Please enter a valid quantity",
-      "missingTableNumber": "Please select or enter a table number",
-      "missingMenuItem": "Please select a menu item",
-      "insufficientStock": "Insufficient stock for the selected item",
-      "orderCreationFailed": "Could not create the order. Please try again.",
-      "fetchOrders": "Error loading orders",
-      "createOrder": "Error creating order",
-      "updateOrder": "Error updating order",
-      "deleteOrder": "Error deleting order",
-      "updateStatus": "Error updating order status"
+    "selectCategory": "Select Category",
+    "selectItem": "Select Item",
+    "quantity": "Quantity",
+    "notes": "Notes",
+    "addItem": "Add Item",
+    "orderItems": "Order Items",
+    "noItemsAdded": "No items added",
+    "dietaryRestrictions": {
+      "title": "Dietary Restrictions",
+      "vegetarian": "Vegetarian",
+      "vegan": "Vegan",
+      "glutenFree": "Gluten-Free",
+      "lactoseFree": "Lactose-Free"
     },
-    "success": {
-      "orderCreated": "Order created successfully",
-      "orderUpdated": "Order updated successfully",
-      "orderDeleted": "Order deleted successfully", 
-      "statusUpdated": "Order status updated successfully",
-      "itemAdded": "Item added to order"
+    "specialInstructions": {
+      "label": "Special Instructions",
+      "hasInstructions": "Has special instructions?"
     }
   },
 
@@ -591,20 +820,16 @@ export const enTranslations = {
       "reserved": "Reserved"
     },
     "status": {
-      "noActiveOrder": "No active order",
-      "ready": "Ready",
-      "served": "Served",
-      "pending": "Pending",
-      "closed": "Closed",
-      "serving": "Serving"
+      "noActiveOrder": "No active order"
     },
     "actions": {
       "createOrder": "Create Order",
+      "changeStatus": "Change Status",
       "viewOrder": "View Order",
       "closeOrder": "Close Order"
     },
     "errors": {
-      "sync": "Failed to synchronize table status",
+      "sync": "Failed to sync table status",
       "closeOrder": "Failed to close order"
     }
   },
@@ -616,77 +841,13 @@ export const enTranslations = {
     "transfer": "Bank Transfer",
     "other": "Other"
   },
-  "inventory": {
-    "pageTitle": "Inventory",
-    "searchPlaceholder": "Search in inventory...",
-    "noItemsFound": "No items found",
-    "categories": {
-      "drinks": "Drinks",
-      "food": "Food",
-      "menu_item": "Menu Item"
+  "table": {
+    "emptyState": {
+      "title": "No orders found",
+      "description": "Currently no orders in the system. Start creating new orders to see them here."
     },
-    "formLabels": {
-      "name": "Name",
-      "category": "Category", 
-      "quantity": "Quantity",
-      "unit": "Unit",
-      "minQuantity": "Minimum Stock",
-      "price": "Price",
-      "actions": "Actions",
-      "status": "Status"
-    },
-    "addItem": {
-      "title": "Add Item",
-      "description": "Add a new item to the inventory",
-      "namePlaceholder": "Enter item name",
-      "categoryPlaceholder": "Select item category",
-      "quantityPlaceholder": "Enter quantity",
-      "unitPlaceholder": "Enter unit (e.g. kg, pcs)",
-      "minQuantityPlaceholder": "Enter minimum stock quantity",
-      "pricePlaceholder": "Enter item price",
-      "successToast": "{{itemName}} was added to inventory",
-      "errorToast": "Failed to add inventory item",
-      "cancel": "Cancel",
-      "descriptionPlaceholder": "Enter item description"
-    },
-    "editItem": {
-      "title": "Edit Item",
-      "description": "Modify the details of an existing inventory item",
-      "successToast": "{{itemName}} was updated",
-      "errorToast": "Failed to update inventory item",
-      "cancel": "Cancel"
-    },
-    "deleteItem": {
-      "title": "Delete Item",
-      "description": "Are you sure you want to delete {{itemName}}? This action cannot be undone.",
-      "successToast": "Inventory item deleted",
-      "errorToast": "Failed to delete inventory item"
-    },
-    "status": {
-      "lowStock": "Low Stock",
-      "inStock": "In Stock"
-    },
-    "buttons": {
-      "addItem": "Add Item",
-      "editItem": "Edit Item",
-      "cancel": "Cancel"
-    },
-    "errors": {
-      "fetchItems": "Failed to fetch inventory items",
-      "addItem": "Failed to add inventory item",
-      "deleteItem": "Failed to delete inventory item"
-    },
-    "noItems": "No items in inventory",
-    "noMatchingItems": "No items found",
-    "initialLoad": {
-      "success": "Menu items loaded successfully",
-      "description": "{{count}} items added to inventory",
-      "error": "Failed to load initial items"
-    }
-  },
-
-  // Add the rest of the translations following the Portuguese structure
-  // ... (continue adding other sections like settings, orderForm, etc.)
+    "loading": "Loading orders..."
+  }
 };
 
-export default enTranslations;
+export default ptTranslations;
