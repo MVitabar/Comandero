@@ -123,23 +123,42 @@ export interface UserActivity {
 
 // Inventory Management
 export interface InventoryItem {
-  [x: string]: string | number | Date | undefined;
-  uid: string;
-  name: string;
-  category: string;
-  quantity: number;
-  unit: string;
-  minQuantity: number;
-  price: number;
-  description?: string;
-  supplier?: string;
-  purchaseDate?: Date;
-  expirationDate?: Date;
-  reorderPoint?: number;
-  notes?: string;
-  createdAt: Date;
-  updatedAt?: Date;
-  restaurantId: string;
+  id?: string
+  name: string
+  category: string
+  categoryName?: string
+  quantity: number
+  unit: string
+  price: number
+  minQuantity: number
+  description?: string
+  supplier?: string
+  restaurantId?: string
+  createdAt?: Date
+  updatedAt?: Date
+  lowStockThreshold?: number
+}
+
+export interface InventoryItemSourceData {
+  id?: string
+  name: string
+  category: string
+  quantity: number
+  minQuantity?: number
+  lowStockThreshold?: number
+  price: number
+  unit: string
+  description?: string
+  supplier?: string
+  restaurantId?: string
+  createdAt?: Date
+  updatedAt?: Date
+  uid?: string
+  purchaseDate?: Date
+  expirationDate?: Date
+  reorderPoint?: number
+  notes?: string
+  categoryName?: string
 }
 
 // Menu and Order Management
@@ -169,19 +188,17 @@ export interface DietaryRestriction {
 }
 
 export interface OrderItem {
-  [x: string]: string | number | boolean | Date | DietaryRestriction | string[] | undefined;
-  uid?: string;
+  id: string;
   itemId: string;
   name: string;
   category: string;
   quantity: number;
   price: number;
+  stock: number;
+  unit: string;
   notes?: string;
-  unit?: string;
-  dietaryInfo?: DietaryRestriction;
+  description?: string;
   customDietaryRestrictions?: string[];
-  preparationInstructions?: string;
-  allergenWarnings?: string[];
   isVegetarian?: boolean;
   isVegan?: boolean;
   isGlutenFree?: boolean;
@@ -628,6 +645,8 @@ export interface InventoryAlert {
   status: 'low' | 'critical' | 'normal';
 }
 
+export type InventoryItemStatus = 'critical' | 'warning' | 'healthy' | 'default';
+
 // Tipos para eventos del sistema
 export interface SystemEvent {
   type: 'order_created' | 'inventory_low' | 'user_login' | 'system_error';
@@ -794,16 +813,17 @@ export type TopSellingItem = {
   category?: string
 }
 
-export type InventoryItemStatus = 'critical' | 'warning' | 'healthy'
-
-export type InventoryItemDetail = {
+export interface InventoryItemDetail {
+  id?: string
   name: string
-  category?: string
+  category: string
+  categoryName?: string
   total: number
   inStock: number
-  lowStock: number
-  status: InventoryItemStatus
-  id?: string
+  lowStock?: number
+  minQuantity?: number
+  lowStockThreshold?: number
+  status?: 'critical' | 'warning' | 'healthy' | 'default'
 }
 
 export type DashboardData = {

@@ -28,7 +28,8 @@ import {
   DashboardData,
   InventoryItem,
   OrderItem,
-  InventoryItemDetail
+  InventoryItemDetail,
+  InventoryItemSourceData
 } from "@/types"
 import { 
   AlertTriangle, 
@@ -76,66 +77,173 @@ export default function DashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
+      console.log("🚀 Starting fetchDashboardData")
       const ordersRef = collection(db, `restaurants/${user?.establishmentId}/orders`)
       
-      // Categories to fetch
-      const categories = [
-        'appetizers', 
-        'desserts', 
-        'drinks', 
-        'main_courses', 
-        'salads', 
-        'sides'
+      // Predefined list of valid categories with translations
+      const validCategories = [
+        { 
+          id: 'appetizers', 
+          name: t('categories.appetizers') 
+        },
+        { 
+          id: 'desserts', 
+          name: t('categories.desserts') 
+        },
+        { 
+          id: 'drinks', 
+          name: t('categories.drinks') 
+        },
+        { 
+          id: 'main_courses', 
+          name: t('categories.mainCourses') 
+        },
+        { 
+          id: 'salads', 
+          name: t('categories.salads') 
+        },
+        { 
+          id: 'sides', 
+          name: t('categories.sides') 
+        }
       ]
 
       // Fetch items from all categories
-      const inventoryPromises = categories.map(category => 
-        getDocs(collection(db, `restaurants/${user?.establishmentId}/inventory/${category}/items`))
+      const inventoryPromises = validCategories.map(category => 
+        getDocs(collection(db, `restaurants/${user?.establishmentId}/inventory/${category.id}/items`))
       )
 
       const inventorySnapshots = await Promise.all(inventoryPromises)
       
       // Flatten and process all inventory items
-      const allInventoryItems: InventoryItem[] = inventorySnapshots.flatMap(snapshot => 
+      const allInventoryItems: InventoryItem[] = inventorySnapshots.flatMap((snapshot, index) => 
         snapshot.docs.map(doc => ({
           ...(doc.data() as InventoryItem),
           id: doc.id,
-          category: doc.ref.path.split('/')[5] // Extract category from path
+          category: validCategories[index].id,
+          categoryName: validCategories[index].name
         }))
       )
 
-      console.log("Total Inventory Items:", allInventoryItems.length)
+      console.log("📦 Total Inventory Items:", allInventoryItems.length)
       
       // Log unique categories
       const uniqueCategories = new Set(
         allInventoryItems.map(item => item.category).filter(category => category)
       )
-      console.log("Unique Inventory Categories:", Array.from(uniqueCategories))
+      console.log("🏷️ Unique Inventory Categories:", Array.from(uniqueCategories))
       
-      const inventoryDetails: InventoryItemDetail[] = allInventoryItems.map(data => ({
-        id: data.id as string,
-        name: data.name || 'Unknown',
-        category: data.category || 'uncategorized',
-        total: data.quantity || 0,
-        inStock: data.quantity || 0,
-        lowStock: Math.max(0, (data.quantity || 0) - (data.quantity || 0)),
-        status: (() => {
-          const total = data.quantity || 0
-          const inStock = data.quantity || 0
-          const stockPercentage = total > 0 ? (inStock / total) * 100 : 0
+      const inventoryDetails: InventoryItemDetail[] = allInventoryItems.map((data: InventoryItemSourceData) => {
+        const quantity = Number(data.quantity) || 0
+        
+        // Use minQuantity instead of a separate threshold
+        const minimumStockThreshold = Number(data.minQuantity) || 10
+        const lowStockThreshold = Number(data.lowStockThreshold) || 50
+
+        // Detailed logging for diagnosis
+        console.group(`🔍 Stock Status for ${data.name}`)
+        console.log('Quantity:', quantity)
+        console.log('Minimum Stock Threshold:', minimumStockThreshold)
+        console.log('Low Stock Threshold:', lowStockThreshold)
+        console.log('Critical Threshold:', minimumStockThreshold)
+        console.log('Warning Threshold:', minimumStockThreshold * 1.5)
+
+        const status = (() => {
+          // Critical: Quantity is less than the minimum stock threshold
+          if (quantity < minimumStockThreshold) {
+            console.log('🔴 Status: CRITICAL (quantity < minimum threshold)')
+            return 'critical'
+          }
           
-          if (stockPercentage <= 20) return 'critical'
-          if (stockPercentage <= 50) return 'warning'
+          // Warning: Quantity is between minimum and 1.5x minimum
+          if (quantity < minimumStockThreshold * 1.5) {
+            console.log('🟠 Status: WARNING (quantity < 1.5 * minimum threshold)')
+            return 'warning'
+          }
+          
+          // Healthy: Quantity is more than 1.5x minimum
+          console.log('🟢 Status: HEALTHY')
           return 'healthy'
         })()
-      }))
 
-      console.log("Processed Inventory Details:", inventoryDetails)
+        // Calculate low stock based on minimum stock threshold
+        const lowStock = status !== 'healthy' 
+          ? Math.max(0, minimumStockThreshold - quantity) 
+          : 0
+
+        console.log('Low Stock:', lowStock)
+        console.log('Status:', status)
+        console.groupEnd()
+
+        return {
+          id: data.id || crypto.randomUUID(),
+          name: data.name || 'Unknown Item',
+          category: data.category || 'uncategorized',
+          categoryName: data.categoryName || 'Uncategorized',
+          total: quantity,
+          inStock: quantity,
+          lowStock: lowStock,
+          minQuantity: minimumStockThreshold,
+          lowStockThreshold,
+          status: status || 'default'
+        }
+      })
+
+      console.log("✅ Processed Inventory Details:", inventoryDetails)
 
       // Calculate inventory totals
       const totalInventoryItems = inventoryDetails.reduce((sum, item) => sum + item.total, 0)
       const totalInStockItems = inventoryDetails.reduce((sum, item) => sum + item.inStock, 0)
-      const totalLowStockItems = inventoryDetails.reduce((sum, item) => sum + item.lowStock, 0)
+      const totalLowStockItems = inventoryDetails.reduce((sum, item) => sum + (item.lowStock ?? 0), 0)
+
+      // Calculate category-level stock status
+      const categorySummary = inventoryDetails.reduce((acc, item) => {
+        const category = item.category || 'uncategorized'
+        
+        if (!acc[category]) {
+          acc[category] = {
+            total: 0,
+            inStock: 0,
+            minStockThreshold: 0,  // Change from lowStockThreshold
+            criticalItems: 0,
+            warningItems: 0,
+            healthyItems: 0
+          }
+        }
+        
+        acc[category].total += item.total
+        acc[category].inStock += item.inStock
+        
+        // Use minQuantity instead of lowStockThreshold
+        acc[category].minStockThreshold += item.minQuantity ?? 10
+        
+        if (item.status === 'critical') acc[category].criticalItems++
+        if (item.status === 'warning') acc[category].warningItems++
+        if (item.status === 'healthy') acc[category].healthyItems++
+        
+        return acc
+      }, {} as Record<string, {
+        total: number,
+        inStock: number,
+        minStockThreshold: number,
+        criticalItems: number,
+        warningItems: number,
+        healthyItems: number
+      }>)
+
+      // Update category status calculation
+      const getCategoryStatus = (categoryData: typeof categorySummary[string]) => {
+        const totalMinStockThreshold = categoryData.minStockThreshold
+        const totalInStock = categoryData.inStock
+
+        // Critical if total in-stock is less than total minimum stock threshold
+        if (totalInStock < totalMinStockThreshold) return 'critical'
+        
+        // Warning if total in-stock is less than 1.5 * total minimum stock threshold
+        if (totalInStock < totalMinStockThreshold * 1.5) return 'warning'
+        
+        return 'healthy'
+      }
 
       // Fetch total orders and sales for the current month
       const currentMonthStart = Timestamp.fromDate(new Date(new Date().getFullYear(), new Date().getMonth(), 1))
@@ -178,7 +286,7 @@ export default function DashboardPage() {
           createdAt: orderData.createdAt?.toDate(),
           status: orderData.status,
           total: orderData.total,
-          items: orderData.items?.length || 0
+          items: orderData.items ? Object.values(orderData.items).length : 0
         })
       })
 
@@ -189,7 +297,7 @@ export default function DashboardPage() {
           createdAt: orderData.createdAt?.toDate(),
           status: orderData.status,
           total: orderData.total,
-          items: orderData.items?.length || 0
+          items: orderData.items ? Object.values(orderData.items).length : 0
         })
       })
 
@@ -240,7 +348,7 @@ export default function DashboardPage() {
       salesByCategorySnapshot.docs.forEach(doc => {
         const orderData = doc.data() as Order
         
-        orderData.items.forEach((item: OrderItem) => {
+        Object.values(orderData.items || {}).forEach((item: OrderItem) => {
           const category = item.category || 'uncategorized'
           const itemTotal = item.price * item.quantity
 
@@ -543,6 +651,26 @@ export default function DashboardPage() {
     }
   ]
 
+  const getCategoryStatus = (categoryData: {
+    total: number,
+    inStock: number,
+    minStockThreshold: number,
+    criticalItems: number,
+    warningItems: number,
+    healthyItems: number
+  }) => {
+    const totalMinStockThreshold = categoryData.minStockThreshold
+    const totalInStock = categoryData.inStock
+
+    // Critical if total in-stock is less than total minimum stock threshold
+    if (totalInStock < totalMinStockThreshold) return 'critical'
+    
+    // Warning if total in-stock is less than 1.5 * total minimum stock threshold
+    if (totalInStock < totalMinStockThreshold * 1.5) return 'warning'
+    
+    return 'healthy'
+  }
+
   return (
     <div className="p-6 space-y-6">
       {/* Personalized Welcome Section */}
@@ -560,7 +688,7 @@ export default function DashboardPage() {
       {/* Dashboard Grid Layout */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Sales Overview - Top Left */}
-        <Card>
+        <Card className="w-full">
           <CardHeader>
             <CardTitle className="text-sm font-medium text-muted-foreground">
               {t("dashboard.salesByCategory.title")}
@@ -583,7 +711,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Total Sales Performance - Top Center */}
-        <Card>
+        <Card className="w-full">
           <CardHeader>
             <CardTitle className="text-sm font-medium text-muted-foreground">
               {t("dashboard.dailySales.title")}
@@ -598,7 +726,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Sales Performance - Top Right */}
-        <Card>
+        <Card className="w-full">
           <CardHeader>
             <CardTitle className="text-sm font-medium text-muted-foreground">
               {t("dashboard.totalSales.title")}
@@ -613,7 +741,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Inventory Overview - Spanning 2 Columns */}
-        <div className="md:col-span-2">
+        <div className="w-full md:col-span-2">
           <Card className="w-full">
             <CardHeader className="p-4 sm:p-6">
               <div className="flex flex-col justify-between items-center mb-4">
@@ -650,7 +778,7 @@ export default function DashboardPage() {
                       {inventoryStatCards.map((stat, index) => (
                         <Card 
                           key={index} 
-                          className="shadow-sm hover:shadow-md transition-shadow"
+                          className="shadow-sm hover:shadow-md transition-shadow w-full"
                         >
                           <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -669,56 +797,69 @@ export default function DashboardPage() {
 
                   <TabsContent value="by_category" className="mt-4 sm:mt-6">
                     <div className="space-y-4">
-                      {Object.entries(
-                        dashboardData.inventoryItems.details.reduce((acc, item) => {
-                          const category = item.category || 'uncategorized'
-                          
-                          if (!acc[category]) {
-                            acc[category] = {
-                              total: 0,
-                              inStock: 0,
-                              lowStock: 0,
-                              items: []
-                            }
+                      {Object.entries(dashboardData.inventoryItems.details.reduce((acc, item) => {
+                        const category = item.category || 'uncategorized'
+                        
+                        if (!acc[category]) {
+                          acc[category] = {
+                            total: 0,
+                            inStock: 0,
+                            minStockThreshold: 0,
+                            criticalItems: 0,
+                            warningItems: 0,
+                            healthyItems: 0
                           }
-                          
-                          acc[category].total += item.total
-                          acc[category].inStock += item.inStock
-                          acc[category].lowStock += item.lowStock
-                          acc[category].items.push(item)
-                          
-                          return acc
-                        }, {} as Record<string, {
-                          total: number,
-                          inStock: number,
-                          lowStock: number,
-                          items: InventoryItemDetail[]
-                        }>)
+                        }
+                        
+                        acc[category].total += item.total
+                        acc[category].inStock += item.inStock
+                        acc[category].minStockThreshold += item.minQuantity ?? 10
+                        
+                        if (item.status === 'critical') acc[category].criticalItems++
+                        if (item.status === 'warning') acc[category].warningItems++
+                        if (item.status === 'healthy') acc[category].healthyItems++
+                        
+                        return acc
+                      }, {} as Record<string, {
+                        total: number,
+                        inStock: number,
+                        minStockThreshold: number,
+                        criticalItems: number,
+                        warningItems: number,
+                        healthyItems: number
+                      }>)
                       ).map(([category, data]) => (
                         <Accordion 
                           type="single" 
                           collapsible 
                           key={category} 
-                          className="border rounded-lg bg-white shadow-sm"
+                          className="border rounded-lg bg-white shadow-sm w-full"
                         >
                           <AccordionItem value={category} className="border-b last:border-b-0">
                             <AccordionTrigger className="px-4 py-3 hover:bg-muted/50 transition-colors">
-                              <div className="flex justify-between w-full items-center">
-                                <div className="flex items-center space-x-3">
+                              <div className="flex flex-col w-full">
+                                <div className="flex justify-between items-center mb-2">
                                   <span className="font-semibold text-sm sm:text-base text-gray-800">
                                     {category}
                                   </span>
-                                  <div className="flex space-x-2">
-                                    <Badge variant="outline" className="text-xs">
-                                      {t("dashboard.inventory.total")}: {data.total}
-                                    </Badge>
-                                    <Badge variant="secondary" className="text-xs">
-                                      {t("dashboard.inventory.inStock")}: {data.inStock}
-                                    </Badge>
-                                    <Badge variant="destructive" className="text-xs">
-                                      {t("dashboard.inventory.lowStock")}: {data.lowStock}
-                                    </Badge>
-                                  </div>
+                                </div>
+                                <div className="flex space-x-2">
+                                  <Badge variant="outline" className="text-xs">
+                                    {t("dashboard.inventory.total")}: {data.total ?? 0}
+                                  </Badge>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {t("dashboard.inventory.inStock")}: {data.inStock ?? 0}
+                                  </Badge>
+                                  <Badge 
+                                    variant={
+                                      getCategoryStatus(data) === 'critical' ? 'destructive' :
+                                      getCategoryStatus(data) === 'warning' ? 'default' :
+                                      'secondary'
+                                    }
+                                    className="text-xs"
+                                  >
+                                    {t(`dashboard.inventory.status.${getCategoryStatus(data)}`)}
+                                  </Badge>
                                 </div>
                               </div>
                             </AccordionTrigger>
@@ -744,7 +885,7 @@ export default function DashboardPage() {
                                   </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                  {data.items.map(item => (
+                                  {dashboardData.inventoryItems.details.filter(item => item.category === category).map(item => (
                                     <TableRow 
                                       key={item.id} 
                                       className="hover:bg-gray-100 transition-colors"
@@ -761,12 +902,12 @@ export default function DashboardPage() {
                                       <TableCell>
                                         <Badge 
                                           variant={
-                                            item.status === 'critical' ? 'destructive' :
-                                            item.status === 'warning' ? 'default' : 'secondary'
+                                            item?.status === 'critical' ? 'destructive' :
+                                            item?.status === 'warning' ? 'default' : 'secondary'
                                           }
                                           className="text-xs"
                                         >
-                                          {t(`dashboard.inventory.status.${item.status}`)}
+                                          {t(`dashboard.inventory.status.${item?.status || 'default'}`)}
                                         </Badge>
                                       </TableCell>
                                     </TableRow>
@@ -782,66 +923,99 @@ export default function DashboardPage() {
 
                   <TabsContent value="by_item" className="w-full mt-4 sm:mt-6">
                     {dashboardData.inventoryItems.details.length > 0 ? (
-                      <div className="w-full border rounded-lg overflow-hidden">
-                        <div className="max-h-64 overflow-y-auto">
-                          <table className="w-full min-w-full">
-                            <thead className="sticky top-0 bg-white z-10">
-                              <tr>
-                                {[
-                                  "itemName", 
-                                  "category", 
-                                  "total", 
-                                  "inStock", 
-                                  "status"
-                                ].map(key => (
-                                  <th 
-                                    key={key} 
-                                    className="px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider sticky top-0 bg-white"
-                                  >
-                                    {key === 'status' 
-                                      ? t('dashboard.inventory.status.label') 
-                                      : t(`dashboard.inventory.${key}`)}
-                                  </th>
-                                ))}
-                              </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                              {dashboardData.inventoryItems.details.map(item => (
-                                <tr 
-                                  key={item.id} 
-                                  className="hover:bg-gray-100 transition-colors"
-                                >
-                                  <td className="px-4 py-2 text-xs sm:text-sm text-gray-800">
-                                    {item.name}
-                                  </td>
-                                  <td className="px-4 py-2 text-xs sm:text-sm text-gray-700">
-                                    {item.category}
-                                  </td>
-                                  <td className="px-4 py-2 text-xs sm:text-sm text-gray-700">
-                                    {item.total}
-                                  </td>
-                                  <td className="px-4 py-2 text-xs sm:text-sm text-gray-700">
-                                    {item.inStock}
-                                  </td>
-                                  <td className="px-4 py-2">
-                                    <span 
-                                      className={`px-2 py-1 text-xs rounded-full ${
-                                        item.status === 'critical' ? 'bg-red-100 text-red-800' :
-                                        item.status === 'warning' ? 'bg-yellow-100 text-yellow-800' : 
-                                        'bg-green-100 text-green-800'
-                                      }`}
-                                    >
-                                      {t(`dashboard.inventory.status.${item.status}`)}
+                      <div className="space-y-4">
+                        {dashboardData.inventoryItems.details.map((item) => (
+                          <Accordion 
+                            type="single" 
+                            collapsible 
+                            key={item.id || 'unknown-item'} 
+                            className="border rounded-lg bg-white shadow-sm w-full"
+                          >
+                            <AccordionItem value={item.id || 'unknown-item'} className="border-b last:border-b-0">
+                              <AccordionTrigger className="px-4 py-3 hover:bg-muted/50 transition-colors">
+                                <div className="flex flex-col w-full">
+                                  <div className="flex justify-between items-center mb-2">
+                                    <span className="font-semibold text-sm sm:text-base text-gray-800">
+                                      {item.name || 'Unknown Item'}
                                     </span>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
+                                  </div>
+                                  <div className="flex space-x-2">
+                                    <Badge variant="outline" className="text-xs">
+                                      {t("dashboard.inventory.total")}: {item.total ?? 0}
+                                    </Badge>
+                                    <Badge variant="secondary" className="text-xs">
+                                      {t("dashboard.inventory.inStock")}: {item.inStock ?? 0}
+                                    </Badge>
+                                    <Badge 
+                                      variant={
+                                        item.status === 'critical' ? 'destructive' :
+                                        item.status === 'warning' ? 'default' :
+                                        item.status === 'healthy' ? 'secondary' :
+                                        'default'
+                                      }
+                                      className="text-xs"
+                                    >
+                                      {t(`dashboard.inventory.status.${
+                                        item.status === 'critical' ? 'critical' :
+                                        item.status === 'warning' ? 'warning' :
+                                        item.status === 'healthy' ? 'healthy' :
+                                        'default'
+                                      }`)}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </AccordionTrigger>
+                              <AccordionContent className="p-0">
+                                <Table>
+                                  <TableHeader className="bg-gray-50">
+                                    <TableRow>
+                                      {[
+                                        "category", 
+                                        "total", 
+                                        "inStock", 
+                                        "status"
+                                      ].map(key => (
+                                        <TableHead 
+                                          key={key} 
+                                          className="text-xs sm:text-sm font-semibold text-gray-600 py-3"
+                                        >
+                                          {t(`dashboard.inventory.${key}`)}
+                                        </TableHead>
+                                      ))}
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    <TableRow className="hover:bg-gray-100 transition-colors">
+                                      <TableCell className="text-xs sm:text-sm text-gray-700">
+                                        {item.category}
+                                      </TableCell>
+                                      <TableCell className="text-xs sm:text-sm text-gray-700">
+                                        {item.total}
+                                      </TableCell>
+                                      <TableCell className="text-xs sm:text-sm text-gray-700">
+                                        {item.inStock}
+                                      </TableCell>
+                                      <TableCell>
+                                        <Badge 
+                                          variant={
+                                            item?.status === 'critical' ? 'destructive' :
+                                            item?.status === 'warning' ? 'default' : 'secondary'
+                                          }
+                                          className="text-xs"
+                                        >
+                                          {t(`dashboard.inventory.status.${item?.status || 'default'}`)}
+                                        </Badge>
+                                      </TableCell>
+                                    </TableRow>
+                                  </TableBody>
+                                </Table>
+                              </AccordionContent>
+                            </AccordionItem>
+                          </Accordion>
+                        ))}
                       </div>
                     ) : (
-                      <div className="text-center py-6 text-muted-foreground">
+                      <div className="text-center text-muted-foreground p-4">
                         {t("dashboard.inventory.noItems")}
                       </div>
                     )}
@@ -852,7 +1026,7 @@ export default function DashboardPage() {
           </Card>
         </div>
          {/* Top Selling Items */}
-         <Card>
+         <Card className="w-full">
           <CardHeader>
             <CardTitle>{t('dashboard.topSellingItems.title')}</CardTitle>
             <CardDescription>{t('dashboard.topSellingItems.subtitle')}</CardDescription>
@@ -876,24 +1050,27 @@ export default function DashboardPage() {
         </Card>
 
         {/* Sales by Category */}
-        <Card className="col-span-2">
+        <Card className="w-full h-[500px]  md:col-span-2">
           <CardHeader>
             <CardTitle>{t('dashboard.salesByCategory.title')}</CardTitle>
             <CardDescription>{t('dashboard.salesByCategory.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             {dashboardData.salesByCategory && dashboardData.salesByCategory.length > 0 ? (
-              <ResponsiveContainer width="100%" height={350}>
-                <PieChart>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart cy="50%" cx="50%" >
                   <Pie
                     data={dashboardData.salesByCategory}
                     cx="50%"
                     cy="50%"
+                    innerRadius={70}
+                    outerRadius={100}
+                    paddingAngle={0}
                     labelLine={false}
-                    outerRadius={120}
                     fill="#8884d8"
                     dataKey="totalSales"
                     nameKey="category"
+                    
                   >
                     {dashboardData.salesByCategory.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
@@ -907,10 +1084,34 @@ export default function DashboardPage() {
                   />
                   <Legend 
                     formatter={(value) => t(`dashboard.salesByCategory.categories.${value}`)}
+                    layout="horizontal" 
+                    verticalAlign="bottom"
+                    align="center"
+                    iconType="circle"
+                    wrapperStyle={{ 
+                      paddingTop: '5px',
+                      position: 'relative',
+                      bottom: 0,
+                      left: 0,
+                      width: '100%',
+                      maxWidth: '100%',
+                      overflow: 'hidden'
+                    }}
+                    iconSize={8}
+                    className="block sm:hidden text-xs"
+                  />
+                  <Legend 
+                    formatter={(value) => t(`dashboard.salesByCategory.categories.${value}`)}
                     layout="vertical" 
                     verticalAlign="middle" 
                     align="right"
                     iconType="circle"
+                    iconSize={10}
+                    className="hidden sm:block text-xs"
+                    wrapperStyle={{
+                      maxWidth: '30%',
+                      paddingLeft: '10px'
+                    }}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -922,7 +1123,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
         {/* Recent Orders */}
-        <Card>
+        <Card className="w-full">
           <CardHeader>
             <CardTitle>{t('dashboard.recentOrders.title')}</CardTitle>
           </CardHeader>
@@ -949,61 +1150,59 @@ export default function DashboardPage() {
         </Card>
 
         {/* Sales List */}
-        <div className="md:col-span-3">
-          <Card className="h-full flex flex-col">
-            <CardHeader>
-              <CardTitle>{t('dashboard.salesList.title')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {dashboardData.salesList.length > 0 ? (
-                <div className="overflow-auto">
-                  <table className="w-full">
-                    <thead className="sticky top-0 bg-white z-10">
-                      <tr className="border-b">
-                        <th className="px-4 py-2 text-left">{t('dashboard.salesList.columns.date')}</th>
-                        <th className="px-4 py-2 text-left">{t('dashboard.salesList.columns.orderId')}</th>
-                        <th className="px-4 py-2 text-right">{t('dashboard.salesList.columns.total')}</th>
-                        <th className="px-4 py-2 text-left">{t('dashboard.salesList.columns.paymentMethod')}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {dashboardData.salesList.map((sale) => (
-                        <tr key={sale.orderId} className="border-b last:border-b-0">
-                          <td className="px-4 py-2">
-                            {new Date(sale.date).toLocaleDateString(i18n.language, {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric'
-                            })}
-                          </td>
-                          <td className="px-4 py-2">{sale.orderId}</td>
-                          <td className="px-4 py-2 text-right">
-                            {sale.total.toLocaleString(i18n.language, { 
-                              style: 'currency', 
-                              currency: user?.currency || 'USD' 
-                            })}
-                          </td>
-                          <td className="px-4 py-2">{sale.paymentMethod}</td>
+        <div className="container w-full md:col-span-3 mx-auto px-2  sm:px-4 lg:px-6">
+          <div className="grid grid-cols-1 gap-4">
+            <Card className="w-full">
+              <CardHeader className="p-2 sm:p-4">
+                <CardTitle className="text-sm sm:text-base">{t('dashboard.salesList.title')}</CardTitle>
+              </CardHeader>
+              <CardContent className="p-2 sm:p-4">
+                {dashboardData.salesList.length > 0 ? (
+                  <div className="overflow-x-auto max-h-[400px]">
+                    <table className="w-full text-xs sm:text-sm">
+                      <thead className="sticky top-0 bg-white z-10">
+                        <tr className="border-b">
+                          <th className="px-1 sm:px-4 py-2 text-left text-xs sm:text-sm">{t('dashboard.salesList.columns.date')}</th>
+                          <th className="px-1 sm:px-4 py-2 text-left text-xs sm:text-sm hidden sm:table-cell">{t('dashboard.salesList.columns.orderId')}</th>
+                          <th className="px-1 sm:px-4 py-2 text-right text-xs sm:text-sm">{t('dashboard.salesList.columns.total')}</th>
+                          <th className="px-1 sm:px-4 py-2 text-left text-xs sm:text-sm hidden md:table-cell">{t('dashboard.salesList.columns.paymentMethod')}</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-center text-muted-foreground p-4">
-                  {t('dashboard.salesList.noSales')}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                      </thead>
+                      <tbody>
+                        {dashboardData.salesList.map((sale) => (
+                          <tr key={sale.orderId} className="border-b last:border-b-0">
+                            <td className="px-1 sm:px-4 py-2 text-xs sm:text-sm">
+                              {new Date(sale.date).toLocaleDateString(i18n.language, {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </td>
+                            <td className="px-1 sm:px-4 py-2 text-xs sm:text-sm hidden sm:table-cell">{sale.orderId}</td>
+                            <td className="px-1 sm:px-4 py-2 text-right text-xs sm:text-sm">
+                              {sale.total.toLocaleString(i18n.language, { 
+                                style: 'currency', 
+                                currency: user?.currency || 'USD' 
+                              })}
+                            </td>
+                            <td className="px-1 sm:px-4 py-2 text-xs sm:text-sm hidden md:table-cell">{sale.paymentMethod}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center text-muted-foreground p-4 text-xs sm:text-sm">
+                    {t('dashboard.salesList.noSales')}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-       
-
-        
-
         {/* Additional Insights */}
-        <div className="md:col-span-3">
+        <div className="w-full md:col-span-3">
         <Card>
           <CardHeader>
             <CardTitle>{t('dashboard.additionalInsights.title')}</CardTitle>

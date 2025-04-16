@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, Search, MoreHorizontal, Edit, Trash, X } from "lucide-react"
 import Link from "next/link"
 import { t, TFunction } from 'i18next';
-import { Order, OrderStatus, FlexibleOrderStatus, BaseOrderStatus } from "@/types"
+import { Order, OrderStatus, FlexibleOrderStatus, BaseOrderStatus, OrderItem } from "@/types"
 import { 
   collection, 
   query, 
@@ -141,6 +141,20 @@ const getStatusBadgeVariant = (status?: BaseOrderStatus): BadgeVariant => {
   }
 }
 
+// Función auxiliar para obtener la etiqueta de tipo de pedido
+const getOrderTypeLabel = (orderType?: string): string => {
+  const orderTypeLabels: Record<string, string> = {
+    'table': 'Mesa',
+    'delivery': 'Delivery',
+    'counter': 'Mostrador',
+    'takeaway': 'Para llevar'
+  };
+
+  return orderType && orderTypeLabels[orderType] 
+    ? orderTypeLabels[orderType] 
+    : 'Desconocido';
+};
+
 export default function OrdersPage() {
   const { t, i18n }: { t: TFunction, i18n: any } = useI18n()
   const { db } = useFirebase()
@@ -193,52 +207,73 @@ export default function OrdersPage() {
         const data = doc.data();
         
         // Precise table number extraction
-        const extractTableNumber = (input: any): number | undefined => {
-          // Check if input is already a valid number
-          if (typeof input === 'number' && !isNaN(input)) return input;
-          
-          // Check if input is a string with numbers
-          if (typeof input === 'string') {
-            const match = input.match(/\d+/);
-            return match ? parseInt(match[0], 10) : undefined;
+        const extractTableNumber = (input: any, orderType?: string): number | undefined => {
+          // Si no hay tipo de orden, devolver undefined
+          if (!orderType) return undefined;
+
+          // Mapeo de tipos de orden a etiquetas
+          const orderTypeLabels: Record<string, string> = {
+            'table': t('orders.type.table'),
+            'delivery': t('orders.type.delivery'),
+            'counter': t('orders.type.counter'),
+            'takeaway': t('orders.type.takeaway')
+          };
+
+          // Si el tipo de orden no está en el mapeo, devolver undefined
+          if (!orderTypeLabels[orderType]) return undefined;
+
+          // Para pedidos de mesa, extraer número de mesa
+          if (orderType === 'table') {
+            // Lógica original de extracción de número de mesa
+            const tableNumber = typeof input === 'number' 
+              ? input 
+              : (typeof input === 'string' 
+                ? parseInt(input, 10) 
+                : undefined);
+            
+            return tableNumber;
           }
-          
-          // Check debugContext for table number
-          if (data.debugContext?.orderContext?.tableNumber) {
-            const match = String(data.debugContext.orderContext.tableNumber).match(/\d+/);
-            return match ? parseInt(match[0], 10) : undefined;
-          }
-          
+
+          // Para otros tipos de pedido, devolver undefined
           return undefined;
         };
-        
-        // Normalize items to match OrderItem interface
+
+        // Normalize items to match Firebase structure
         const normalizedItems = Array.isArray(data.items) 
-          ? (data.items || []).map((item: any) => ({
-            uid: item.uid,
-            itemId: item.itemId || item.menuItemId || item.uid,
-            name: item.name,
-            category: item.category || '',
-            quantity: item.quantity,
-            price: item.price,
-            notes: item.notes || '',
-            unit: item.unit,
-            dietaryInfo: {
-              vegetarian: item.dietaryInfo?.vegetarian ?? item.isVegetarian ?? false,
-              vegan: item.dietaryInfo?.vegan ?? item.isVegan ?? false,
-              glutenFree: item.dietaryInfo?.glutenFree ?? item.isGlutenFree ?? false,
-              lactoseFree: item.dietaryInfo?.lactoseFree ?? item.isLactoseFree ?? false
-            },
-            isVegetarian: item.isVegetarian,
-            isVegan: item.isVegan,
-            isGlutenFree: item.isGlutenFree,
-            isLactoseFree: item.isLactoseFree
-          }))
-          : [];
+          ? Object.values(data.items).map((item: any) => ({
+              id: item.id || `temp-${Date.now()}`,
+              itemId: item.itemId,
+              name: item.name,
+              category: item.category,
+              quantity: Number(item.quantity),
+              price: Number(item.price),
+              stock: Number(item.stock),
+              unit: item.unit,
+              notes: item.notes || '',
+              customDietaryRestrictions: Array.isArray(item.customDietaryRestrictions) 
+                ? item.customDietaryRestrictions 
+                : []
+            } as OrderItem))
+          : (data.items 
+              ? Object.values(data.items).map((item: any) => ({
+                  id: item.id || `temp-${Date.now()}`,
+                  itemId: item.itemId,
+                  name: item.name,
+                  category: item.category,
+                  quantity: Number(item.quantity),
+                  price: Number(item.price),
+                  stock: Number(item.stock),
+                  unit: item.unit,
+                  notes: item.notes || '',
+                  customDietaryRestrictions: Array.isArray(item.customDietaryRestrictions) 
+                    ? item.customDietaryRestrictions 
+                    : []
+                } as OrderItem))
+              : []);
 
         return {
           id: doc.id,
-          tableNumber: extractTableNumber(data.tableNumber),
+          tableNumber: extractTableNumber(data.tableNumber, data.orderType),
           orderType: data.orderType || data.type || 'table',
           type: data.type || data.orderType || 'table',
           status: data.status || 'pending',
@@ -325,48 +360,70 @@ export default function OrdersPage() {
       const data = orderDoc.data();
 
       // Use the same normalization logic as in fetchOrders
-      const extractTableNumber = (input: any): number | undefined => {
-        if (typeof input === 'number' && !isNaN(input)) return input;
-        
-        if (typeof input === 'string') {
-          const match = input.match(/\d+/);
-          return match ? parseInt(match[0], 10) : undefined;
+      const extractTableNumber = (input: any, orderType?: string): number | undefined => {
+        // Si no hay tipo de orden, devolver undefined
+        if (!orderType) return undefined;
+
+        // Mapeo de tipos de orden a etiquetas
+        const orderTypeLabels: Record<string, string> = {
+          'table': t('orders.type.table'),
+          'delivery': t('orders.type.delivery'),
+          'counter': t('orders.type.counter'),
+          'takeaway': t('orders.type.takeaway')
+        };
+
+        // Si el tipo de orden no está en el mapeo, devolver undefined
+        if (!orderTypeLabels[orderType]) return undefined;
+
+        // Para pedidos de mesa, extraer número de mesa
+        if (orderType === 'table') {
+          // Lógica original de extracción de número de mesa
+          const tableNumber = typeof input === 'number' 
+            ? input 
+            : (typeof input === 'string' 
+              ? parseInt(input, 10) 
+              : undefined);
+          
+          return tableNumber;
         }
-        
-        if (data.debugContext?.orderContext?.tableNumber) {
-          const match = String(data.debugContext.orderContext.tableNumber).match(/\d+/);
-          return match ? parseInt(match[0], 10) : undefined;
-        }
-        
+
+        // Para otros tipos de pedido, devolver undefined
         return undefined;
       };
 
       const normalizedItems = Array.isArray(data.items) 
-        ? (data.items || []).map((item: any) => ({
-          uid: item.uid,
-          itemId: item.itemId || item.menuItemId || item.uid,
-          name: item.name,
-          category: item.category || '',
-          quantity: item.quantity,
-          price: item.price,
-          notes: item.notes || '',
-          unit: item.unit,
-          dietaryInfo: {
-            vegetarian: item.dietaryInfo?.vegetarian ?? item.isVegetarian ?? false,
-            vegan: item.dietaryInfo?.vegan ?? item.isVegan ?? false,
-            glutenFree: item.dietaryInfo?.glutenFree ?? item.isGlutenFree ?? false,
-            lactoseFree: item.dietaryInfo?.lactoseFree ?? item.isLactoseFree ?? false
-          },
-          isVegetarian: item.isVegetarian,
-          isVegan: item.isVegan,
-          isGlutenFree: item.isGlutenFree,
-          isLactoseFree: item.isLactoseFree
-        }))
-        : [];
+        ? Object.values(data.items).map((item: any) => ({
+            id: item.id || `temp-${Date.now()}`,
+            itemId: item.itemId,
+            name: item.name,
+            category: item.category,
+            quantity: Number(item.quantity),
+            price: Number(item.price),
+            stock: Number(item.stock),
+            unit: item.unit,
+            notes: item.notes || '',
+            customDietaryRestrictions: Array.isArray(item.customDietaryRestrictions) 
+              ? item.customDietaryRestrictions 
+              : []
+          } as OrderItem))
+        : (data.items ? Object.values(data.items).map((item: any) => ({
+            id: item.id || `temp-${Date.now()}`,
+            itemId: item.itemId,
+            name: item.name,
+            category: item.category,
+            quantity: Number(item.quantity),
+            price: Number(item.price),
+            stock: Number(item.stock),
+            unit: item.unit,
+            notes: item.notes || '',
+            customDietaryRestrictions: Array.isArray(item.customDietaryRestrictions) 
+              ? item.customDietaryRestrictions 
+              : []
+          } as OrderItem)) : []);
 
       const normalizedOrder: Order = {
         id: orderDoc.id,
-        tableNumber: extractTableNumber(data.tableNumber),
+        tableNumber: extractTableNumber(data.tableNumber, data.orderType),
         orderType: data.orderType || data.type || 'table',
         type: data.type || data.orderType || 'table',
         status: data.status || 'pending',
@@ -401,7 +458,7 @@ export default function OrdersPage() {
       });
       return null;
     }
-  };
+  }
 
   const handleUpdateStatus = async () => {
     if (!db || !user || !selectedOrder || !selectedOrder.id) return
@@ -502,6 +559,13 @@ export default function OrdersPage() {
       (order.status || '').toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
+  console.log("Filtered Orders:", filteredOrders.map(order => ({
+    id: order.id,
+    itemsCount: order.items.length,
+    itemsType: typeof order.items,
+    itemsExample: order.items.length > 0 ? order.items[0] : null
+  })))
+
   const handleStatusChange = (status: FlexibleOrderStatus) => {
     if (!selectedOrder) return
 
@@ -581,13 +645,22 @@ export default function OrdersPage() {
                 {filteredOrders.map((order) => (
                   <TableRow key={order.id}>
                     <TableCell>{order.id}</TableCell>
-                    <TableCell>{order.tableNumber}</TableCell>
+                    <TableCell>
+                      {order.tableNumber 
+                        ? `${getOrderTypeLabel(order.orderType)} ${order.tableNumber}` 
+                        : getOrderTypeLabel(order.orderType)}
+                    </TableCell>
                     <TableCell>{order.waiter}</TableCell>
                     <TableCell>
-                      {order.items.length > 0 
-                        ? order.items.map(item => item.name).join(", ") 
-                        : t("orders.noItemsInOrder")
-                      }
+                      {(() => {
+                        const orderItems = Array.isArray(order.items) 
+                          ? order.items 
+                          : (order.items ? Object.values(order.items).map(item => item as OrderItem) : [])
+                        
+                        return orderItems.length > 0 
+                          ? orderItems.map(item => item.name).join(", ") 
+                          : t("orders.noItemsInOrder")
+                      })()}
                     </TableCell>
                     <TableCell>
                       <Badge variant={getStatusBadgeVariant(order.status as BaseOrderStatus)}>
