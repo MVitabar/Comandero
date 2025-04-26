@@ -291,13 +291,19 @@ export default function OrdersPage() {
           updatedAt: data.updatedAt?.toDate() || new Date(),
           tableId: data.tableId || data.debugContext?.orderContext?.tableId,
           tableMapId: data.tableMapId || data.debugContext?.orderContext?.tableMapId,
-          waiter: data.waiter || data.debugContext?.userInfo?.uid || user.email,
+          waiter: data.createdBy?.username || data.createdBy?.email || data.waiter || 'Unknown',
           specialRequests: data.specialRequests || '',
           paymentInfo: {
             method: data.paymentInfo?.method || 'other',
             amount: data.paymentInfo?.amount || data.total || 0
           },
-          debugContext: data.debugContext
+          debugContext: data.debugContext,
+          createdBy: {
+            uid: data.createdBy?.uid || data.uid,
+            displayName: data.createdBy?.username || data.createdBy?.email || 'Unknown',
+            email: data.createdBy?.email || null,
+            role: data.createdBy?.role || 'unknown'
+          }
         } as Order;
       });
 
@@ -447,7 +453,13 @@ export default function OrdersPage() {
           method: data.paymentInfo?.method || 'other',
           amount: data.paymentInfo?.amount || data.total || 0
         },
-        debugContext: data.debugContext
+        debugContext: data.debugContext,
+        createdBy: {
+          uid: data.createdBy?.uid || user.uid,
+          displayName: data.createdBy?.displayName || user.displayName || 'Unknown',
+          email: data.createdBy?.email || user.email || null,
+          role: data.createdBy?.role || user.role || 'unknown'
+        }
       };
 
       return normalizedOrder;
@@ -719,7 +731,13 @@ export default function OrdersPage() {
                         ? `${getOrderTypeLabel(order.orderType)} ${order.tableNumber}` 
                         : getOrderTypeLabel(order.orderType)}
                     </TableCell>
-                    <TableCell>{order.waiter}</TableCell>
+                    <TableCell>
+                      {order.createdBy?.displayName || order.createdBy?.email || t("orders.unknownUser")}
+                      {order.createdBy?.role && (
+                        <span className="text-xs text-muted-foreground ml-1">
+                          ({t(`roles.${order.createdBy.role.toLowerCase()}`)})</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       {(() => {
                         const orderItems = Array.isArray(order.items) 
@@ -789,7 +807,13 @@ export default function OrdersPage() {
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">{t("orders.errors.headers.waiter")}</p>
-                        <p>{order.waiter}</p>
+                        <p>
+                          {order.createdBy?.displayName || order.createdBy?.email || t("orders.unknownUser")}
+                          {order.createdBy?.role && (
+                            <span className="text-xs text-muted-foreground ml-1">
+                              ({t(`roles.${order.createdBy.role.toLowerCase()}`)})</span>
+                          )}
+                        </p>
                       </div>
                       <div className="col-span-2">
                         <p className="text-xs text-muted-foreground">{t("orders.errors.headers.items")}</p>

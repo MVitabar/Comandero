@@ -1,35 +1,36 @@
-// hooks/usePermissions.ts
-import { useAuth } from "@/components/auth-provider"
-import { UserRole, hasPermission, ROLE_PERMISSIONS } from "@/types/permissions"
+import { useContext } from 'react';
+import { UserRole, ModulePermissions, Permission, hasPermission } from '@/types/permissions';
+import { useAuth } from './useAuth';
 
 export function usePermissions() {
-  const { user } = useAuth()
+  const { user } = useAuth();
   
+  console.log('Current user in usePermissions:', user); // Debug log
+
   const checkPermission = (
-    view?: string, 
-    action?: string
-  ) => {
-    // Si no hay usuario, retornar false
-    if (!user) return false
-    
-    // Validar que el rol sea un UserRole válido
-    const normalizedRole = (user.role || 'owner').toLowerCase() as UserRole
-    
-    // Verificar si el rol existe en UserRole
-    const isValidRole = Object.values(UserRole).includes(normalizedRole)
-    
-    // Si no es un rol válido, usar 'owner' por defecto
-    const safeRole = isValidRole ? normalizedRole : UserRole.OWNER
-    
-    return hasPermission(
-      safeRole, 
-      view, 
-      action
-    )
-  }
-  
+    module: keyof ModulePermissions,
+    action: keyof Permission
+  ): boolean => {
+    if (!user || !user.role) {
+      console.log('No user or role found:', { user, role: user?.role }); // Debug log
+      return false;
+    }
+
+    // Si es OWNER, dar acceso total
+    if (user.role === UserRole.OWNER) {
+      console.log('User is OWNER, granting access');
+      return true;
+    }
+
+    const permissionGranted = hasPermission(user.role, module, action);
+    console.log(`Permission check for ${module}.${action}:`, permissionGranted); // Debug log
+    return permissionGranted;
+  };
+
   return {
-    canView: (view: string) => checkPermission(view),
-    canDo: (action: string) => checkPermission(undefined, action)
-  }
+    canView: (module: keyof ModulePermissions) => checkPermission(module, 'view'),
+    canCreate: (module: keyof ModulePermissions) => checkPermission(module, 'create'),
+    canUpdate: (module: keyof ModulePermissions) => checkPermission(module, 'update'),
+    canDelete: (module: keyof ModulePermissions) => checkPermission(module, 'delete'),
+  };
 }

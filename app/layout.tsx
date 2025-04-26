@@ -13,7 +13,9 @@ import { useAuth } from "@/components/auth-provider"
 import { usePathname } from "next/navigation"
 import LoginPage from "@/app/login/page"
 import RegisterPage from "@/app/register/page"
+import { UserProvider } from '@/contexts/UserContext';
 import "./globals.css"
+import { PermissionsProvider } from "@/components/permissions-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -30,8 +32,12 @@ export default function RootLayout({
             <FirebaseError />
             <AuthProvider>
               <I18nProvider>
-                <LayoutContent>{children}</LayoutContent>
-                <Toaster />
+                <UserProvider>
+                  <PermissionsProvider>
+                  <LayoutContent>{children}</LayoutContent>
+                  <Toaster />
+                  </PermissionsProvider>
+                </UserProvider>
               </I18nProvider>
             </AuthProvider>
           </FirebaseProvider>

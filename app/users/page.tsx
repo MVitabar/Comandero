@@ -8,14 +8,15 @@ import { collection, query, orderBy, getDocs, doc, deleteDoc } from "firebase/fi
 import { useToast } from "@/components/ui/use-toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { Search, MoreHorizontal, UserPlus, Edit, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { User } from "@/types"
-import { usePermissions } from "@/hooks/usePermissions"
+import { usePermissions } from "@/components/permissions-provider"
+import { UnauthorizedAccess } from "@/components/unauthorized-access"
 import { 
   Dialog, 
   DialogContent, 
@@ -32,7 +33,7 @@ export default function UsersPage() {
   const { db } = useFirebase()
   const { user: currentUser } = useAuth()
   const { toast } = useToast()
-  const { canDo } = usePermissions()
+  const { canView, canCreate, canUpdate, canDelete } = usePermissions()
 
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -92,7 +93,7 @@ export default function UsersPage() {
   }, [db, currentUser, searchQuery]);
 
   const handleDeleteUser = async () => {
-    if (!canDo('deleteUser') || !userToDelete || !db || !currentUser?.establishmentId) {
+    if (!canDelete('users-management') || !userToDelete || !db || !currentUser?.establishmentId) {
       toast({
         title: "Error",
         description: "Cannot delete user: insufficient permissions or missing establishment",
@@ -129,6 +130,11 @@ export default function UsersPage() {
     }
   };
 
+  // Check if user has access to view users
+  if (!canView('users-management')) {
+    return <UnauthorizedAccess />
+  }
+
   // Render loading state
   if (loading) {
     return <div>{t("commons.loading")}</div>
@@ -136,10 +142,11 @@ export default function UsersPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header section */}
+      <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold">{t("users.pageTitle")}</h1>
-        {canDo('createUser') && (
-          <Button asChild>
+        {canCreate('users-management') && (
+          <Button className="w-full sm:w-auto" asChild>
             <Link href="/users/add">
               <UserPlus className="mr-2 h-4 w-4" />
               {t("users.addUser")}
@@ -148,106 +155,190 @@ export default function UsersPage() {
         )}
       </div>
 
+      {/* Search section */}
       <div className="flex items-center py-4">
-        <Input
-          placeholder={t("users.searchPlaceholder")}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="max-w-sm"
-        />
+        <div className="relative w-full sm:max-w-sm">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder={t("users.searchPlaceholder")}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8"
+          />
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("users.userList")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("users.username")}</TableHead>
-                <TableHead>{t("users.email")}</TableHead>
-                <TableHead>{t("users.role")}</TableHead>
-                <TableHead>{t("users.status")}</TableHead>
-                <TableHead className="text-right">{t("users.actions")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.length === 0 ? (
+      {/* Desktop view - Table */}
+      <div className="hidden md:block">
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("users.userList")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">
-                    {t("users.noUsers")}
-                  </TableCell>
+                  <TableHead>{t("users.username")}</TableHead>
+                  <TableHead>{t("users.email")}</TableHead>
+                  <TableHead>{t("users.role")}</TableHead>
+                  <TableHead>{t("users.status")}</TableHead>
+                  <TableHead className="text-right">{t("users.actions")}</TableHead>
                 </TableRow>
-              ) : (
-                users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>{user.username}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {t(`users.roles.${(user.role || 'default').toLowerCase()}`)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        className={"bg-green-100 text-green-800"}
-                      >
-                        {t("users.userStatus.active")}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">{t("users.openMenu")}</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem 
-                            onClick={() => navigator.clipboard.writeText(user.id || user.uid)}
-                          >
-                            {t("users.copyId")}
-                          </DropdownMenuItem>
-                          
-                          {canDo('editUser') && (
-                            <>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                onSelect={() => {/* Navegar a edición de usuario */}}
-                              >
-                                <Edit className="mr-2 h-4 w-4" />
-                                {t("users.editUser")}
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                          
-                          {canDo('deleteUser') && (
-                            <>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                className="text-destructive focus:text-destructive/90"
-                                onSelect={() => setUserToDelete({
-                                  ...user,
-                                  id: user.id || user.uid
-                                })}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                {t("users.delete")}
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+              </TableHeader>
+              <TableBody>
+                {users.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center">
+                      {t("users.noUsers")}
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                ) : (
+                  users.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell>{user.username}</TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {t(`users.roles.${(user.role || 'default').toLowerCase()}`)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          className={"bg-green-100 text-green-800"}
+                        >
+                          {t("users.userStatus.active")}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">{t("users.openMenu")}</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem 
+                              onClick={() => navigator.clipboard.writeText(user.id || user.uid)}
+                            >
+                              {t("users.copyId")}
+                            </DropdownMenuItem>
+                            
+                            {canUpdate('users-management') && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  onSelect={() => {/* Navegar a edición de usuario */}}
+                                >
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  {t("users.editUser")}
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                            
+                            {canDelete('users-management') && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  className="text-destructive focus:text-destructive/90"
+                                  onSelect={() => setUserToDelete({
+                                    ...user,
+                                    id: user.id || user.uid
+                                  })}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  {t("users.delete")}
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Mobile view - Cards */}
+      <div className="grid grid-cols-1 gap-4 md:hidden">
+        {users.length === 0 ? (
+          <Card>
+            <CardContent className="text-center py-6">
+              {t("users.noUsers")}
+            </CardContent>
+          </Card>
+        ) : (
+          users.map((user) => (
+            <Card key={user.id} className="overflow-hidden">
+              <CardHeader className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base">
+                    {user.username}
+                  </CardTitle>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <span className="sr-only">{t("users.openMenu")}</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem 
+                        onClick={() => navigator.clipboard.writeText(user.id || user.uid)}
+                      >
+                        {t("users.copyId")}
+                      </DropdownMenuItem>
+                      
+                      {canUpdate('users-management') && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem>
+                            <Edit className="mr-2 h-4 w-4" />
+                            {t("users.editUser")}
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      
+                      {canDelete('users-management') && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="text-destructive focus:text-destructive/90"
+                            onSelect={() => setUserToDelete({
+                              ...user,
+                              id: user.id || user.uid
+                            })}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            {t("users.delete")}
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </CardHeader>
+              <CardContent className="grid gap-2.5">
+                <div className="text-sm text-muted-foreground">
+                  {user.email}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="outline">
+                    {t(`users.roles.${(user.role || 'default').toLowerCase()}`)}
+                  </Badge>
+                  <Badge className="bg-green-100 text-green-800">
+                    {t("users.userStatus.active")}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
 
       {/* Diálogo de confirmación de eliminación */}
       <Dialog 

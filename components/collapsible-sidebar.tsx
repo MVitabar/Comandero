@@ -32,6 +32,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { ModulePermissions } from "@/types/permissions";
 
 export function CollapsibleSidebar() {
   const { t, language, setLanguage } = useI18n()
@@ -214,7 +215,13 @@ export function CollapsibleSidebar() {
     }
   }
 
-  const navItems = [
+  const navItems: Array<{
+    name: string;
+    href: string;
+    icon: React.ComponentType<any>;
+    mobileIcon: React.ComponentType<any>;
+    requiredPermission: keyof ModulePermissions;
+  }> = [
     {
       name: t("sidebar.dashboard"),
       href: "/dashboard",
@@ -260,9 +267,31 @@ export function CollapsibleSidebar() {
   ]
 
   // Filter navigation items based on user permissions
-  const filteredNavItems = navItems.filter(item => 
-    canView(item.requiredPermission)
-  )
+  const filteredNavItems = navItems.filter(item => {
+    const hasPermission = canView(item.requiredPermission);
+    console.log(`Checking permission for ${item.name}:`, {
+      requiredPermission: item.requiredPermission,
+      hasPermission,
+      userRole: user?.role
+    });
+    return hasPermission;
+  });
+
+  // Add debug logs
+  useEffect(() => {
+    console.log('Sidebar Debug:', {
+      user,
+      isMobile,
+      filteredNavItems: filteredNavItems.length,
+      originalItems: navItems.length,
+      permissions: {
+        canViewDashboard: canView('dashboard'),
+        canViewOrders: canView('orders'),
+        canViewTables: canView('tables'),
+        userRole: user?.role
+      }
+    });
+  }, [user, isMobile, filteredNavItems.length]);
 
   return (
     <>
@@ -304,7 +333,7 @@ export function CollapsibleSidebar() {
                 "text-lg font-semibold transition-opacity", 
                 (isCollapsed && !isTemporarilyExpanded) ? "opacity-0" : "opacity-100"
               )}>
-                {user?.name || user?.restaurantName || user?.currentEstablishmentName || "Comandero"}
+                {user?.restaurantName || user?.currentEstablishmentName || "Comandero"}
               </h2>
               <Button 
                 variant="ghost" 
@@ -427,39 +456,81 @@ export function CollapsibleSidebar() {
         </aside>
       )}
 
+      {/* Mobile Header Actions */}
+      {isMobile && (
+        <>
+          {/* Language selector on the left */}
+          <div className="fixed top-0 left-0 z-50 p-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8">
+                  <Globe className="h-5 w-5" />
+                  <span className="sr-only">{t("sidebar.language")}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onClick={() => setLanguage("en")}>
+                  {t("sidebar.languages.english")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage("es")}>
+                  {t("sidebar.languages.spanish")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage("pt")}>
+                  {t("sidebar.languages.portuguese")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Logout button on the right */}
+          <div className="fixed top-0 right-0 z-50 p-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              className="h-8"
+            >
+              <LogOut className="h-5 w-5" />
+              <span className="sr-only">{t("sidebar.logout")}</span>
+            </Button>
+          </div>
+        </>
+      )}
+
       {/* Mobile Footer Navigation */}
       {isMobile && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-background border-t z-50 flex justify-around py-2">
-          {filteredNavItems.map((item) => {
-            const MobileIcon = item.mobileIcon || item.icon
-            const isSelected = pathname === item.href
+        <nav className="fixed bottom-0 left-0 right-0 bg-background border-t z-50 py-2">
+          <div className="flex justify-around w-full">
+            {filteredNavItems.map((item) => {
+              const MobileIcon = item.mobileIcon || item.icon;
+              const isSelected = pathname === item.href;
 
-            return (
-              <Link 
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex flex-col items-center justify-center p-2 rounded-lg transition-all",
-                  isSelected 
-                    ? "bg-primary/10 text-primary" 
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                  "w-full max-w-[80px]"
-                )}
-              >
-                <MobileIcon 
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
                   className={cn(
-                    "h-6 w-6", 
-                    isSelected ? "text-primary" : "text-muted-foreground"
-                  )} 
-                />
-                {isSelected && (
-                  <span className="mt-1 h-1 w-1 bg-primary rounded-full"></span>
-                )}
-              </Link>
-            )
-          })}
+                    "flex flex-col items-center justify-center p-2 rounded-lg transition-all",
+                    isSelected
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  )}
+                >
+                  <MobileIcon
+                    className={cn(
+                      "h-6 w-6",
+                      isSelected ? "text-primary" : "text-muted-foreground"
+                    )}
+                  />
+                  {isSelected && (
+                    <span className="mt-1 h-1 w-1 bg-primary rounded-full"></span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
         </nav>
       )}
     </>
-  )
+  );
 }

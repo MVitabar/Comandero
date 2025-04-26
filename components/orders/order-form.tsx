@@ -468,6 +468,12 @@ export function OrderForm({
 
       // Prepare order data with safe value handling
       const orderData: Order = {
+        createdBy: {
+          uid: user.uid,
+          displayName: user.username || user.email || 'Unknown',
+          email: user.email,
+          role: user.role
+        },
         id: `temp-order-${Date.now()}`,
         tableId: orderType === 'table' ? (selectedTable?.uid || '') : '',
         tableNumber: finalTableNumber as number,
@@ -686,7 +692,13 @@ export function OrderForm({
           tableId: table?.id,
           tableMapId: table?.tableMapId
         }
-      }
+      },
+      createdBy: {
+        uid: user.uid,
+        displayName: user.username || user.email || 'Unknown',
+        email: user.email,
+        role: user.role
+      },
     };
 
     // Comprehensive order data cleaning

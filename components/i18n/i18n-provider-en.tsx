@@ -918,4 +918,24 @@ export const ptTranslations = {
   }
 };
 
+export const enTranslations = {
+  settings: {
+    profile: {
+      fields: {
+        role: {
+          label: "Role",
+          options: {
+            owner: "Owner",
+            admin: "Administrator",
+            manager: "Manager",
+            chef: "Chef",
+            waiter: "Waiter",
+            barman: "Bartender"
+          }
+        }
+      }
+    }
+  }
+};
+
 export default ptTranslations;

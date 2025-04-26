@@ -56,6 +56,8 @@ import {
   SelectValue 
 } from "@/components/ui/select"
 import { Plus, Search, AlertTriangle, Edit, Trash2 } from "lucide-react"
+import { usePermissions } from "@/components/permissions-provider"
+import { UnauthorizedAccess } from "@/components/unauthorized-access"
 
 const entradas = [
   {
@@ -137,6 +139,7 @@ const porcoesExtras = [
 
 export default function InventoryPage() {
   const { user } = useAuth()
+  const { canView, canCreate, canUpdate, canDelete } = usePermissions()
   const { t } = useI18n()
   const { toast } = useToast()
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([])
@@ -159,6 +162,11 @@ export default function InventoryPage() {
     description: '',
     supplier: '',
   })
+
+  // Verificar si el usuario puede ver el inventario
+  if (!canView('inventory')) {
+    return <UnauthorizedAccess />
+  }
 
   // Fetch Inventory Items
   const fetchInventoryItems = async () => {
@@ -210,7 +218,15 @@ export default function InventoryPage() {
             return {
               uid: itemDoc.id,
               category: category,
-              ...itemData
+              name: itemData.name || '',
+              quantity: itemData.quantity || 0,
+              unit: itemData.unit || '',
+              price: itemData.price || 0,
+              minQuantity: itemData.minQuantity || 0,
+              description: itemData.description || '',
+              supplier: itemData.supplier || '',
+              createdAt: itemData.createdAt || new Date(),
+              updatedAt: itemData.updatedAt || new Date(),
             } as InventoryItem
           })
         } catch (categoryErr) {
@@ -425,6 +441,9 @@ export default function InventoryPage() {
     )
   }, [inventoryItems])
 
+  // First, create a function to check if user can perform any actions
+  const canPerformActions = canUpdate('inventory') || canDelete('inventory');
+
   return (
     <div className="container mx-auto p-4">
       <Card>
@@ -436,14 +455,16 @@ export default function InventoryPage() {
             </div>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button 
-                  onClick={() => {
-                    setDialogMode('add')
-                    setFormData({})
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" /> {t("inventory.addItem")}
-                </Button>
+                {canCreate('inventory') && (
+                  <Button 
+                    onClick={() => {
+                      setDialogMode('add')
+                      setFormData({})
+                    }}
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> {t("inventory.addItem")}
+                  </Button>
+                )}
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -605,7 +626,10 @@ export default function InventoryPage() {
                 <TableHead>{t("inventory.category")}</TableHead>
                 <TableHead>{t("inventory.quantity")}</TableHead>
                 <TableHead>{t("inventory.unit")}</TableHead>
-                <TableHead>{t("inventory.actions")}</TableHead>
+                {/* Only show actions column if user has permissions */}
+                {canPerformActions && (
+                  <TableHead>{t("inventory.actions")}</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -625,29 +649,36 @@ export default function InventoryPage() {
                     </Badge>
                   </TableCell>
                   <TableCell>{item.unit}</TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button 
-                        size="icon" 
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedItem(item)
-                          setFormData(item)
-                          setDialogMode('edit')
-                          setIsDialogOpen(true)
-                        }}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        size="icon" 
-                        variant="destructive"
-                        onClick={() => handleDelete(item.uid)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  {/* Only show actions cell if user has permissions */}
+                  {canPerformActions && (
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        {canUpdate('inventory') && (
+                          <Button 
+                            size="icon" 
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedItem(item)
+                              setFormData(item)
+                              setDialogMode('edit')
+                              setIsDialogOpen(true)
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {canDelete('inventory') && (
+                          <Button 
+                            size="icon" 
+                            variant="destructive"
+                            onClick={() => handleDelete(item.uid)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

@@ -719,7 +719,9 @@ export const ptTranslations = {
             "admin": "Administrador",
             "manager": "Gerente", 
             "chef": "Chef",
-            "waiter": "Garçom"
+            "waiter": "Garçom",
+            "owner": "Proprietário",
+            "barman": "Barman"
           }
         }
       }

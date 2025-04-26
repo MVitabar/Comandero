@@ -2,6 +2,7 @@
 
 import type React from "react"
 import type { User as FirebaseUser } from 'firebase/auth'
+import { UserRole } from './permissions';
 
 // Tipos de enumeración y métodos de pago
 export type PaymentMethod = 'cash' | 'card' | 'transfer' | 'credit' | 'debit' | 'other';
@@ -13,13 +14,6 @@ export type OrderStatus = BaseOrderStatus;
 export type FlexibleOrderStatus = BaseOrderStatus;
 
 // Enums adicionales
-export enum UserRole {
-  Owner = 'owner',
-  Manager = 'manager',
-  Staff = 'staff',
-  WAITER = "WAITER"
-}
-
 export enum MenuItemCategory {
   Appetizer = 'appetizer',
   MainCourse = 'main_course',
@@ -123,6 +117,7 @@ export interface UserActivity {
 
 // Inventory Management
 export interface InventoryItem {
+  uid: string;  // Add this line
   id?: string
   name: string
   category: string
@@ -252,6 +247,12 @@ export interface Order {
       tableMapId?: string;
     };
     timestamp?: Date;
+  };
+  createdBy: {
+    uid: string;
+    displayName: string;
+    email: string | null;
+    role: UserRole;
   };
 }
 

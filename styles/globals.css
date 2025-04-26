@@ -92,3 +92,13 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Adjust padding for fixed header elements on mobile */
+@media (max-width: 768px) {
+  body {
+    padding-top: 3.5rem;
+    /* Ensure content doesn't get hidden under fixed elements */
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}

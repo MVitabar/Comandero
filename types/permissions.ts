@@ -1,167 +1,224 @@
-// types/permissions.ts
 export enum UserRole {
   OWNER = 'owner',
   ADMIN = 'admin',
-  MANAGER = 'manager', 
+  MANAGER = 'manager',
   CHEF = 'chef',
   WAITER = 'waiter',
   BARMAN = 'barman'
 }
 
-export interface RolePermissions {
-  views: string[];
-  actions: {
-    [key: string]: boolean;
-  };
+export interface Permission {
+  view: boolean;
+  create: boolean;
+  update: boolean;
+  delete: boolean;
 }
 
-export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
+export interface ModulePermissions {
+  profile: Permission;
+  language: Permission;
+  appearance: Permission;
+  notifications: Permission;
+  'users-management': Permission;
+  dashboard: Permission;
+  orders: Permission;
+  tables: Permission;
+  inventory: Permission;
+  settings: {
+    view: boolean;
+    create: boolean;
+    update: boolean;
+    delete: boolean;
+    sections?: {
+      profile: boolean;
+      appearance: boolean;
+      language: boolean;
+      notifications: boolean;
+      establishment: boolean;
+      security: boolean;
+      billing: boolean;
+    };
+  };
+  reports: Permission;
+}
+
+export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
   [UserRole.OWNER]: {
-    views: [
-      'dashboard',
-      'users-management',
-      'settings',
-      'reports',
-      'menu-management',
-      'orders',
-      'tables',
-      'inventory'
-    ],
-    actions: {
-      createUser: true,
-      deleteUser: true,
-      editUser: true,
-      createOrder: true,
-      cancelOrder: true,
-      modifyMenu: true,
-      modifyPrices: true,
-      generateReports: true,
-      manageTables: true,
-      modifyInventory: true
-    }
+    profile: { view: true, create: true, update: true, delete: true },
+    language: { view: true, create: true, update: true, delete: true },
+    appearance: { view: true, create: true, update: true, delete: true },
+    notifications: { view: true, create: true, update: true, delete: true },
+    'users-management': { view: true, create: true, update: true, delete: true },
+    dashboard: { view: true, create: true, update: true, delete: true },
+    orders: { view: true, create: true, update: true, delete: true },
+    tables: { view: true, create: true, update: true, delete: true },
+    inventory: { view: true, create: true, update: true, delete: true },
+    settings: {
+      view: true,
+      create: true,
+      update: true,
+      delete: true,
+      sections: {
+        profile: true,
+        appearance: true,
+        language: true,
+        notifications: true,
+        establishment: true,
+        security: true,
+        billing: true
+      }
+    },
+    reports: { view: true, create: true, update: true, delete: true }
   },
   [UserRole.ADMIN]: {
-    views: [
-      'dashboard',
-      'users-management',
-      'settings',
-      'reports',
-      'menu-management',
-      'orders',
-      'tables',
-      'inventory'
-    ],
-    actions: {
-      createUser: true,
-      deleteUser: true,
-      editUser: true,
-      createOrder: true,
-      cancelOrder: true,
-      modifyMenu: true,
-      modifyPrices: true,
-      generateReports: true,
-      manageTables: true,
-      modifyInventory: true
+    profile: { view: true, create: true, update: true, delete: false },
+    language: { view: true, create: true, update: true, delete: true },
+    appearance: { view: true, create: true, update: true, delete: true },
+    notifications: { view: true, create: true, update: true, delete: true },
+    'users-management': { view: true, create: true, update: true, delete: false }, // No puede eliminar usuarios
+    dashboard: { view: true, create: true, update: true, delete: true },
+    orders: { view: true, create: true, update: true, delete: true },
+    tables: { view: true, create: true, update: true, delete: true },
+    inventory: { view: true, create: true, update: true, delete: false },
+    reports: { view: true, create: true, update: false, delete: false },
+    settings: {
+      view: true,
+      create: false,
+      update: true,
+      delete: false,
+      sections: {
+        profile: true,
+        appearance: true,
+        language: true,
+        notifications: true,
+        establishment: true,
+        security: false,
+        billing: false
+      }
     }
   },
+
   [UserRole.MANAGER]: {
-    views: [
-      'dashboard',
-      'reports',
-      'menu-management',
-      'orders',
-      'tables',
-      'inventory'
-    ],
-    actions: {
-      createUser: false,
-      deleteUser: false,
-      editUser: false,
-      createOrder: true,
-      cancelOrder: true,
-      modifyMenu: true,
-      modifyPrices: false,
-      generateReports: true,
-      manageTables: true,
-      modifyInventory: true
+    profile: { view: true, create: false, update: true, delete: false },
+    language: { view: true, create: true, update: true, delete: true },
+    appearance: { view: true, create: true, update: true, delete: true },
+    notifications: { view: true, create: true, update: true, delete: true },
+    'users-management': { view: true, create: false, update: false, delete: false },
+    dashboard: { view: true, create: false, update: false, delete: false },
+    orders: { view: true, create: true, update: true, delete: true },
+    tables: { view: true, create: true, update: true, delete: true },
+    inventory: { view: true, create: true, update: true, delete: false },
+    reports: { view: true, create: true, update: false, delete: false },
+    settings: {
+      view: true,
+      create: false,
+      update: true,
+      delete: false,
+      sections: {
+        profile: true,
+        appearance: true,
+        language: true,
+        notifications: true,
+        establishment: false,
+        security: false,
+        billing: false
+      }
     }
   },
+
   [UserRole.CHEF]: {
-    views: [
-      'orders',
-      'menu-management'
-    ],
-    actions: {
-      createUser: false,
-      deleteUser: false,
-      editUser: false,
-      createOrder: false,
-      cancelOrder: false,
-      modifyMenu: false,
-      modifyPrices: false,
-      generateReports: false,
-      manageTables: false,
-      modifyInventory: false,
-      updateOrderStatus: true,
-      viewOrderDetails: true
+    profile: { view: true, create: false, update: true, delete: false },
+    language: { view: true, create: true, update: true, delete: true },
+    appearance: { view: true, create: true, update: true, delete: true },
+    notifications: { view: true, create: true, update: true, delete: true },
+    'users-management': { view: false, create: false, update: false, delete: false },
+    dashboard: { view: false, create: false, update: false, delete: false },
+    orders: { view: true, create: false, update: true, delete: false },
+    tables: { view: true, create: false, update: false, delete: false },
+    inventory: { view: true, create: false, update: true, delete: false },
+    reports: { view: false, create: false, update: false, delete: false },
+    settings: {
+      view: true,
+      create: false,
+      update: true,
+      delete: false,
+      sections: {
+        profile: true,
+        appearance: true,
+        language: true,
+        notifications: true,
+        establishment: false,
+        security: false,
+        billing: false
+      }
     }
   },
+
   [UserRole.WAITER]: {
-    views: [
-      'orders',
-      'tables'
-    ],
-    actions: {
-      createUser: false,
-      deleteUser: false,
-      editUser: false,
-      createOrder: true,
-      cancelOrder: true,
-      modifyMenu: false,
-      modifyPrices: false,
-      generateReports: false,
-      manageTables: false,
-      modifyInventory: false,
-      viewOrderDetails: true
+    profile: { view: true, create: false, update: true, delete: false },
+    language: { view: true, create: true, update: true, delete: true },
+    appearance: { view: true, create: true, update: true, delete: true },
+    notifications: { view: true, create: true, update: true, delete: true },
+    'users-management': { view: false, create: false, update: false, delete: false },
+    dashboard: { view: false, create: false, update: false, delete: false },
+    orders: { view: true, create: true, update: true, delete: false },
+    tables: { view: true, create: true, update: true, delete: false },
+    inventory: { view: false, create: false, update: false, delete: false },
+    reports: { view: false, create: false, update: false, delete: false },
+    settings: {
+      view: true,
+      create: false,
+      update: true,
+      delete: false,
+      sections: {
+        profile: true,
+        appearance: true,
+        language: true,
+        notifications: true,
+        establishment: false,
+        security: false,
+        billing: false
+      }
     }
   },
+
   [UserRole.BARMAN]: {
-    views: [
-      'orders',
-      'menu-management'
-    ],
-    actions: {
-      createUser: false,
-      deleteUser: false,
-      editUser: false,
-      createOrder: false,
-      cancelOrder: false,
-      modifyMenu: false,
-      modifyPrices: false,
-      generateReports: false,
-      manageTables: false,
-      modifyInventory: false,
-      updateOrderStatus: true,
-      viewOrderDetails: true,
-      prepareDrinks: true
+    profile: { view: true, create: false, update: true, delete: false },
+    language: { view: true, create: true, update: true, delete: true },
+    appearance: { view: true, create: true, update: true, delete: true },
+    notifications: { view: true, create: true, update: true, delete: true },
+    'users-management': { view: false, create: false, update: false, delete: false },
+    dashboard: { view: false, create: false, update: false, delete: false },
+    orders: { view: true, create: true, update: true, delete: false },
+    tables: { view: true, create: false, update: false, delete: false },
+    inventory: { view: true, create: false, update: false, delete: false },
+    reports: { view: false, create: false, update: false, delete: false },
+    settings: {
+      view: true,
+      create: false,
+      update: true,
+      delete: false,
+      sections: {
+        profile: true,
+        appearance: true,
+        language: true,
+        notifications: true,
+        establishment: false,
+        security: false,
+        billing: false
+      }
     }
   }
-}
+};
 
 export function hasPermission(
-  role: UserRole, 
-  view?: string, 
-  action?: keyof RolePermissions['actions']
+  role: UserRole,
+  module: keyof ModulePermissions,
+  action: keyof Permission
 ): boolean {
-  const permissions = ROLE_PERMISSIONS[role]
+  // Si es OWNER, siempre tiene permisos
+  if (role === UserRole.OWNER) return true;
   
-  if (view && !permissions.views.includes(view)) {
-    return false
-  }
-  
-  if (action && permissions.actions[action] !== true) {
-    return false
-  }
-  
-  return true
+  // Para otros roles, verificar en ROLE_PERMISSIONS
+  return ROLE_PERMISSIONS[role]?.[module]?.[action] ?? false;
 }

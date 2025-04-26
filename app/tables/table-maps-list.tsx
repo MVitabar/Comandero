@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 
 // Define TableMap interface
 export interface TableMap {
@@ -169,82 +170,65 @@ export default function TableMapsList({ onCreateMap }: TableMapsListProps) {
           {t('tables.tableMaps.noMapsFound')}
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t('tables.tableMaps.mapName')}</TableHead>
-              <TableHead>{t('tables.tableMaps.mapDescription')}</TableHead>
-              <TableHead>{t('tables.actions')}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {tableMaps.map((map) => (
-              <TableRow key={map.id}>
-                <TableCell>{map.name}</TableCell>
-                <TableCell>{map.description || '-'}</TableCell>
-                <TableCell>
-                  <div className="flex space-x-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => handleViewTableMap(map)}
-                    >
-                      <Eye className="mr-2 h-4 w-4" /> {t('tables.tableMaps.viewMap')}
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => handleAddTables(map)}
-                    >
-                      <Plus className="mr-2 h-4 w-4" /> {t('tables.tableMaps.addTable')}
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => handleEditMap(map)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button 
-                          variant="destructive" 
-                          size="sm"
-                          onClick={() => setTableToDelete(map)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            {t('tableMaps.delete.confirmTitle')}
-                          </AlertDialogTitle>
-                          <AlertDialogDescription>
-                            {t('tableMaps.delete.confirmDescription', { 
-                              name: tableToDelete?.name 
-                            })}
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>
-                            {t('commons.cancel')}
-                          </AlertDialogCancel>
-                          <AlertDialogAction 
-                            onClick={handleDeleteTableMap}
-                          >
-                            {t('commons.delete')}
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </TableCell>
+        // Vista de escritorio
+        <div className="hidden md:block">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('tables.tableMaps.mapName')}</TableHead>
+                <TableHead>{t('tables.tableMaps.mapDescription')}</TableHead>
+                <TableHead>{t('tables.actions')}</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {tableMaps.map((map) => (
+                <TableRow key={map.id}>
+                  <TableCell>{map.name}</TableCell>
+                  <TableCell>{map.description || '-'}</TableCell>
+                  <TableCell>
+                    <div className="flex space-x-2">
+                      <ActionButtons 
+                        map={map}
+                        onView={handleViewTableMap}
+                        onAddTables={handleAddTables}
+                        onEdit={handleEditMap}
+                        onDelete={setTableToDelete}
+                        onConfirmDelete={handleDeleteTableMap}  // Add this prop
+                        tableToDelete={tableToDelete}
+                      />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
+
+      {/* Vista móvil */}
+      <div className="grid grid-cols-1 gap-4 md:hidden">
+        {tableMaps.map((map) => (
+          <Card key={map.id}>
+            <CardHeader>
+              <CardTitle className="text-lg">{map.name}</CardTitle>
+              <CardDescription>
+                {map.description || t('tables.tableMaps.noDescription')}
+              </CardDescription>
+            </CardHeader>
+            <CardFooter className="flex flex-wrap gap-2">
+              <ActionButtons 
+                map={map}
+                onView={handleViewTableMap}
+                onAddTables={handleAddTables}
+                onEdit={handleEditMap}
+                onDelete={setTableToDelete}
+                onConfirmDelete={handleDeleteTableMap}  // Add this prop
+                tableToDelete={tableToDelete}
+              />
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
 
       {selectedTableMap && (
         <>
@@ -269,5 +253,88 @@ export default function TableMapsList({ onCreateMap }: TableMapsListProps) {
         />
       )}
     </div>
+  )
+}
+
+// First, define the interface for ActionButtons props
+interface ActionButtonsProps {
+  map: TableMap;
+  onView: (map: TableMap) => void;
+  onAddTables: (map: TableMap) => void;
+  onEdit: (map: TableMap) => void;
+  onDelete: (map: TableMap) => void;
+  onConfirmDelete: () => void;  // Add this prop
+  tableToDelete: TableMap | null;
+}
+
+// Update the ActionButtons component
+function ActionButtons({ 
+  map, 
+  onView, 
+  onAddTables, 
+  onEdit, 
+  onDelete,
+  onConfirmDelete,  // Add this prop
+  tableToDelete 
+}: ActionButtonsProps) {
+  const { t } = useTranslation()
+  
+  return (
+    <>
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={() => onView(map)}
+      >
+        <Eye className="mr-2 h-4 w-4" /> {t('tables.tableMaps.viewMap')}
+      </Button>
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={() => onAddTables(map)}
+      >
+        <Plus className="mr-2 h-4 w-4" /> {t('tables.tableMaps.addTable')}
+      </Button>
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={() => onEdit(map)}
+      >
+        <Edit className="h-4 w-4" />
+      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button 
+            variant="destructive" 
+            size="sm"
+            onClick={() => onDelete(map)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t('tableMaps.delete.confirmTitle')}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('tableMaps.delete.confirmDescription', { 
+                name: tableToDelete?.name 
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {t('commons.cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={onConfirmDelete}  // Use the passed handler
+            >
+              {t('commons.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }

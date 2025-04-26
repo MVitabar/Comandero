@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useAuth } from "@/components/auth-provider"
 import { useFirebase } from "@/components/firebase-provider"
@@ -14,11 +13,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { doc, getDoc, updateDoc } from "firebase/firestore"
-import { updateProfile } from "firebase/auth"
+import { updateProfile, User as FirebaseUser } from "firebase/auth"
 import { Loader2, Upload } from "lucide-react"
+import { UserRole } from "@/types/permissions"
+import { usePermissions } from "@/components/permissions-provider"
+import { UnauthorizedAccess } from "../unauthorized-access"
+
+interface CustomUser extends FirebaseUser {
+  role?: UserRole;
+}
 
 export function UserProfile() {
-  const { user } = useAuth()
+  const { canView, canUpdate } = usePermissions();
+  const { user } = useAuth() as { user: CustomUser | null }
   const { db, auth } = useFirebase()
   const { t } = useI18n()
   const { toast } = useToast()
@@ -37,8 +44,7 @@ export function UserProfile() {
       setLoading(true)
       const fetchUserData = async () => {
         try {
-          // Validate user.uid before creating document reference
-          if (!user.uid || typeof user.uid !== 'string') {
+          if (!user.uid) {
             console.error("Invalid user ID:", user.uid)
             return
           }
@@ -82,7 +88,6 @@ export function UserProfile() {
     setLoading(true)
 
     try {
-      // Update Firestore document
       await updateDoc(doc(db, "users", user.uid), {
         username: userData.username,
         phoneNumber: userData.phoneNumber,
@@ -91,7 +96,6 @@ export function UserProfile() {
         updatedAt: new Date(),
       })
 
-      // Update Firebase Auth profile
       await updateProfile(user, {
         displayName: userData.username,
       })
@@ -120,6 +124,16 @@ export function UserProfile() {
       .toUpperCase()
       .substring(0, 2)
   }
+
+  // Verificar si puede ver el perfil
+  if (!canView('profile')) {
+    return <UnauthorizedAccess />
+  }
+
+  // Verificar si puede cambiar roles (solo OWNER, ADMIN, MANAGER)
+  const canChangeRoles = user?.role === UserRole.OWNER || 
+                        user?.role === UserRole.ADMIN || 
+                        user?.role === UserRole.MANAGER;
 
   if (!user) return null
 
@@ -151,7 +165,7 @@ export function UserProfile() {
                 name="username"
                 value={userData.username}
                 onChange={handleChange}
-                disabled={loading}
+                disabled={loading || !canUpdate('profile')}
               />
             </div>
 
@@ -184,26 +198,29 @@ export function UserProfile() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="role">{t("settings.profile.fields.role.label")}</Label>
-              <Select value={userData.role} onValueChange={handleRoleChange} disabled={loading}>
-                <SelectTrigger id="role">
-                  <SelectValue placeholder={t("settings.profile.fields.role.placeholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">{t("settings.profile.fields.role.options.admin")}</SelectItem>
-                  <SelectItem value="manager">{t("settings.profile.fields.role.options.manager")}</SelectItem>
-                  <SelectItem value="chef">{t("settings.profile.fields.role.options.chef")}</SelectItem>
-                  <SelectItem value="waiter">{t("settings.profile.fields.role.options.waiter")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {canChangeRoles && (
+              <div className="space-y-2">
+                <Label htmlFor="role">{t("settings.profile.fields.role.label")}</Label>
+                <Select value={userData.role} onValueChange={handleRoleChange} disabled={loading}>
+                  <SelectTrigger id="role">
+                    <SelectValue placeholder={t("settings.profile.fields.role.placeholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(UserRole).map((role) => (
+                      <SelectItem key={role} value={role}>
+                        {t(`settings.profile.fields.role.options.${role.toLowerCase()}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           <Separator className="my-6" />
 
           <div className="flex justify-end">
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading || !canUpdate('profile')}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
