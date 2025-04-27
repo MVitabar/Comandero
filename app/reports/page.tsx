@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/components/auth-provider"
 import { useFirebase } from "@/components/firebase-provider"
 import { useI18n } from "@/components/i18n-provider"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -20,7 +20,6 @@ export default function ReportsPage() {
   const { user } = useAuth()
   const { db } = useFirebase()
   const { t } = useI18n()
-  const { toast } = useToast()
 
   const [loading, setLoading] = useState(true)
   const [orders, setOrders] = useState<Order[]>([])
@@ -93,11 +92,7 @@ export default function ReportsPage() {
       setFilteredOrders(fetchedOrders)
     } catch (error) {
       console.error("Error fetching order reports:", error)
-      toast({
-        title: "Error",
-        description: "Failed to fetch order data",
-        variant: "destructive",
-      })
+      toast.error("Failed to fetch order data")
     } finally {
       setLoading(false)
     }
@@ -126,11 +121,7 @@ export default function ReportsPage() {
       setSalesData(fetchedSales)
     } catch (error) {
       console.error("Error fetching sales reports:", error)
-      toast({
-        title: "Error",
-        description: "Failed to fetch sales data",
-        variant: "destructive",
-      })
+      toast.error("Failed to fetch sales data")
     } finally {
       setLoading(false)
     }
