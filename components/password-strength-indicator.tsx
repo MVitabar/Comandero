@@ -1,10 +1,7 @@
 "use client"
 
 import { useI18n } from "./i18n-provider"
-
-interface PasswordStrengthIndicatorProps {
-  password: string
-}
+import { PasswordStrengthIndicatorProps } from '@/types'
 
 export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicatorProps) {
   const { t } = useI18n()
@@ -58,4 +55,3 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
     </div>
   )
 }
-

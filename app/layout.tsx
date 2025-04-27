@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import { Inter } from "next/font/google"
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "@/components/ui/sonner"
 import { ThemeProvider } from "@/components/theme-provider"
 import { I18nProvider } from "@/components/i18n-provider"
 import { AuthProvider } from "@/components/auth-provider"
@@ -14,6 +14,7 @@ import { usePathname } from "next/navigation"
 import LoginPage from "@/app/login/page"
 import RegisterPage from "@/app/register/page"
 import { UserProvider } from '@/contexts/UserContext';
+import { NotificationProvider } from '@/components/providers/NotificationProvider';
 import "./globals.css"
 import { PermissionsProvider } from "@/components/permissions-provider"
 
@@ -34,8 +35,10 @@ export default function RootLayout({
               <I18nProvider>
                 <UserProvider>
                   <PermissionsProvider>
-                  <LayoutContent>{children}</LayoutContent>
-                  <Toaster />
+                    <NotificationProvider>
+                      <LayoutContent>{children}</LayoutContent>
+                      <Toaster />
+                    </NotificationProvider>
                   </PermissionsProvider>
                 </UserProvider>
               </I18nProvider>

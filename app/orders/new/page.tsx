@@ -6,7 +6,6 @@ import { useI18n } from "@/components/i18n-provider"
 import { useFirebase } from "@/components/firebase-provider"
 import { useAuth } from "@/components/auth-provider"
 import { collection, query, orderBy, getDocs, addDoc, serverTimestamp } from "firebase/firestore"
-import { useToast } from "@/components/ui/use-toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,13 +16,15 @@ import { Minus, Plus, Trash, ArrowLeft } from "lucide-react"
 import { InventoryItem, OrderItem } from "@/types"
 import { OrderForm } from "@/components/orders/order-form"
 import { Order } from "@/types"
+import { useNotifications } from "@/hooks/useNotifications"
+import { toast } from "sonner"
 
 export default function NewOrderPage() {
   const { t } = useI18n()
   const { db } = useFirebase()
   const { user } = useAuth()
-  const { toast } = useToast()
   const router = useRouter()
+  const { sendNotification } = useNotifications()
 
   // Utility function to remove undefined values from an object
   const removeUndefinedValues = (obj: Record<string, any>): Record<string, any> => {
@@ -51,22 +52,14 @@ export default function NewOrderPage() {
 
   const handleCreateOrder = async (order: Order) => {
     if (!db || !user) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível criar o pedido",
-        variant: "destructive"
-      })
+      toast.error("Database or user not found")
       return
     }
 
     // Validate establishmentId before proceeding
     if (!user.establishmentId) {
       console.error('No establishment ID found for user')
-      toast({
-        title: "Erro ao Criar Pedido",
-        description: "Não foi possível criar o pedido: Estabelecimento não identificado",
-        variant: "destructive"
-      })
+      toast.error("Establishment ID not found")
       return
     }
 
@@ -83,21 +76,23 @@ export default function NewOrderPage() {
         status: cleanedOrder.status || 'pending'
       })
 
-      toast({
-        title: "Pedido Criado",
-        description: "Pedido criado com sucesso",
-        variant: "default"
+      // Notificación in-app con Sonner
+      toast.success("Pedido Criado")
+
+      // Notificación push con OneSignal
+      await sendNotification({
+        title: "Nuevo Pedido",
+        message: `Mesa ${order.tableNumber} - Total: $${order.total}`,
+        url: `/orders/${newOrderRef.id}`
       })
+
+      toast.success("Pedido Criado com sucesso")
 
       // Optional: Navigate back to orders page or show order details
       router.push('/orders')
     } catch (error) {
       console.error("Error creating order:", error)
-      toast({
-        title: "Erro ao Criar Pedido",
-        description: error instanceof Error ? error.message : "Não foi possível criar o pedido",
-        variant: "destructive"
-      })
+      toast.error("Erro ao criar pedido")
     }
   }
 

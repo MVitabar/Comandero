@@ -20,28 +20,15 @@ import {
   CreditCard,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Toast } from "@/components/ui/toast"
 import { useFirebase } from "@/components/firebase-provider"
-import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/components/auth-provider"
 import { doc, getDoc, updateDoc, collection, query, where, getDocs, limit, serverTimestamp } from "firebase/firestore"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { OrderDetailsDialog } from './orders/order-details-dialog'
-import { Order as ImportedOrder, TableItem, PaymentInfo, PaymentMethod } from '@/types'
+import { TableCardProps, Order, TableItem, PaymentInfo, PaymentMethod } from '@/types'
 import { DialogDescription } from "@radix-ui/react-dialog"
-
-interface TableCardProps {
-  table: TableItem
-  hasActiveOrder?: boolean
-  orderStatus?: string
-  onEdit?: () => void
-  onDelete?: () => void
-  onCreateOrder?: () => void
-  onViewOrder?: () => void
-  onMarkAsServed?: () => void
-  onCloseOrder?: () => void
-  isEditing?: boolean
-}
+import { toast } from "sonner"
+import { UserRole } from '@/types'
 
 export function TableCard({
   table,
@@ -57,10 +44,9 @@ export function TableCard({
 }: TableCardProps) {
   const { t } = useI18n()
   const { db } = useFirebase()
-  const { toast } = useToast()
   const { user } = useAuth()
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [activeOrder, setActiveOrder] = useState<ImportedOrder | null>(null)
+  const [activeOrder, setActiveOrder] = useState<Order | null>(null)
   const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false)
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null)
@@ -69,9 +55,9 @@ export function TableCard({
   const restaurantId = user?.establishmentId || user?.uid || table.restaurantId || ''
 
   // Comprehensive order preparation with robust type handling
-  const prepareOrderForDialog = (activeOrder: ImportedOrder | null): ImportedOrder => {
+  const prepareOrderForDialog = (activeOrder: Order | null): Order => {
     // Create a base order object with required properties
-    const createBaseOrder = (): ImportedOrder => ({
+    const createBaseOrder = (): Order => ({
       id: crypto.randomUUID(),
       status: 'pending',
       total: 0,
@@ -82,6 +68,12 @@ export function TableCard({
       subtotal: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
+      createdBy: {
+        uid: user?.uid || 'system',
+        displayName: user?.displayName || '',
+        email: user?.email || null,
+        role: user?.role || UserRole.WAITER
+      },
       paymentInfo: {
         method: 'cash' as PaymentMethod,
         amount: 0,
@@ -96,7 +88,7 @@ export function TableCard({
     }
 
     // Prepare extended order properties with comprehensive fallbacks
-    const extendedOrderProperties: Partial<ImportedOrder> = {
+    const extendedOrderProperties: Partial<Order> = {
       // Table-related properties with precise fallback
       tableNumber: 
         activeOrder.tableNumber !== undefined 
@@ -171,7 +163,7 @@ export function TableCard({
     }
 
     // Merge original order with extended properties
-    const preparedOrder: ImportedOrder = {
+    const preparedOrder: Order = {
       ...createBaseOrder(), // Start with a base order
       ...activeOrder, // Overlay original order properties
       ...extendedOrderProperties, // Add extended properties
@@ -217,7 +209,7 @@ export function TableCard({
           const orderData = {
             id: orderDoc.id,
             ...orderDoc.data()
-          } as ImportedOrder
+          } as Order
 
           console.log('Found Active Order:', JSON.stringify(orderData, null, 2))
           setActiveOrder(orderData)
@@ -256,7 +248,7 @@ export function TableCard({
     'other'
   ]
 
-  const handleTableOrderSync = async (order?: ImportedOrder | null) => {
+  const handleTableOrderSync = async (order?: Order | null) => {
     try {
       if (!db || !user) return
 
@@ -313,26 +305,21 @@ export function TableCard({
       })
 
       // Optional toast notification
-      toast({
-        title: 'Table Status Updated',
-        description: `Table ${table.number} is now ${newTableStatus}`,
-        variant: 'default'
+      toast(`Table ${table.number} is now ${newTableStatus}`, {
+        description: undefined,
       })
     } catch (error) {
       console.error('Table Sync Error:', error)
-      toast({
-        title: 'Sync Error',
-        description: t("tableCard.errors.sync"),
-        variant: 'destructive'
+      toast(t("tableCard.errors.sync"), {
+        description: undefined,
       })
     }
   }
 
   const confirmCloseOrder = async () => {
     if (!selectedPaymentMethod) {
-      toast({
-        title: t("orders.errors.selectPaymentMethod"),
-        variant: "destructive"
+      toast(t("orders.errors.selectPaymentMethod"), {
+        description: undefined,
       })
       return
     }
@@ -379,10 +366,8 @@ export function TableCard({
         updatedAt: new Date()
       })
 
-      toast({
-        title: t("orders.success.orderClosed"),
+      toast(t("orders.success.orderClosed"), {
         description: `${t("orders.paymentMethod")}: ${t(`orders.paymentMethods.${selectedPaymentMethod}`)}`,
-        variant: "default"
       })
 
       // Reset states
@@ -390,10 +375,8 @@ export function TableCard({
       setSelectedPaymentMethod(null)
     } catch (error) {
       console.error('Error closing order:', error)
-      toast({
-        title: t("orders.errors.closeOrderFailed"),
+      toast(t("orders.errors.closeOrderFailed"), {
         description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive"
       })
     }
   }
@@ -489,6 +472,7 @@ export function TableCard({
           order={prepareOrderForDialog(activeOrder)}
           open={isOrderDetailsOpen}
           onOpenChange={(open) => setIsOrderDetailsOpen(open)}
+          onClose={() => setIsOrderDetailsOpen(false)}
         />
       )}
 

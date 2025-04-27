@@ -6,7 +6,6 @@ import { InventoryItem } from "@/types"
 import { useState, useEffect, useMemo } from "react"
 import { useAuth } from "@/components/auth-provider"
 import { useI18n } from "@/components/i18n-provider"
-import { useToast } from "@/components/ui/use-toast"
 import { 
   collection, 
   query, 
@@ -58,6 +57,8 @@ import {
 import { Plus, Search, AlertTriangle, Edit, Trash2 } from "lucide-react"
 import { usePermissions } from "@/components/permissions-provider"
 import { UnauthorizedAccess } from "@/components/unauthorized-access"
+import { useNotifications } from "@/hooks/useNotifications"
+import { toast } from "sonner"
 
 const entradas = [
   {
@@ -141,7 +142,7 @@ export default function InventoryPage() {
   const { user } = useAuth()
   const { canView, canCreate, canUpdate, canDelete } = usePermissions()
   const { t } = useI18n()
-  const { toast } = useToast()
+  const { sendNotification } = useNotifications()
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -262,10 +263,8 @@ export default function InventoryPage() {
     e.preventDefault()
     
     if (!user?.establishmentId) {
-      toast({
-        title: t("commons.error"),
+      toast.error(t("commons.error"), {
         description: t("inventory.noEstablishmentError"),
-        variant: "destructive"
       })
       return
     }
@@ -280,10 +279,8 @@ export default function InventoryPage() {
 
       // Verify category is selected
       if (!itemData.category) {
-        toast({
-          title: t("commons.error"),
-          description: t("inventory.categoryRequired"),
-          variant: "destructive"
+        toast.error(t("commons.error"), {
+          description: t("inventory.noCategoryError"),
         })
         return
       }
@@ -362,15 +359,15 @@ export default function InventoryPage() {
         }
       }
       
-      toast({
-        title: dialogMode === 'add' 
-          ? t("inventory.addSuccess") 
-          : t("inventory.updateSuccess"),
-        description: dialogMode === 'add' 
-          ? `${itemData.name} ${t("inventory.addedToInventory")}` 
-          : `${itemData.name} ${t("inventory.updatedInInventory")}`,
-        variant: "default"
+      toast.success(t("inventory.saveSuccess"), {
+        description: t("inventory.itemSaved"),
       })
+
+      await sendNotification({
+        title: t("inventory.push.itemSavedTitle"),
+        message: t("inventory.push.itemSavedMessage", { name: itemData.name }),
+        url: window.location.href,
+      });
 
       // Reset form and close dialog
       setFormData({
@@ -387,10 +384,8 @@ export default function InventoryPage() {
       setSelectedItem(null)
     } catch (err) {
       console.error("Error saving inventory item:", err)
-      toast({
-        title: t("commons.error"),
+      toast.error(t("commons.error"), {
         description: t("inventory.saveError"),
-        variant: "destructive"
       })
     }
   }
@@ -398,10 +393,8 @@ export default function InventoryPage() {
   // Delete Inventory Item
   const handleDelete = async (itemId: string) => {
     if (!user?.establishmentId) {
-      toast({
-        title: t("commons.error"),
+      toast.error(t("commons.error"), {
         description: t("inventory.noEstablishmentError"),
-        variant: "destructive"
       })
       return
     }
@@ -412,17 +405,19 @@ export default function InventoryPage() {
       
       setInventoryItems(prev => prev.filter(item => item.uid !== itemId))
       
-      toast({
-        title: t("inventory.deleteSuccess"),
-        description: t("inventory.itemRemoved"),
-        variant: "default"
+      toast.success(t("inventory.deleteSuccess"), {
+        description: t("inventory.itemDeleted"),
       })
+
+      await sendNotification({
+        title: t("inventory.push.itemDeletedTitle"),
+        message: t("inventory.push.itemDeletedMessage"),
+        url: window.location.href,
+      });
     } catch (err) {
       console.error("Error deleting inventory item:", err)
-      toast({
-        title: t("commons.error"),
+      toast.error(t("commons.error"), {
         description: t("inventory.deleteError"),
-        variant: "destructive"
       })
     }
   }
@@ -443,6 +438,23 @@ export default function InventoryPage() {
 
   // First, create a function to check if user can perform any actions
   const canPerformActions = canUpdate('inventory') || canDelete('inventory');
+
+  useEffect(() => {
+    // Notificar productos con bajo stock
+    if (lowStockItems.length > 0) {
+      toast.warning(`${lowStockItems.length} productos con bajo stock`)
+
+      // Notificación push solo si hay items críticos
+      const criticalItems = lowStockItems.filter(item => item.quantity <= (item.minQuantity || 0) / 2)
+      if (criticalItems.length > 0) {
+        sendNotification({
+          title: "¡Alerta de Inventario!",
+          message: `${criticalItems.length} productos requieren atención inmediata`,
+          url: '/inventory'
+        })
+      }
+    }
+  }, [lowStockItems])
 
   return (
     <div className="container mx-auto p-4">

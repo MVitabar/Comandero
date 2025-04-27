@@ -4,8 +4,9 @@ import { useState, useEffect } from "react"
 import { useI18n } from "@/components/i18n-provider"
 import { useFirebase } from "@/components/firebase-provider"
 import { useAuth } from "@/components/auth-provider"
+import { useNotifications } from "@/hooks/useNotifications"
 import { collection, query, orderBy, getDocs, doc, deleteDoc } from "firebase/firestore"
-import { useToast } from "@/components/ui/use-toast"
+import {toast} from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
@@ -32,8 +33,8 @@ export default function UsersPage() {
   const { t } = useI18n() as { t: (key: string, options?: any) => string }
   const { db } = useFirebase()
   const { user: currentUser } = useAuth()
-  const { toast } = useToast()
   const { canView, canCreate, canUpdate, canDelete } = usePermissions()
+  const { sendNotification } = useNotifications();
 
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -80,11 +81,8 @@ export default function UsersPage() {
         setLoading(false);
       } catch (error) {
         console.error('Error fetching users:', error);
-        toast({
-          title: "Error",
-          description: "Could not fetch users",
-          variant: "destructive"
-        });
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        toast.error(t("users.errors.fetchUsers", { error: errorMessage }));
         setLoading(false);
       }
     };
@@ -94,11 +92,7 @@ export default function UsersPage() {
 
   const handleDeleteUser = async () => {
     if (!canDelete('users-management') || !userToDelete || !db || !currentUser?.establishmentId) {
-      toast({
-        title: "Error",
-        description: "Cannot delete user: insufficient permissions or missing establishment",
-        variant: "destructive"
-      });
+      toast.error(t("users.errors.deleteUserPermission"));
       return;
     }
 
@@ -113,20 +107,18 @@ export default function UsersPage() {
       
       setUsers(prevUsers => prevUsers.filter(u => u.id !== userToDelete.id));
       
-      toast({
-        title: t("users.deleteSuccess"),
-        description: `${userToDelete.username} ${t("users.hasBeenDeleted")}`,
-        variant: "default"
+      toast.success(t("users.userDeleted", { username: userToDelete.username }));
+      await sendNotification({
+        title: t("users.push.userDeletedTitle"),
+        message: t("users.push.userDeletedMessage", { username: userToDelete.username }),
+        url: window.location.href,
       });
-
+      
       setUserToDelete(null);
     } catch (error) {
       console.error("Error deleting user:", error);
-      toast({
-        title: t("users.errors.deleteUser"),
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive"
-      });
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      toast.error(t("users.errors.deleteUser", { error: errorMessage }));
     }
   };
 

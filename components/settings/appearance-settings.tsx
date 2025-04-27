@@ -5,7 +5,8 @@ import { useAuth } from "@/components/auth-provider"
 import { useFirebase } from "@/components/firebase-provider"
 import { useI18n } from "@/components/i18n-provider"
 import { useTheme, Theme } from "@/components/theme-provider"
-import { useToast } from "@/components/ui/use-toast"
+import { useNotifications } from "@/hooks/useNotifications"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
@@ -17,7 +18,7 @@ export function AppearanceSettings() {
   const { db } = useFirebase()
   const { t } = useI18n()
   const { theme, setTheme } = useTheme()
-  const { toast } = useToast()
+  const { sendNotification } = useNotifications()
 
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -57,16 +58,19 @@ export function AppearanceSettings() {
         updatedAt: new Date(),
       })
 
-      toast({
-        title: t("settings.appearance.actions.saved.title"),
+      toast.success(t("settings.appearance.actions.saved.title"), {
         description: t("settings.appearance.actions.saved.description"),
+      })
+
+      await sendNotification({
+        title: t("settings.push.appearanceSavedTitle"),
+        message: t("settings.push.appearanceSavedMessage", { theme }),
+        url: window.location.href,
       })
     } catch (error) {
       console.error("Error saving appearance preference:", error)
-      toast({
-        title: t("settings.appearance.actions.failed.title"),
-        description: t("settings.appearance.actions.failed.description"),
-        variant: "destructive",
+      toast.error(t("settings.appearance.actions.save.error.title"), {
+        description: t("settings.appearance.actions.save.error.description"),
       })
     } finally {
       setSaving(false)

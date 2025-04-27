@@ -2,13 +2,14 @@
 
 import { useState } from "react"
 import { useAuth } from "@/components/auth-provider"
-import { useToast } from "@/components/ui/use-toast"
+import {toast} from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { UserRole } from "@/types/permissions"
 import { createTeamMember, CurrentUser } from "@/lib/user-management"
+import { useNotifications } from "@/hooks/useNotifications"
 
 export default function AddTeamMemberPage() {
   const [formData, setFormData] = useState({
@@ -22,7 +23,7 @@ export default function AddTeamMemberPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const { user } = useAuth()
-  const { toast } = useToast()
+  const { sendNotification } = useNotifications();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -73,11 +74,7 @@ export default function AddTeamMemberPage() {
 
     // Ensure we have a logged-in user
     if (!user) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to add a team member",
-        variant: "destructive"
-      })
+      toast.error("You must be logged in to add a team member")
       return
     }
 
@@ -121,12 +118,12 @@ export default function AddTeamMemberPage() {
 
       console.groupEnd(); // Close debug group
 
-      toast({
-        title: "Team Member Added",
-        description: `${formData.username} has been added to your team`,
-      })
-
-      // Reset form
+      toast.success("Team member added successfully")
+      await sendNotification({
+        title: "Nuevo miembro agregado",
+        message: `Se agregó a ${formData.username} al equipo`,
+        url: window.location.href,
+      });
       setFormData({
         username: "",
         email: "",
@@ -142,11 +139,8 @@ export default function AddTeamMemberPage() {
           ? "This email is already in use" 
           : error.message || "Failed to add team member"
 
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive"
-      })
+      toast.error(errorMessage)
+      setErrors((prev) => ({ ...prev, email: errorMessage }))
     } finally {
       setLoading(false)
     }

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "@/components/auth-provider"
 import { useI18n } from "@/components/i18n-provider"
-import { useToast } from "@/components/ui/use-toast"
+import {toast} from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { PasswordStrengthIndicator } from "@/components/password-strength-indicator"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
+import { useNotifications } from "@/hooks/useNotifications"
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -33,8 +34,8 @@ export default function RegisterPage() {
 
   const { signUp } = useAuth()
   const { t } = useI18n()
-  const { toast } = useToast()
   const router = useRouter()
+  const { sendNotification } = useNotifications()
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -102,11 +103,15 @@ export default function RegisterPage() {
       )
 
       if (result.success) {
-        toast({
-          title: t("register.success"),
-          description: t("register.welcomeMessage"),
-          variant: "default"
+        // Notificación in-app con Sonner
+        toast.success(t("register.success"))
+        
+        // Notificación push con OneSignal
+        await sendNotification({
+          title: "Nuevo Usuario Registrado",
+          message: `${formData.username} se ha registrado en ${formData.establishmentName}`,
         })
+        
         router.push("/dashboard")
       } else {
         // Handle specific error cases
@@ -114,11 +119,13 @@ export default function RegisterPage() {
           form: result.error || t("register.unexpectedError")
         })
         
-        toast({
-          title: t("register.error"),
-          description: result.error || t("register.unexpectedError"),
-          variant: "destructive"
-        })
+        toast.error(result.error || t("register.unexpectedError"))
+        if (result.error === "EMAIL_ALREADY_EXISTS") {
+          setErrors((prev) => ({ ...prev, email: t("register.emailAlreadyExists") }))
+        }
+        if (result.error === "USERNAME_ALREADY_EXISTS") {
+          setErrors((prev) => ({ ...prev, username: t("register.usernameAlreadyExists") }))
+        }
       }
     } catch (error) {
       console.error("Registration error:", error)
@@ -127,11 +134,7 @@ export default function RegisterPage() {
         form: t("register.unexpectedError")
       })
       
-      toast({
-        title: t("register.error"),
-        description: t("register.unexpectedError"),
-        variant: "destructive"
-      })
+      toast.error(t("register.unexpectedError"))
     } finally {
       setLoading(false)
     }

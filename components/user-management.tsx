@@ -13,18 +13,14 @@ import {
 import { useFirebase } from '@/components/firebase-provider'
 import { Button } from '@/components/ui/button'
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from '@/components/ui/table'
-
-// Definir una interfaz para el tipo de usuario
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  role: string;
-}
+import { User } from '@/types'
+import { toast } from "sonner"
+import { useNotifications } from "@/hooks/useNotifications"
 
 export function UserManagement() {
-  const { canView, canDo } = usePermissions()
+  const { canView, canDo } = usePermissions() as { canView: (module: string | number) => boolean; canDo?: (module: string | number, action: string) => boolean }
   const { db } = useFirebase()
+  const { sendNotification } = useNotifications();
   
   // Especificar el tipo de estado como User[]
   const [users, setUsers] = useState<User[]>([])
@@ -56,8 +52,9 @@ export function UserManagement() {
   }
 
   const handleDeleteUser = async (userId: string) => {
-    if (!canDo('deleteUser')) {
-      return
+    if (!canDo || !canDo('users-management', 'deleteUser')) {
+      toast.error("No tienes permisos para eliminar usuarios.");
+      return;
     }
 
     try {
@@ -65,8 +62,15 @@ export function UserManagement() {
       
       // Filtrar el usuario eliminado del estado
       setUsers(prevUsers => prevUsers.filter(user => user.id !== userId))
+      toast.success("Usuario eliminado correctamente.");
+      await sendNotification({
+        title: "Usuario eliminado",
+        message: `Se eliminó el usuario con ID ${userId}`,
+        url: window.location.href,
+      });
     } catch (error) {
       console.error('Error deleting user:', error)
+      toast.error("Error al eliminar el usuario.");
     }
   }
 
@@ -93,10 +97,10 @@ export function UserManagement() {
               <TableCell>{user.email}</TableCell>
               <TableCell>{user.role}</TableCell>
               <TableCell>
-                {canDo('deleteUser') && (
+                {canDo && canDo('users-management', 'deleteUser') && (
                   <Button 
                     variant="destructive" 
-                    onClick={() => handleDeleteUser(user.id)}
+                    onClick={() => handleDeleteUser(user.id ?? '')}
                   >
                     Eliminar
                   </Button>

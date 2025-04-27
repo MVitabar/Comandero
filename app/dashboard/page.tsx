@@ -49,8 +49,11 @@ import {
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@radix-ui/react-accordion"
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useNotifications } from "@/hooks/useNotifications"
+import { toast } from "sonner"
 
 export default function DashboardPage() {
+  const { sendNotification } = useNotifications()
   const { t, i18n } = useI18n()
   const { db } = useFirebase()
   const { user } = useAuth()
@@ -632,6 +635,31 @@ export default function DashboardPage() {
       loadDashboardData()
     }
   }, [db, user])
+
+  useEffect(() => {
+    // Notificar cuando hay un crecimiento negativo
+    if (dashboardData.monthlyGrowth < 0) {
+      toast.warning("¡Alerta de ventas!")
+      
+      sendNotification({
+        title: "Alerta de Rendimiento",
+        message: `Las ventas han disminuido un ${Math.abs(dashboardData.monthlyGrowth)}% este mes`,
+        url: '/dashboard'
+      })
+    }
+
+    // Notificar metas alcanzadas
+    const targetSales = 10000; // Define a target sales value
+    if (dashboardData.totalSales > targetSales) {
+      toast.success("¡Meta alcanzada!")
+      
+      sendNotification({
+        title: "¡Meta Alcanzada!",
+        message: "Has superado la meta de ventas mensual",
+        url: '/dashboard'
+      })
+    }
+  }, [dashboardData])
 
   const inventoryStatCards = [
     { 

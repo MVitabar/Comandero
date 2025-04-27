@@ -14,7 +14,7 @@ import {
 } from "firebase/auth"
 import { useRouter, usePathname } from "next/navigation"
 import { useFirebase } from "@/components/firebase-provider"
-import { useToast } from "@/components/ui/use-toast"
+import {toast} from "sonner"
 import { 
   getFirestore, 
   doc, 
@@ -67,7 +67,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { db, auth, isInitialized, error } = useFirebase()
   const router = useRouter()
   const pathname = usePathname()
-  const { toast } = useToast()
 
   // Debug method to check authentication state
   const debugAuthState = () => {
@@ -217,11 +216,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Send email verification
       await sendEmailVerification(firebaseUser);
 
-      toast({
-        title: "Sign Up Successful",
-        description: "Your account has been created. Please verify your email.",
-        variant: "default",
-      });
+      toast.success(t("auth.signUp.success", { username: newUser.username }))
+      setUser(newUser);
 
       return {
         success: true,
@@ -247,11 +243,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      toast({
-        title: "Sign Up Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(t("auth.signUp.error", { username: errorMessage }))
 
       return {
         success: false,
@@ -386,7 +378,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     uid: firebaseUser.uid,
     email: firebaseUser.email,
     username: username,
-    role: UserRole.Owner,
+    role: UserRole.OWNER,
     currentEstablishmentName: baseSlug,
     establishmentId: establishmentId,
     status: 'active',
@@ -452,7 +444,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // 2. If no users exist yet, default to OWNER
       // 3. Otherwise, default to WAITER
       const userRole = options?.role || 
-        (usersSnapshot.empty ? UserRole.Owner : UserRole.WAITER);
+        (usersSnapshot.empty ? UserRole.OWNER : UserRole.WAITER);
       
       const username = options?.username || 
         await generateUniqueUsername(firebaseUser.email || '', baseSlug);
@@ -563,11 +555,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (authError) => {
         console.error("🔥 Auth state change error:", authError)
         setLoading(false)
-        toast({
-          title: "Authentication Error",
-          description: authError.message || "An unexpected error occurred",
-          variant: "destructive",
-        })
+        toast.error("Error during authentication state change")
       }
     )
 
@@ -672,11 +660,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Update user state
       setUser(customUser);
       
-      toast({
-        title: "Login Successful",
-        description: `Welcome back, ${customUser.username || 'User'}!`,
-        variant: "default",
-      });
+      toast.success(t("auth.login.success", { username: customUser.username }))
 
       return {
         success: true
@@ -728,11 +712,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
 
-      toast({
-        title: "Login Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(t("auth.login.error", { username: errorMessage }))
 
       return {
         success: false,
@@ -755,11 +735,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await signOut(auth);
       setUser(null);
       
-      toast({
-        title: "Logged Out",
-        description: "You have been logged out successfully.",
-        variant: "default",
-      });
+      toast.success(t("auth.logout.success", { username: user?.username || "Guest" }))
 
       return {
         success: true
@@ -771,11 +747,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ? error.message 
         : "An unexpected error occurred during logout";
 
-      toast({
-        title: "Logout Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(t("auth.logout.error", { username: errorMessage }))
 
       return {
         success: false,
@@ -849,3 +821,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp 
   }}>{children}</AuthContext.Provider>
 }
+function t(arg0: string, arg1: { username: string }): string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | (() => React.ReactNode) | null | undefined {
+  throw new Error("Function not implemented.")
+}
+

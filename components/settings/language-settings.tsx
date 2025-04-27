@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/components/auth-provider"
 import { useFirebase } from "@/components/firebase-provider"
 import { useI18n } from "@/components/i18n-provider"
-import { useToast } from "@/components/ui/use-toast"
+import { useNotifications } from "@/hooks/useNotifications"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
@@ -18,7 +19,7 @@ export function LanguageSettings() {
   const { user } = useAuth()
   const { db } = useFirebase()
   const { language, setLanguage, t } = useI18n()
-  const { toast } = useToast()
+  const { sendNotification } = useNotifications();
 
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -105,17 +106,21 @@ export function LanguageSettings() {
         updatedAt: new Date(),
       }, { merge: true });
 
-      toast({
-        title: t("settings.language.actions.profileUpdated"),
-        description: t("settings.language.actions.profileUpdateSuccess"),
+      toast.success(t("settings.language.actions.profileUpdateSuccess"), {
+        description: t("settings.language.actions.profileUpdateSuccessDescription"),
       })
+      await sendNotification({
+        title: t("settings.push.languageSavedTitle"),
+        message: t("settings.push.languageSavedMessage", { language }),
+        url: window.location.href,
+      });
     } catch (error) {
       console.error("Error saving language preference", error);
-      toast({
-        title: t("settings.language.actions.profileUpdateFailed"),
-        description: t("settings.language.actions.profileUpdateError"),
-        variant: "destructive"
+      toast.error(t("settings.language.actions.profileUpdateError"), {
+        description: t("settings.language.actions.profileUpdateErrorDescription"),
       })
+
+
     } finally {
       setSaving(false)
     }

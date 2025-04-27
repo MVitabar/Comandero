@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next' 
 import { TableMap } from './table-maps-list'
 import { useFirebase } from '@/components/firebase-provider'
 import { doc, getDoc, collection, addDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { TableCard } from '@/components/table-card'
 import { Order } from '@/types'
 import { useAuth } from '@/components/auth-provider'
-import { useToast } from '@/components/ui/use-toast'
+import {toast} from 'sonner'
 import { OrderForm } from '@/components/orders/order-form'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -36,7 +36,6 @@ export default function TableMapViewDialog({
   const { t } = useTranslation()
   const { db } = useFirebase()
   const { user } = useAuth()
-  const { toast } = useToast()
   const [tables, setTables] = useState<RestaurantTable[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedTable, setSelectedTable] = useState<RestaurantTable | null>(null)
@@ -79,10 +78,8 @@ export default function TableMapViewDialog({
         setTables([])
         setIsLoading(false)
         
-        toast({
-          title: t('common.error'),
-          description: t('tables.fetchError'),
-          variant: 'destructive'
+        toast.error(t('tables.tableMaps.fetchError'), {
+          description: error instanceof Error ? error.message : undefined
         })
       }
     }
@@ -169,29 +166,26 @@ export default function TableMapViewDialog({
         // Normalize items to match OrderItem interface
         items: (order.items || []).map(item => {
           // Convert itemId to string, fallback to empty string
-          const itemId = item.itemId 
-            ? String(item.itemId) 
-            : (item.menuItemId ? String(item.menuItemId) : (item.uid ? String(item.uid) : ''));
-          
+          const itemId = item.itemId
+            ? String(item.itemId)
+            : '';
+
           return {
-            uid: String(item.uid || itemId || ''),
+            id: item.id || itemId || '',
             itemId: itemId,
             name: item.name,
             category: item.category || '',
             quantity: item.quantity,
             price: item.price,
-            notes: item.notes || '',
+            stock: item.stock || 0,
             unit: item.unit || 'pcs',
-            dietaryInfo: {
-              vegetarian: item.dietaryInfo?.vegetarian ?? item.isVegetarian ?? false,
-              vegan: item.dietaryInfo?.vegan ?? item.isVegan ?? false,
-              glutenFree: item.dietaryInfo?.glutenFree ?? item.isGlutenFree ?? false,
-              lactoseFree: item.dietaryInfo?.lactoseFree ?? item.isLactoseFree ?? false
-            },
-            isVegetarian: item.isVegetarian,
-            isVegan: item.isVegan,
-            isGlutenFree: item.isGlutenFree,
-            isLactoseFree: item.isLactoseFree
+            notes: item.notes || '',
+            description: item.description || '',
+            customDietaryRestrictions: item.customDietaryRestrictions || [],
+            isVegetarian: item.isVegetarian ?? false,
+            isVegan: item.isVegan ?? false,
+            isGlutenFree: item.isGlutenFree ?? false,
+            isLactoseFree: item.isLactoseFree ?? false
           };
         }),
         
@@ -277,9 +271,8 @@ export default function TableMapViewDialog({
         }, { merge: true })  // Use merge to avoid overwriting existing data
       }
 
-      toast({
-        title: t('orders.success.orderCreated'),
-        variant: 'default'
+      toast.success(t('orders.orderCreated'), {
+        description: t('orders.orderCreatedDescription', { orderId: newOrderRef.id })
       })
 
       // Close order form
@@ -289,10 +282,8 @@ export default function TableMapViewDialog({
     } catch (error) {
       console.error('❌ Order Creation Error:', error)
       
-      toast({
-        title: t('orders.errors.orderCreationFailed'),
-        description: error instanceof Error ? error.message : undefined,
-        variant: 'destructive'
+      toast.error(t('orders.orderCreationError'), {
+        description: error instanceof Error ? error.message : undefined
       })
 
       throw error

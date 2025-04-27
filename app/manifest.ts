@@ -7,8 +7,9 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "A comprehensive restaurant management system",
     start_url: "/login",
     display: "standalone",
-    background_color: "#000033", // Deep navy blue representing the gradient's midpoint
-    theme_color: "#000066", // Slightly lighter blue for theme
+    background_color: "#000033",
+    theme_color: "#000066",
+    gcm_sender_id: "482941778795", // Requerido para OneSignal
     icons: [
       {
         src: "/icons/icon-192x192.png",
@@ -33,6 +34,10 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: "maskable",
       },
     ],
+    serviceworker: {
+      src: "/OneSignalSDKWorker.js",
+      scope: "/"
+    }
   }
 }
 

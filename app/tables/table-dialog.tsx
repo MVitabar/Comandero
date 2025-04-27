@@ -10,7 +10,7 @@ import { TableMap, RestaurantTable } from './table-maps-list'
 import { useFirebase } from '@/components/firebase-provider'
 import { useAuth } from '@/components/auth-provider'
 import { doc, updateDoc, arrayUnion, getDoc, setDoc, writeBatch } from 'firebase/firestore'
-import { toast } from '@/components/ui/use-toast'
+import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
 
 interface TableDialogProps {
@@ -112,10 +112,9 @@ export default function TableDialog({
         updatedAt: new Date()
       })
 
-      toast({
-        title: t("tableDialog.success.create"),
-        description: `${newTable.name} ${t("commons.created")}`,
-        variant: 'default'
+      toast.success(t("tableDialog.success.create"), {
+        description: t("tableDialog.success.createDescription", { tableName: newTable.name }),
+        duration: 3000
       })
 
       // Reset form and close dialog
@@ -124,10 +123,9 @@ export default function TableDialog({
       onClose()
     } catch (error) {
       console.error('Error creating table:', error)
-      toast({
-        title: t("common.error"),
-        description: t("tableDialog.error.create"),
-        variant: 'destructive'
+      toast.error(t("tableDialog.error.create"), {
+        description: t("tableDialog.error.createDescription"),
+        duration: 3000
       })
     } finally {
       setIsLoading(false)

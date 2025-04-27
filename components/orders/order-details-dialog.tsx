@@ -9,15 +9,9 @@ import {
   DialogFooter
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Order } from '@/types'
+import { Order, OrderDetailsDialogProps } from '@/types'
 import { useRouter } from 'next/navigation'
 import { useI18n } from '@/components/i18n-provider'
-
-interface OrderDetailsDialogProps {
-  order: Order
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}
 
 export function OrderDetailsDialog({ 
   order, 
@@ -84,7 +78,7 @@ export function OrderDetailsDialog({
         <DialogFooter>
           <Button 
             variant="outline" 
-            onClick={() => onOpenChange(false)}
+            onClick={() => onOpenChange?.(false)}
           >
             {t("commons.close")}
           </Button>

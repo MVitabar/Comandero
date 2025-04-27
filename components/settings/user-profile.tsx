@@ -5,7 +5,7 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/components/auth-provider"
 import { useFirebase } from "@/components/firebase-provider"
 import { useI18n } from "@/components/i18n-provider"
-import { useToast } from "@/components/ui/use-toast"
+import {toast} from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -18,17 +18,15 @@ import { Loader2, Upload } from "lucide-react"
 import { UserRole } from "@/types/permissions"
 import { usePermissions } from "@/components/permissions-provider"
 import { UnauthorizedAccess } from "../unauthorized-access"
-
-interface CustomUser extends FirebaseUser {
-  role?: UserRole;
-}
+import type { CustomUser } from '@/types';
+import { useNotifications } from "@/hooks/useNotifications"
 
 export function UserProfile() {
   const { canView, canUpdate } = usePermissions();
   const { user } = useAuth() as { user: CustomUser | null }
   const { db, auth } = useFirebase()
   const { t } = useI18n()
-  const { toast } = useToast()
+  const { sendNotification } = useNotifications();
 
   const [loading, setLoading] = useState(false)
   const [userData, setUserData] = useState({
@@ -100,17 +98,15 @@ export function UserProfile() {
         displayName: userData.username,
       })
 
-      toast({
-        title: t("settings.profile.actions.profileUpdated"),
-        description: t("settings.profile.actions.profileUpdateSuccess"),
-      })
+      toast.success(t("settings.profile.actions.profileUpdated"))
+      await sendNotification({
+        title: t("profile.push.profileSavedTitle"),
+        message: t("profile.push.profileSavedMessage", { username: userData.username }),
+        url: window.location.href,
+      });
     } catch (error) {
       console.error("Error updating profile:", error)
-      toast({
-        title: t("settings.profile.actions.profileUpdateFailed"),
-        description: t("settings.profile.actions.profileUpdateError"),
-        variant: "destructive",
-      })
+      toast.error(t("settings.profile.actions.errorUpdatingProfile"))
     } finally {
       setLoading(false) 
     }

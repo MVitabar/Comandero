@@ -117,7 +117,7 @@ export interface UserActivity {
 
 // Inventory Management
 export interface InventoryItem {
-  uid: string;  // Add this line
+  uid: string;  
   id?: string
   name: string
   category: string
@@ -850,3 +850,78 @@ export type DashboardData = {
     paymentMethod: string
   }[]
 }
+
+// --- PATCH: Corrección de tipos, unificación y compatibilidad global ---
+
+// 1. Elimina import duplicado de FirebaseUser (solo debe haber uno al inicio del archivo)
+
+// 2. ModulePermissions: Definición base para permisos de módulos
+export type ModulePermissions = {
+  [key: string]: {
+    view?: boolean;
+    create?: boolean;
+    update?: boolean;
+    delete?: boolean;
+    [action: string]: boolean | undefined;
+  };
+};
+
+// 3. PermissionProps: Props para HOC de permisos
+export interface PermissionProps {
+  requiredView?: keyof ModulePermissions;
+  requiredAction?: keyof ModulePermissions[string];
+}
+
+// 4. UserProfileData: Datos de perfil de usuario
+export interface UserProfileData {
+  username: string;
+  email: string;
+  role: UserRole;
+  phoneNumber: string;
+}
+
+// 5. CustomUser: Extiende correctamente el tipo importado
+export interface CustomUser extends FirebaseUser {
+  role?: UserRole;
+}
+
+// 6. PermissionsContextType: Contexto de permisos
+export interface PermissionsContextType {
+  canView: (module: string | number) => boolean;
+  canCreate: (module: string | number) => boolean;
+  canUpdate: (module: string | number) => boolean;
+  canDelete: (module: string | number) => boolean;
+  canDo?: (module: string | number, action: string) => boolean;
+}
+
+// 7. PasswordStrengthIndicatorProps
+export interface PasswordStrengthIndicatorProps {
+  password: string;
+}
+
+// 8. TableCardProps: Unifica con el tipo principal
+export interface TableCardProps {
+  table: TableItem;
+  hasActiveOrder?: boolean;
+  orderStatus?: string;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  onCreateOrder?: () => void;
+  onViewOrder?: (order: Order) => void;
+  onMarkAsServed?: () => void;
+  onCloseOrder?: () => void;
+  isEditing?: boolean;
+}
+
+// 9. OrderDetailsDialogProps: Compatibilidad con props opcionales
+export interface OrderDetailsDialogProps {
+  order: Order;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  table?: TableItem;
+  onEditOrder?: () => void;
+}
+
+
+export { UserRole };
+// --- END PATCH ---

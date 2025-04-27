@@ -10,8 +10,7 @@ import { TableMap } from './table-maps-list'
 import { useFirebase } from '@/components/firebase-provider'
 import { useAuth } from '@/components/auth-provider'
 import { doc, collection, updateDoc, setDoc, query, getDocs, serverTimestamp } from 'firebase/firestore'
-import { Toast, ToastProps } from '@/components/ui/toast'
-
+import {toast} from 'sonner'
 interface TableMapDialogProps {
   isOpen: boolean
   onClose: () => void
@@ -41,11 +40,7 @@ export default function TableMapDialog({
 
   const handleSave = async () => {
     if (!db || !user) {
-      Toast({
-        title: t('common.error'),
-        description: t('common.authenticationRequired'),
-        variant: 'destructive'
-      } as ToastProps)
+      toast.error(t('common.error'))
       return
     }
 
@@ -82,11 +77,7 @@ export default function TableMapDialog({
       onClose()
     } catch (error) {
       console.error('Error saving table map:', error)
-      Toast({
-        title: t('common.error'),
-        description: t('tables.tableMaps.saveError'),
-        variant: 'destructive'
-      } as ToastProps)
+      toast.error(t('common.error'))
     }
   }
 

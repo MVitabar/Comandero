@@ -7,39 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Filter, Plus } from "lucide-react"
-
-interface TableItem {
-  id: string
-  number: number
-  seats: number
-  shape: "square" | "round" | "rectangle"
-  width: number
-  height: number
-  x: number
-  y: number
-  status: "available" | "occupied" | "reserved" | "maintenance" | "ordering" | "preparing" | "ready" | "served"
-}
-
-interface Order {
-  id: string
-  status: string
-  tableId: string
-  // Other order properties
-}
-
-interface TableGridViewProps {
-  tables: TableItem[]
-  orders?: Record<string, Order>
-  onTableClick?: (table: TableItem) => void
-  onCreateOrder?: (table: TableItem) => void
-  onViewOrder?: (table: TableItem) => void
-  onMarkAsServed?: (table: TableItem, orderId: string) => void
-  onCloseOrder?: (table: TableItem, orderId: string) => void
-  onAddTable?: () => void
-  onEditTable?: (table: TableItem) => void
-  onDeleteTable?: (table: TableItem) => void
-  isEditing?: boolean
-}
+import { TableItem, Order, TableGridViewProps } from "@/types"
 
 export function TableGridView({
   tables,

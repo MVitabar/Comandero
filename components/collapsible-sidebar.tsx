@@ -5,7 +5,7 @@ import { useI18n } from "./i18n-provider"
 import { useAuth } from "./auth-provider"
 import { signOut } from "firebase/auth"
 import { useFirebase } from "./firebase-provider"
-import { useToast } from "@/components/ui/use-toast"
+import {toast} from "sonner"
 import { usePermissions } from "@/hooks/usePermissions"
 import {
   LayoutDashboard,
@@ -38,7 +38,6 @@ export function CollapsibleSidebar() {
   const { t, language, setLanguage } = useI18n()
   const { user } = useAuth()
   const { auth } = useFirebase()
-  const { toast } = useToast()
   const { canView } = usePermissions()
   const pathname = usePathname()
   const sidebarRef = useRef<HTMLDivElement>(null)
@@ -156,16 +155,13 @@ export function CollapsibleSidebar() {
 
     try {
       await signOut(auth)
-      toast({
-        title: t("sidebar.logout"),
-        description: "You have been logged out successfully",
-      })
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to log out",
-        variant: "destructive",
-      })
+      toast.success(t("sidebar.logoutSuccess"))
+    } catch (error: any) {
+      if (error.code === "auth/popup-closed-by-user") {
+        toast.error(t("sidebar.logoutCancelled"))
+      } else {
+        toast.error(t("sidebar.logoutError"))
+      }
     }
   }
 
@@ -198,20 +194,13 @@ export function CollapsibleSidebar() {
       const choiceResult = await result.userChoice
 
       if (choiceResult.outcome === 'accepted') {
-        toast({
-          title: t("commons.success"),
-          description: t("sidebar.installApp") + " " + t("commons.initiated")
-        })
+        toast.success(t("sidebar.installSuccess"))
       }
 
       // Reset the install prompt
       setInstallPrompt(null)
     } catch (error) {
-      toast({
-        title: t("commons.error"),
-        description: t("commons.installFailed"),
-        variant: "destructive"
-      })
+      toast.error(t("sidebar.installError"))
     }
   }
 

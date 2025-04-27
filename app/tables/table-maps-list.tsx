@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next'
 import TableDialog from './table-dialog'
 import TableMapViewDialog from './table-map-view-dialog'
 import TableMapDialog from './table-map-dialog'
-import { toast } from '@/components/ui/use-toast'
+import { toast } from 'sonner'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -88,11 +88,7 @@ export default function TableMapsList({ onCreateMap }: TableMapsListProps) {
       (error) => {
         console.error('Error fetching table maps in real-time:', error)
         setIsLoading(false)
-        toast({
-          title: t('common.error'),
-          description: t('tables.tableMaps.fetchError'),
-          variant: 'destructive'
-        })
+        toast.error(t('tableMaps.fetch.error'))
       }
     )
 
@@ -129,21 +125,13 @@ export default function TableMapsList({ onCreateMap }: TableMapsListProps) {
       
       await deleteDoc(tableMapRef)
 
-      toast({
-        title: t('tableMaps.delete.success'),
-        description: `${tableToDelete.name} ${t('commons.deleted')}`,
-        variant: 'default'
-      })
+      toast.success(t('tableMaps.delete.success', { name: tableToDelete.name }))
 
       // Reset the tableToDelete state
       setTableToDelete(null)
     } catch (error) {
       console.error('Error deleting table map:', error)
-      toast({
-        title: t('common.error'),
-        description: t('tableMaps.delete.error'),
-        variant: 'destructive'
-      })
+      toast.error(t('tableMaps.delete.error'))
     }
   }
 

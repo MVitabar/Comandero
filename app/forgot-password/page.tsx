@@ -8,7 +8,7 @@ import Link from "next/link"
 import { sendPasswordResetEmail } from "firebase/auth"
 import { useFirebase } from "@/components/firebase-provider"
 import { useI18n } from "@/components/i18n-provider"
-import { useToast } from "@/components/ui/use-toast"
+import {toast} from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -23,27 +23,18 @@ export default function ForgotPasswordPage() {
 
   const { auth } = useFirebase()
   const { t } = useI18n()
-  const { toast } = useToast()
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!email) {
-      toast({
-        title: t("error"),
-        description: t("forgotPassword.error.emailRequired"),
-        variant: "destructive",
-      })
+      toast.error(t("forgotPassword.error.emailRequired"))  
       return
     }
 
     if (!auth) {
-      toast({
-        title: t("error"),
-        description: t("forgotPassword.error.authServiceUnavailable"),
-        variant: "destructive",
-      })
+      toast.error(t("forgotPassword.error.authNotInitialized"))
       return
     }
 
@@ -52,25 +43,16 @@ export default function ForgotPasswordPage() {
     try {
       await sendPasswordResetEmail(auth, email)
       setEmailSent(true)
-      toast({
-        title: t("forgotPassword"),
-        description: t("forgotPassword.success.emailSent"),
-      })
+      toast.success(t("forgotPassword.success.emailSent"))
     } catch (error: any) {
       console.error("Password reset error:", error)
 
       if (error.code === "auth/user-not-found") {
-        toast({
-          title: t("error"),
-          description: t("forgotPassword.error.userNotFound"),
-          variant: "destructive",
-        })
+        toast.error(t("forgotPassword.error.userNotFound"))
+      } else if (error.code === "auth/invalid-email") {
+        toast.error(t("forgotPassword.error.invalidEmail"))
       } else {
-        toast({
-          title: t("error"),
-          description: error.message || t("forgotPassword.error.generic"),
-          variant: "destructive",
-        })
+        toast.error(t("forgotPassword.error.genericError"))
       }
     } finally {
       setLoading(false)

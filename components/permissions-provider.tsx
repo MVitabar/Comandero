@@ -3,13 +3,7 @@
 import { createContext, useContext, ReactNode } from "react";
 import { useAuth } from "./auth-provider";
 import { ModulePermissions, Permission, hasPermission, UserRole } from "@/types/permissions";
-
-interface PermissionsContextType {
-  canView: (module: keyof ModulePermissions) => boolean;
-  canCreate: (module: keyof ModulePermissions) => boolean;
-  canUpdate: (module: keyof ModulePermissions) => boolean;
-  canDelete: (module: keyof ModulePermissions) => boolean;
-}
+import { PermissionsContextType } from '@/types';
 
 const PermissionsContext = createContext<PermissionsContextType | null>(null);
 
@@ -17,7 +11,7 @@ export function PermissionsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
 
   const checkPermission = (
-    module: keyof ModulePermissions,
+    module: string | number,
     action: keyof Permission
   ): boolean => {
     if (!user || !user.role) {
@@ -29,14 +23,14 @@ export function PermissionsProvider({ children }: { children: ReactNode }) {
       return true;
     }
 
-    return hasPermission(user.role as UserRole, module, action);
+    return hasPermission(user.role as UserRole, module as keyof ModulePermissions, action);
   };
 
-  const value = {
-    canView: (module: keyof ModulePermissions) => checkPermission(module, "view"),
-    canCreate: (module: keyof ModulePermissions) => checkPermission(module, "create"),
-    canUpdate: (module: keyof ModulePermissions) => checkPermission(module, "update"),
-    canDelete: (module: keyof ModulePermissions) => checkPermission(module, "delete"),
+  const value: PermissionsContextType = {
+    canView: (module: string | number) => checkPermission(module, "view"),
+    canCreate: (module: string | number) => checkPermission(module, "create"),
+    canUpdate: (module: string | number) => checkPermission(module, "update"),
+    canDelete: (module: string | number) => checkPermission(module, "delete"),
   };
 
   return (

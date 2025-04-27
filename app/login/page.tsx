@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "@/components/auth-provider"
 import { useI18n } from "@/components/i18n-provider"
-import { useToast } from "@/components/ui/use-toast"
+import {toast} from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -25,7 +25,6 @@ export default function LoginPage() {
 
   const { login } = useAuth()
   const { t } = useI18n()
-  const { toast } = useToast()
   const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -57,11 +56,7 @@ export default function LoginPage() {
       const result = await login(email, password)
 
       if (result.success) {
-        toast({
-          title: t("login.success"),
-          description: t("login.welcomeBack"),
-          variant: "default"
-        })
+        toast.success(t("login.success"))
         router.push("/dashboard")
       } else {
         // Handle specific error cases
@@ -69,11 +64,7 @@ export default function LoginPage() {
           form: result.error || t("login.unexpectedError")
         })
         
-        toast({
-          title: t("login.error"),
-          description: result.error || t("login.unexpectedError"),
-          variant: "destructive"
-        })
+        toast.error(result.error || t("login.unexpectedError"))
       }
     } catch (error) {
       console.error("Login error:", error)
@@ -81,11 +72,7 @@ export default function LoginPage() {
         form: t("login.unexpectedError")
       })
       
-      toast({
-        title: t("login.error"),
-        description: t("login.unexpectedError"),
-        variant: "destructive"
-      })
+      toast.error(t("login.unexpectedError"))
     } finally {
       setLoading(false)
     }

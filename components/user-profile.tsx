@@ -10,16 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label'
 import { doc, updateDoc } from 'firebase/firestore'
 import { UserRole } from '@/types/permissions'
-
-interface UserProfileData {
-  username: string;
-  email: string;
-  role: UserRole;
-  phoneNumber: string;
-}
+import { UserProfileData } from '@/types'
 
 export function UserProfile() {
-  const { canView, canDo } = usePermissions()
+  const { canView, canDo } = usePermissions() as { canView: (module: string | number) => boolean; canDo?: (module: string | number, action: string) => boolean }
   const { user } = useAuth()
   const { db } = useFirebase()
 
@@ -57,7 +51,7 @@ export function UserProfile() {
 
   const handleRoleChange = (value: UserRole) => {
     // Solo administradores pueden cambiar roles
-    if (canDo('changeRole')) {
+    if (canDo && canDo('profile', 'changeRole')) {
       setUserData(prev => ({ ...prev, role: value }))
     }
   }
@@ -72,7 +66,7 @@ export function UserProfile() {
       await updateDoc(doc(db, 'users', user.uid), {
         username: userData.username,
         phoneNumber: userData.phoneNumber,
-        ...(canDo('changeRole') ? { role: userData.role } : {})
+        ...(canDo && canDo('profile', 'changeRole') ? { role: userData.role } : {})
       })
     } catch (error) {
       console.error('Error updating profile:', error)
@@ -110,7 +104,7 @@ export function UserProfile() {
             disabled={loading}
           />
         </div>
-        {canDo('changeRole') && (
+        {canDo && canDo('profile', 'changeRole') && (
           <div>
             <Label>Rol</Label>
             <Select 

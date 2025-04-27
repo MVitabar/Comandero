@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/components/auth-provider"
 import { useFirebase } from "@/components/firebase-provider"
 import { useI18n } from "@/components/i18n-provider"
-import { useToast } from "@/components/ui/use-toast"
+import {toast} from "sonner"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, FileSpreadsheet } from "lucide-react"
 import { collection, query, where, orderBy, getDocs, DocumentData } from "firebase/firestore"
@@ -26,7 +26,6 @@ const AdvancedReportsPage = () => {
   const { db } = useFirebase()
   const { user } = useAuth()
   const { t } = useI18n()
-  const { toast } = useToast()
 
   const generateDefaultFinancialData = (): FinancialData => ({
     summary: [
@@ -198,7 +197,22 @@ const AdvancedReportsPage = () => {
             category: item.category || 'Uncategorized',
             quantity: item.quantity || 0,
             price: item.price || 0
-          }))
+          })),
+          orderType: data.orderType || 'table',
+          restaurantId: data.restaurantId || user?.uid || '',
+          subtotal: data.subtotal || data.total || 0,
+          updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : new Date(),
+          paymentInfo: data.paymentInfo || {
+            method: "unknown",
+            amount: 0,
+            status: "pending"
+          },
+          createdBy: data.createdBy || {
+            uid: "",
+            displayName: "",
+            email: null,
+            role: "staff"
+          }
         }
       })
 
@@ -281,7 +295,22 @@ const AdvancedReportsPage = () => {
             category: item.category || 'Uncategorized',
             quantity: item.quantity || 0,
             price: item.price || 0
-          }))
+          })),
+          orderType: data.orderType || 'table',
+          restaurantId: data.restaurantId || user?.uid || '',
+          subtotal: data.subtotal || data.total || 0,
+          updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : new Date(),
+          paymentInfo: data.paymentInfo || {
+            method: "unknown",
+            amount: 0,
+            status: "pending"
+          },
+          createdBy: data.createdBy || {
+            uid: "",
+            displayName: "",
+            email: null,
+            role: "staff"
+          }
         }
       })
     } catch (error) {
@@ -394,11 +423,7 @@ const AdvancedReportsPage = () => {
       } catch (error) {
         console.error("Error fetching report data:", error)
         setLoading(false)
-        toast({
-          title: t("errorFetchingData"),
-          description: t("pleaseTryAgain"),
-          variant: "destructive", 
-        })
+        toast.error(t("errorFetchingData"))
       }
     }
 

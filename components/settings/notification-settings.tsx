@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/components/auth-provider"
 import { useFirebase } from "@/components/firebase-provider"
 import { useI18n } from "@/components/i18n-provider"
-import { useToast } from "@/components/ui/use-toast"
+import { useNotifications } from "@/hooks/useNotifications"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
@@ -17,7 +18,7 @@ export function NotificationSettings() {
   const { user } = useAuth()
   const { db } = useFirebase()
   const { t } = useI18n()
-  const { toast } = useToast()
+  const { sendNotification } = useNotifications()
 
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -70,16 +71,19 @@ export function NotificationSettings() {
         updatedAt: new Date()
       })
 
-      toast({
-        title: t("settings.notifications.actions.profileUpdated"),
-        description: t("settings.notifications.actions.profileUpdateSuccess"),
+      toast.success(t("settings.notifications.actions.profileUpdateSuccess"), {
+        description: t("settings.notifications.actions.profileUpdateSuccessDescription"),
       })
+
+      await sendNotification({
+        title: t("settings.push.notificationsSavedTitle"),
+        message: t("settings.push.notificationsSavedMessage"),
+        url: window.location.href,
+      });
     } catch (error) {
       console.error("Error saving notification preferences:", error)
-      toast({
-        title: t("settings.notifications.actions.profileUpdateFailed"),
-        description: t("settings.notifications.actions.profileUpdateError"),
-        variant: "destructive",
+      toast.error(t("settings.notifications.actions.profileUpdateError"), {
+        description: t("settings.notifications.actions.profileUpdateErrorDescription"),
       })
     } finally {
       setSaving(false)

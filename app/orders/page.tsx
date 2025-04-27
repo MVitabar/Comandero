@@ -5,7 +5,7 @@ import { useI18n } from "@/components/i18n-provider"
 import { safeTranslate } from '@/components/i18n-provider';
 import { useFirebase } from "@/components/firebase-provider"
 import { useAuth } from "@/components/auth-provider"
-import { useToast } from "@/components/ui/use-toast"
+import {toast} from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -39,6 +39,7 @@ import * as crypto from 'crypto';
 import { useRouter } from "next/navigation";
 import { OrderDetailsDialog } from "@/components/orders/order-details-dialog"
 import { UserRole } from "@/types/permissions";
+import { useNotifications } from "@/hooks/useNotifications";
 
 // Language codes
 type LanguageCode = 'en' | 'es' | 'pt';
@@ -160,8 +161,8 @@ export default function OrdersPage() {
   const { t, i18n }: { t: TFunction, i18n: any } = useI18n()
   const { db } = useFirebase()
   const { user } = useAuth()
-  const { toast } = useToast()
   const router = useRouter();
+  const { sendNotification } = useNotifications();
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -182,11 +183,7 @@ export default function OrdersPage() {
     // Validate establishmentId before proceeding
     if (!user.establishmentId) {
       console.error('No establishment ID found for user')
-      toast({
-        title: "Orders Fetch Error",
-        description: "Unable to fetch orders: No establishment ID found",
-        variant: "destructive"
-      })
+      toast.error("Establishment ID not found")
       setLoading(false)
       return
     }
@@ -311,11 +308,7 @@ export default function OrdersPage() {
     } catch (error) {
       console.error("Error fetching orders:", error)
       console.groupEnd()
-      toast({
-        title: t("commons.error"),
-        description: t("orders.error.fetchFailed"),
-        variant: "destructive",
-      })
+      toast.error(t("orders.error.fetchFailed"))
     } finally {
       setLoading(false)
     }
@@ -326,21 +319,13 @@ export default function OrdersPage() {
     try {
       // Validate inputs
       if (!orderId) {
-        toast({
-          title: t("commons.error"),
-          description: t("orders.error.invalidOrderId"),
-          variant: "destructive"
-        });
+        toast.error(t("orders.error.invalidOrderId"))
         return null;
       }
 
       // Ensure user and establishment ID exist
       if (!user || !user.establishmentId) {
-        toast({
-          title: t("commons.error"),
-          description: t("commons.userNotAuthenticated"),
-          variant: "destructive"
-        });
+        toast.error(t("orders.error.userNotFound"))
         return null;
       }
 
@@ -357,11 +342,7 @@ export default function OrdersPage() {
       const orderDoc = await getDoc(orderRef);
 
       if (!orderDoc.exists()) {
-        toast({
-          title: t("commons.error"),
-          description: t("orders.error.notFound"),
-          variant: "destructive"
-        });
+        toast.error(t("orders.error.orderNotFound"))
         return null;
       }
 
@@ -465,11 +446,7 @@ export default function OrdersPage() {
       return normalizedOrder;
     } catch (error) {
       console.error("Error fetching specific order:", error);
-      toast({
-        title: t("commons.error"),
-        description: t("orders.error.fetchFailed"),
-        variant: "destructive",
-      });
+      toast.error(t("orders.error.fetchSpecificOrderFailed"));
       return null;
     }
   }
@@ -480,51 +457,31 @@ export default function OrdersPage() {
     // Validate establishmentId before proceeding
     if (!user.establishmentId) {
       console.error('No establishment ID found for user')
-      toast({
-        title: "Order Update Error",
-        description: "Unable to update order status: No establishment ID found",
-        variant: "destructive"
-      })
+      toast.error(t("orders.error.establishmentIdNotFound"))
       return
     }
 
     try {
       const orderRef = doc(db, 'restaurants', user.establishmentId, 'orders', String(selectedOrder.id))
-      
-      // Ignorar 'all' y usar un status válido de BaseOrderStatus
-      const validStatus = selectedStatus === 'all' 
-        ? 'pending' // O cualquier otro status por defecto
-        : selectedStatus as BaseOrderStatus;
-
-      await updateDoc(orderRef, {
-        status: validStatus,
-        updatedAt: new Date(),
-      })
-
-      // Update local state
-      setOrders(
-        orders.map((order) =>
-          order.id === selectedOrder.id 
-            ? { ...order, status: validStatus, updatedAt: new Date() } 
-            : order
-        )
-      )
-
-      // Close the status dialog
+      const validStatus = selectedStatus === 'all' ? 'pending' : selectedStatus as BaseOrderStatus;
+      await updateDoc(orderRef, { status: validStatus, updatedAt: new Date() })
+      setOrders(orders => orders.map(order => order.id === selectedOrder.id ? { ...order, status: validStatus, updatedAt: new Date() } : order))
       setIsStatusDialogOpen(false)
-
-      // Show success toast
-      toast({
-        title: t("commons.success"),
-        description: t("orders.statusUpdated")
-      })
+      toast.success(
+        t("orders.success.statusUpdated", {
+          orderId: selectedOrder.id,
+          status: translateStatus(validStatus, i18n?.language as LanguageCode)
+        })
+      )
+      await sendNotification({
+        title: t("orders.push.statusUpdatedTitle"),
+        message: t("orders.push.statusUpdatedMessage", { orderId: selectedOrder.id, status: translateStatus(validStatus, i18n?.language as LanguageCode) }),
+        url: window.location.href,
+      });
     } catch (error) {
       console.error("Error updating order status:", error)
-      toast({
-        title: t("commons.error"),
-        description: t("orders.error.updateStatusFailed"),
-        variant: "destructive",
-      })
+      toast.error(t("orders.error.updateStatusFailed"))
+      setIsStatusDialogOpen(false)
     }
   }
 
@@ -533,39 +490,49 @@ export default function OrdersPage() {
 
     // Validate establishmentId before proceeding
     if (!user.establishmentId) {
-      console.error('No establishment ID found for user')
-      toast({
-        title: "Order Delete Error",
-        description: "Unable to delete order: No establishment ID found",
-        variant: "destructive"
-      })
-      setIsDeleteDialogOpen(false)
+      toast.error(t("orders.error.establishmentIdNotFound"))
       return
     }
 
     try {
-      // Use restaurant-specific orders subcollection
-      const orderRef = doc(db, 'restaurants', user.establishmentId, 'orders', String(selectedOrder.id))
-      await deleteDoc(orderRef)
-
-      // Update local state
-      setOrders(orders.filter((order) => order.id !== selectedOrder.id))
-
-      // Close the delete dialog
+      await deleteDoc(doc(db, 'restaurants', user.establishmentId, 'orders', String(selectedOrder.id)))
+      setOrders(orders => orders.filter(order => order.id !== selectedOrder.id))
       setIsDeleteDialogOpen(false)
-
-      toast({
-        title: t("orders.success.orderDeleted"),
-        description: `${t("orders.table.headers.id")} #${String(selectedOrder.id).substring(0, 6)} ${t("orders.action.deleted")}`,
-        variant: "default"
-      })
+      toast.success(t("orders.success.orderDeleted", { orderId: selectedOrder.id }))
+      await sendNotification({
+        title: t("orders.push.orderDeletedTitle"),
+        message: t("orders.push.orderDeletedMessage", { orderId: selectedOrder.id }),
+        url: window.location.href,
+      });
     } catch (error) {
-      console.error("Error deleting order:", error)
-      toast({
-        title: t("commons.error"),
-        description: t("orders.error.deleteFailed"),
-        variant: "destructive",
-      })
+      toast.error(t("orders.error.deleteOrderFailed"))
+      setIsDeleteDialogOpen(false)
+    }
+  }
+
+  const handleCancelOrder = async () => {
+    if (!db || !user || !selectedOrder || !selectedOrder.id) return
+
+    // Validate establishmentId before proceeding
+    if (!user.establishmentId) {
+      toast.error(t("orders.error.establishmentIdNotFound"))
+      return
+    }
+
+    try {
+      const orderRef = doc(db, 'restaurants', user.establishmentId, 'orders', String(selectedOrder.id))
+      await updateDoc(orderRef, { status: 'cancelled', updatedAt: new Date() })
+      setOrders(orders => orders.map(order => order.id === selectedOrder.id ? { ...order, status: 'cancelled', updatedAt: new Date() } : order))
+      setIsDeleteDialogOpen(false)
+      toast.success(t("orders.success.orderCancelled", { orderId: selectedOrder.id }))
+      await sendNotification({
+        title: t("orders.push.orderCancelledTitle"),
+        message: t("orders.push.orderCancelledMessage", { orderId: selectedOrder.id }),
+        url: window.location.href,
+      });
+    } catch (error) {
+      toast.error(t("orders.error.cancelOrderFailed"))
+      setIsDeleteDialogOpen(false)
     }
   }
 
@@ -942,8 +909,9 @@ export default function OrdersPage() {
         <OrderDetailsDialog 
           order={selectedOrder}
           open={isOrderDetailsDialogOpen}
-          onOpenChange={setIsOrderDetailsDialogOpen}
-        />
+          onOpenChange={setIsOrderDetailsDialogOpen} onClose={function (): void {
+            throw new Error("Function not implemented.");
+          } }        />
       )}
     </div>
   )

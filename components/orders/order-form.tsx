@@ -24,7 +24,7 @@ import {
   serverTimestamp 
 } from "firebase/firestore"
 import { Loader2, Plus, Minus, Trash, QrCode } from "lucide-react"
-import { toast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 import QRCode from 'qrcode.react'
 import { 
   OrderFormProps, 
@@ -44,6 +44,7 @@ import {
   reduceInventoryStock,
   InventoryItem 
 } from '@/lib/inventory-utils'
+import { useNotifications } from "@/hooks/useNotifications"
 
 export function OrderForm({ 
   initialTableNumber, 
@@ -60,6 +61,7 @@ export function OrderForm({
   const { user: contextUser } = useAuth()
   const user = propUser || contextUser
   const { t } = useI18n()
+  const { sendNotification } = useNotifications();
 
   if (!user) {
     return (
@@ -107,36 +109,25 @@ export function OrderForm({
   const handleAddItem = () => {
     const menuItem = menuItems.find((item) => item.uid === selectedItem)
     if (!menuItem) {
-      toast({
-        title: t("orders.errors.noItemSelected"),
-        variant: "destructive"
-      });
+      toast.error(t("orders.errors.itemNotFound"))
       return;
     }
 
     if (quantity < 1) {
-      toast({
-        title: t("orders.errors.invalidQuantity"),
-        variant: "destructive"
-      });
+      toast.error(t("orders.errors.invalidQuantity"));
       return;
     }
 
     if (menuItem.stock === undefined || menuItem.stock === null) {
-      toast({
-        title: t("orders.errors.stockUnavailable"),
-        description: "No se pudo determinar el stock del item",
-        variant: "destructive"
-      });
+      toast.error(t("orders.errors.stockNotAvailable"));
       return;
     }
 
     if (menuItem.stock < quantity) {
-      toast({
-        title: t("orders.errors.insufficientStock"),
-        description: `Solo hay ${menuItem.stock} unidades disponibles`,
-        variant: "destructive"
-      });
+      toast.error(t("orders.errors.stockExceeded", {
+        stock: menuItem.stock,
+        quantity: quantity
+      }));
       return;
     }
 
@@ -163,11 +154,11 @@ export function OrderForm({
     if (existingItemIndex >= 0) {
       const totalRequestedQuantity = orderItems[existingItemIndex].quantity + quantity;
       if (totalRequestedQuantity > menuItem.stock) {
-        toast({
-          title: t("orders.errors.stockExceeded"),
-          description: `Superaría el stock disponible de ${menuItem.stock} unidades`,
-          variant: "destructive"
-        });
+        toast.error(t("orders.errors.stockExceeded", {
+          stock: menuItem.stock,
+          quantity: totalRequestedQuantity
+        }));
+
         return;
       }
 
@@ -199,11 +190,7 @@ export function OrderForm({
     // Add type-safe check for establishmentId
     if (!user.establishmentId) {
       console.error('No establishment ID found for user')
-      toast({
-        title: "Inventory Error",
-        description: "Unable to load inventory: No establishment ID found",
-        variant: "destructive"
-      })
+      toast.error(t("orders.errors.noEstablishmentId"))
       setLoading(false)
       return
     }
@@ -275,11 +262,9 @@ export function OrderForm({
     } catch (error) {
       console.error('Error fetching menu items:', error)
       setLoading(false)
-      toast({
-        title: t("orders.errors.fetchMenuItemsFailed"),
-        description: error instanceof Error ? error.message : "Não foi possível carregar os itens do menu",
-        variant: "destructive"
-      })
+      toast.error(t("orders.errors.fetchMenuItems", {
+        error: error instanceof Error ? error.message : "Unknown error"
+      }))
     }
   }, [db, user, t])
 
@@ -332,11 +317,9 @@ export function OrderForm({
       }
     } catch (error) {
       console.error("Error fetching tables:", error)
-      toast({
-        title: t('common.error'),
-        description: t('tables.fetchError'),
-        variant: 'destructive'
-      })
+      toast.error(t("orders.errors.fetchTables", {
+        error: error instanceof Error ? error.message : "Unknown error"
+      }))
     }
   }
 
@@ -354,6 +337,7 @@ export function OrderForm({
     const updatedItems = [...orderItems]
     updatedItems.splice(index, 1)
     setOrderItems(updatedItems)
+    toast.success(t("orders.success.itemRemoved"))
   }
 
   // Correct onChange handler for quantity input
@@ -405,21 +389,13 @@ export function OrderForm({
   const handleSubmit = async () => {
     // Early validation checks
     if (orderItems.length === 0) {
-      toast({
-        title: t("orders.errors.emptyOrder"),
-        description: t("orders.errors.emptyOrderDescription"),
-        variant: "destructive"
-      })
+      toast.error(t("orders.errors.noItemsInOrder"))
       return
     }
 
     // Validate table number based on order type
     if (orderType === 'table' && !tableNumber.trim()) {
-      toast({
-        title: t("orders.errors.noTableSelected"),
-        description: t("orders.errors.noTableSelectedDescription"),
-        variant: "destructive"
-      })
+      toast.error(t("orders.errors.noTableSelected"))
       return
     }
 
@@ -517,11 +493,7 @@ export function OrderForm({
 
       // Verificar disponibilidad de inventario
       if (!user.establishmentId) {
-        toast({
-          title: "Error de Establecimiento",
-          description: "No se ha podido identificar el establecimiento",
-          variant: "destructive"
-        })
+        toast.error(t("orders.errors.noEstablishmentId"))
         return
       }
 
@@ -536,22 +508,16 @@ export function OrderForm({
           .map(item => item.name)
           .join(', ')
 
-        toast({
-          title: t("inventory.insufficientStock"),
-          description: `Los siguientes items no tienen stock suficiente: ${unavailableItemNames}`,
-          variant: "destructive"
-        })
+        toast.error(t("inventory.insufficientStock", {
+          items: unavailableItemNames
+        }))
         return
       }
 
       // Use onOrderCreated callback if provided
       if (!onOrderCreated) {
         console.error('No onOrderCreated callback provided');
-        toast({
-          title: "Error de Configuración",
-          description: "No se ha configurado la función para crear pedidos",
-          variant: "destructive"
-        });
+        toast.error(t("orders.errors.noOrderCreatedCallback"));
         return;
       }
 
@@ -576,31 +542,29 @@ export function OrderForm({
         resetForm();
 
         // Show success toast
-        toast({
-          title: t("orders.success.orderCreated"),
-          description: `Pedido creado por ${calculateTotal()}`,
-          variant: "default"
+        toast.success(t("orders.success.orderCreated"), {
+          description: `Pedido creado por ${calculateTotal()}`
+        });
+
+        await sendNotification({
+          title: t("orders.push.orderCreatedTitle"),
+          message: t("orders.push.orderCreatedMessage", { tableNumber, total: calculateTotal() }),
+          url: window.location.href,
         });
 
         console.groupEnd();
       } catch (error) {
         console.groupEnd();
         console.error('Order Creation Failed:', error);
-        toast({
-          title: t("orders.errors.orderCreationFailed"),
-          description: error instanceof Error ? error.message : "No se pudo crear el pedido",
-          variant: "destructive"
+        toast.error(t("orders.errors.orderCreationFailed"), {
+          description: `Error al crear el pedido: ${error}`
         });
       }
 
       // Después de crear el pedido, reducir el stock
       if (!user.establishmentId) {
         console.error('No establishment ID found for user');
-        toast({
-          title: "Error de Establecimiento",
-          description: "No se ha podido identificar el establecimiento para reducir stock",
-          variant: "destructive"
-        });
+        toast.error(t("orders.errors.noEstablishmentId"))
         return;
       }
 
@@ -620,19 +584,15 @@ export function OrderForm({
       
       if (failedStockReductions.length > 0) {
         console.error('Stock reduction errors:', failedStockReductions)
-        toast({
-          title: t("inventory.stockReductionError"),
-          description: "Algunos items no pudieron ser descontados del inventario",
-          variant: "destructive"
+        toast.error(t("inventory.stockReductionError"), {
+          description: failedStockReductions.map(result => result.error).join(', ')
         })
       }
 
     } catch (error) {
       console.error("Erro ao criar pedido:", error)
-      toast({
-        title: t("orders.errors.orderCreationFailed"),
-        description: error instanceof Error ? error.message : "Não foi possível criar o pedido",
-        variant: "destructive"
+      toast.error(t("orders.errors.orderCreationFailed"), {
+        description: `Error ao criar o pedido: ${error}`
       })
     }
   }
@@ -640,19 +600,13 @@ export function OrderForm({
   const handleCreateOrder = async () => {
     // Validate order creation
     if (orderItems.length === 0) {
-      toast({
-        title: t("orders.errors.noItemsInOrder"),
-        variant: "destructive"
-      })
+      toast.error(t("orders.errors.noItemsInOrder"))
       return
     }
 
     // Validate table for table orders
     if (orderType === 'table' && !tableNumber.trim()) {
-      toast({
-        title: t("orders.errors.noTableSelected"),
-        variant: "destructive"
-      })
+      toast.error(t("orders.errors.noTableSelected"))
       return
     }
 
@@ -745,10 +699,7 @@ export function OrderForm({
         tableNumber,
         user: user?.uid
       })
-      toast({
-        title: t("orders.errors.noItemsInOrder"),
-        variant: "destructive"
-      })
+      toast.error(t("orders.errors.noItemsInOrder"))
       return
     }
 
@@ -764,11 +715,7 @@ export function OrderForm({
 
     // Verificar disponibilidad de inventario
     if (!user.establishmentId) {
-      toast({
-        title: "Error de Establecimiento",
-        description: "No se ha podido identificar el establecimiento",
-        variant: "destructive"
-      })
+      toast.error(t("orders.errors.noEstablishmentId"))
       return
     }
 
@@ -783,22 +730,16 @@ export function OrderForm({
         .map(item => item.name)
         .join(', ')
 
-      toast({
-        title: t("inventory.insufficientStock"),
-        description: `Los siguientes items no tienen stock suficiente: ${unavailableItemNames}`,
-        variant: "destructive"
-      })
+      toast.error(t("inventory.insufficientStock", {
+        items: unavailableItemNames
+      }))
       return
     }
 
     // Use onOrderCreated callback if provided
     if (!onOrderCreated) {
       console.error('No onOrderCreated callback provided');
-      toast({
-        title: "Error de Configuración",
-        description: "No se ha configurado la función para crear pedidos",
-        variant: "destructive"
-      });
+      toast.error(t("orders.errors.noOrderCreatedCallback"));
       return;
     }
 
@@ -823,31 +764,29 @@ export function OrderForm({
       resetForm();
 
       // Show success toast
-      toast({
-        title: t("orders.success.orderCreated"),
-        description: `Pedido creado por ${calculateTotal()}`,
-        variant: "default"
+      toast.success(t("orders.success.orderCreated"), {
+        description: `Pedido creado por ${calculateTotal()}`
+      });
+
+      await sendNotification({
+        title: t("orders.push.orderCreatedTitle"),
+        message: t("orders.push.orderCreatedMessage", { tableNumber, total: calculateTotal() }),
+        url: window.location.href,
       });
 
       console.groupEnd();
     } catch (error) {
       console.groupEnd();
       console.error('Order Creation Failed:', error);
-      toast({
-        title: t("orders.errors.orderCreationFailed"),
-        description: error instanceof Error ? error.message : "No se pudo crear el pedido",
-        variant: "destructive"
+      toast.error(t("orders.errors.orderCreationFailed"), {
+        description: `Error al crear el pedido: ${error}`
       });
     }
 
     // Después de crear el pedido, reducir el stock
     if (!user.establishmentId) {
       console.error('No establishment ID found for user');
-      toast({
-        title: "Error de Establecimiento",
-        description: "No se ha podido identificar el establecimiento para reducir stock",
-        variant: "destructive"
-      });
+      toast.error(t("orders.errors.noEstablishmentId"))
       return;
     }
 
@@ -867,10 +806,8 @@ export function OrderForm({
     
     if (failedStockReductions.length > 0) {
       console.error('Stock reduction errors:', failedStockReductions)
-      toast({
-        title: t("inventory.stockReductionError"),
-        description: "Algunos items no pudieron ser descontados del inventario",
-        variant: "destructive"
+      toast.error(t("inventory.stockReductionError"), {
+        description: failedStockReductions.map(result => result.error).join(', ')
       })
     }
   }
