@@ -130,18 +130,23 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
         role: authUser.role || 'user',
         phoneNumber: authUser.phoneNumber,
         position: '',
+        status: authUser.status || 'active',
+        emailVerified: authUser.emailVerified ?? false,
         loading: false,
         login: async (email: string, password: string) => {
           // Placeholder implementation
           console.warn('Login method called on reconstructed user')
+          return { success: false, error: 'Not implemented' }
         },
         logout: async () => {
           // Placeholder implementation
           console.warn('Logout method called on reconstructed user')
+          return { success: false, error: 'Not implemented' }
         },
         signUp: async (email: string, password: string) => {
           // Placeholder implementation
           console.warn('SignUp method called on reconstructed user')
+          return { success: false, error: 'Not implemented' }
         }
       } as User
     }

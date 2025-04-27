@@ -9,15 +9,25 @@ export const initializeOneSignal = async () => {
         enable: true,
         size: 'medium',
         position: 'bottom-right',
-      },
-      promptOptions: {
-        slidedown: {
-          enabled: true,
-          actionMessage: "¿Deseas recibir notificaciones de pedidos?",
-          acceptButton: "Permitir",
-          cancelButton: "Cancelar"
+        prenotify: true,
+        showCredit: false,
+        text: {
+          'tip.state.unsubscribed': 'Suscríbete a las notificaciones',
+          'tip.state.subscribed': 'Estás suscrito a las notificaciones',
+          'tip.state.blocked': 'Has bloqueado las notificaciones',
+          'message.prenotify': 'Haz clic para suscribirte a las notificaciones',
+          'message.action.subscribed': '¡Gracias por suscribirte!',
+          'message.action.resubscribed': 'Has vuelto a suscribirte',
+          'message.action.unsubscribed': 'No recibirás más notificaciones',
+          'dialog.main.title': 'Gestionar notificaciones',
+          'dialog.main.button.subscribe': 'Suscribirse',
+          'dialog.main.button.unsubscribe': 'Darse de baja',
+          'dialog.blocked.title': 'Desbloquea las notificaciones',
+          'dialog.blocked.message': 'Sigue las instrucciones para habilitar notificaciones',
+          'message.action.subscribing': ''
         }
-      }
+      },
+      // promptOptions eliminado porque no es compatible con la versión/tipado actual
     });
   } catch (error) {
     console.error('Error initializing OneSignal:', error);

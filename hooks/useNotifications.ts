@@ -7,9 +7,16 @@ export const useNotifications = () => {
 
   useEffect(() => {
     const checkSubscription = async () => {
-      const status = await OneSignal.getNotificationPermission();
+      // Usa la API nativa del navegador para el permiso
+      const status = Notification.permission;
       setIsSubscribed(status === 'granted');
       
+      // Si prefieres el estado real de OneSignal, descomenta la siguiente línea:
+      // const isEnabled = await OneSignal.isPushNotificationsEnabled();
+      // setIsSubscribed(isEnabled);
+
+      // Usa la API clásica de OneSignal para obtener el ID del usuario (Player ID)
+      // @ts-ignore
       const id = await OneSignal.getUserId();
       setUserId(id);
     };
@@ -23,6 +30,7 @@ export const useNotifications = () => {
     url?: string;
   }) => {
     try {
+      // @ts-ignore
       await OneSignal.sendSelfNotification(
         data.title,
         data.message,
