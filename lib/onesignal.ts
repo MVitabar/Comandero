@@ -6,9 +6,7 @@ export const initializeOneSignal = async () => {
       appId: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID!,
       allowLocalhostAsSecureOrigin: true,
       notifyButton: {
-        enable: true,
-        size: 'medium',
-        position: 'bottom-right',
+        enable: false,
         prenotify: true,
         showCredit: false,
         text: {
@@ -27,8 +25,10 @@ export const initializeOneSignal = async () => {
           'message.action.subscribing': ''
         }
       },
-      // promptOptions eliminado porque no es compatible con la versión/tipado actual
     });
+
+    // Solicita el permiso push al usuario (prompt nativo)
+    OneSignal.Slidedown.promptPush();
   } catch (error) {
     console.error('Error initializing OneSignal:', error);
   }
