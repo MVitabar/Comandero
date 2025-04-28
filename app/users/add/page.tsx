@@ -81,15 +81,6 @@ export default function AddTeamMemberPage() {
     setLoading(true)
 
     try {
-      console.group('🔍 Add Team Member Debug');
-      console.log('Full User Object:', JSON.stringify(user, null, 2));
-      console.log('User Properties:', {
-        uid: user?.uid,
-        establishmentId: user?.establishmentId,
-        currentEstablishmentName: user?.currentEstablishmentName,
-        role: user?.role
-      });
-
       // Validate user object before passing
       if (!user) {
         console.error('No user object available');
@@ -105,8 +96,6 @@ export default function AddTeamMemberPage() {
         // Add any other properties you know should be present
       };
 
-      console.log('Processed User Object:', JSON.stringify(userToPass, null, 2));
-
       await createTeamMember(user as unknown as CurrentUser, {
         email: formData.email,
         password: formData.password,
@@ -115,8 +104,6 @@ export default function AddTeamMemberPage() {
         establishmentName: user?.currentEstablishmentName || '',
         establishmentId: user?.establishmentId
       });
-
-      console.groupEnd(); // Close debug group
 
       toast.success("Team member added successfully")
       await sendNotification({

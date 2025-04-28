@@ -80,7 +80,6 @@ export default function DashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
-      console.log("🚀 Starting fetchDashboardData")
       const ordersRef = collection(db, `restaurants/${user?.establishmentId}/orders`)
       
       // Predefined list of valid categories with translations
@@ -128,79 +127,43 @@ export default function DashboardPage() {
         }))
       )
 
-      console.log("📦 Total Inventory Items:", allInventoryItems.length)
-      
-      // Log unique categories
-      const uniqueCategories = new Set(
-        allInventoryItems.map(item => item.category).filter(category => category)
-      )
-      console.log("🏷️ Unique Inventory Categories:", Array.from(uniqueCategories))
-      
-      const inventoryDetails: InventoryItemDetail[] = allInventoryItems.map((data: InventoryItemSourceData) => {
-        const quantity = Number(data.quantity) || 0
-        
-        // Use minQuantity instead of a separate threshold
-        const minimumStockThreshold = Number(data.minQuantity) || 10
-        const lowStockThreshold = Number(data.lowStockThreshold) || 50
-
-        // Detailed logging for diagnosis
-        console.group(`🔍 Stock Status for ${data.name}`)
-        console.log('Quantity:', quantity)
-        console.log('Minimum Stock Threshold:', minimumStockThreshold)
-        console.log('Low Stock Threshold:', lowStockThreshold)
-        console.log('Critical Threshold:', minimumStockThreshold)
-        console.log('Warning Threshold:', minimumStockThreshold * 1.5)
-
-        const status = (() => {
-          // Critical: Quantity is less than the minimum stock threshold
-          if (quantity < minimumStockThreshold) {
-            console.log('🔴 Status: CRITICAL (quantity < minimum threshold)')
-            return 'critical'
-          }
-          
-          // Warning: Quantity is between minimum and 1.5x minimum
-          if (quantity < minimumStockThreshold * 1.5) {
-            console.log('🟠 Status: WARNING (quantity < 1.5 * minimum threshold)')
-            return 'warning'
-          }
-          
-          // Healthy: Quantity is more than 1.5x minimum
-          console.log('🟢 Status: HEALTHY')
-          return 'healthy'
-        })()
-
-        // Calculate low stock based on minimum stock threshold
-        const lowStock = status !== 'healthy' 
-          ? Math.max(0, minimumStockThreshold - quantity) 
-          : 0
-
-        console.log('Low Stock:', lowStock)
-        console.log('Status:', status)
-        console.groupEnd()
-
+      // --- INICIO CORRECCIÓN TIPOS INVENTARIO ---
+      // 1. Añadir cálculo de status a cada InventoryItem para poder usar item.status
+      const addStatusToInventoryItem = (item: InventoryItem): InventoryItemDetail => {
+        const quantity = Number(item.quantity) || 0;
+        const minQuantity = Number(item.minQuantity) || 10;
+        const lowStockThreshold = Number(item.lowStockThreshold) || 50;
+        let status: 'critical' | 'warning' | 'healthy' | 'default' = 'default';
+        if (quantity < minQuantity) status = 'critical';
+        else if (quantity < minQuantity * 1.5) status = 'warning';
+        else status = 'healthy';
         return {
-          id: data.id || crypto.randomUUID(),
-          name: data.name || 'Unknown Item',
-          category: data.category || 'uncategorized',
-          categoryName: data.categoryName || 'Uncategorized',
+          id: item.id,
+          name: item.name,
+          category: item.category,
+          categoryName: item.categoryName,
           total: quantity,
           inStock: quantity,
-          lowStock: lowStock,
-          minQuantity: minimumStockThreshold,
+          lowStock: status !== 'healthy' ? Math.max(0, minQuantity - quantity) : 0,
+          minQuantity,
           lowStockThreshold,
-          status: status || 'default'
-        }
-      })
+          status,
+        };
+      };
 
-      console.log("✅ Processed Inventory Details:", inventoryDetails)
+      // 2. Al procesar allInventoryItems, convertirlos a InventoryItemDetail
+      const allInventoryItemsDetailed: InventoryItemDetail[] = allInventoryItems.map(addStatusToInventoryItem);
+
+      // 3. Usar allInventoryItemsDetailed en todos los cálculos posteriores y en el dashboardData
+      // --- FIN CORRECCIÓN TIPOS INVENTARIO ---
 
       // Calculate inventory totals
-      const totalInventoryItems = inventoryDetails.reduce((sum, item) => sum + item.total, 0)
-      const totalInStockItems = inventoryDetails.reduce((sum, item) => sum + item.inStock, 0)
-      const totalLowStockItems = inventoryDetails.reduce((sum, item) => sum + (item.lowStock ?? 0), 0)
+      const totalInventoryItems = allInventoryItemsDetailed.length
+      const totalInStockItems = allInventoryItemsDetailed.reduce((sum, item) => sum + item.inStock, 0)
+      const totalLowStockItems = allInventoryItemsDetailed.reduce((sum, item) => sum + (item.lowStock ?? 0), 0)
 
       // Calculate category-level stock status
-      const categorySummary = inventoryDetails.reduce((acc, item) => {
+      const categorySummary = allInventoryItemsDetailed.reduce((acc, item) => {
         const category = item.category || 'uncategorized'
         
         if (!acc[category]) {
@@ -216,8 +179,6 @@ export default function DashboardPage() {
         
         acc[category].total += item.total
         acc[category].inStock += item.inStock
-        
-        // Use minQuantity instead of lowStockThreshold
         acc[category].minStockThreshold += item.minQuantity ?? 10
         
         if (item.status === 'critical') acc[category].criticalItems++
@@ -252,10 +213,6 @@ export default function DashboardPage() {
       const currentMonthStart = Timestamp.fromDate(new Date(new Date().getFullYear(), new Date().getMonth(), 1))
       const lastMonthStart = Timestamp.fromDate(new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1))
       
-      console.log("Current Month Start (Timestamp):", currentMonthStart.toDate())
-      console.log("Last Month Start (Timestamp):", lastMonthStart.toDate())
-      console.log("Establishment ID:", user?.establishmentId)
-
       const currentMonthOrdersQuery = query(
         ordersRef, 
         where("status", "==", "finished"),
@@ -278,32 +235,7 @@ export default function DashboardPage() {
         getDocs(query(ordersRef, orderBy('createdAt', 'desc'), limit(5)))
       ])
 
-      console.log("Current Month Orders Count:", currentMonthOrdersSnapshot.size)
-      console.log("Last Month Orders Count:", lastMonthOrdersSnapshot.size)
-
-      // Detailed logging of orders
-      currentMonthOrdersSnapshot.docs.forEach((doc, index) => {
-        const orderData = doc.data()
-        console.log(`Current Month Order ${index + 1}:`, {
-          id: doc.id,
-          createdAt: orderData.createdAt?.toDate(),
-          status: orderData.status,
-          total: orderData.total,
-          items: orderData.items ? Object.values(orderData.items).length : 0
-        })
-      })
-
-      lastMonthOrdersSnapshot.docs.forEach((doc, index) => {
-        const orderData = doc.data()
-        console.log(`Last Month Order ${index + 1}:`, {
-          id: doc.id,
-          createdAt: orderData.createdAt?.toDate(),
-          status: orderData.status,
-          total: orderData.total,
-          items: orderData.items ? Object.values(orderData.items).length : 0
-        })
-      })
-
+      // Calculate monthly growth percentage
       const currentMonthTotalSales = currentMonthOrdersSnapshot.docs.reduce(
         (total, doc) => total + (doc.data().total || 0), 
         0
@@ -391,13 +323,6 @@ export default function DashboardPage() {
         }
       }).sort((a, b) => b.totalSales - a.totalSales)
 
-      // Diagnóstico detallado
-      console.log("🍽️ Sales by Category Diagnóstico", {
-        totalOrders: salesByCategorySnapshot.size,
-        categorySalesDetails: translatedCategorySales,
-        totalCategorySales: translatedCategorySales.reduce((sum, cat) => sum + cat.totalSales, 0)
-      })
-
       // Calculate Top Selling Items from Orders
       const topSellingItemsMap = new Map<string, {
         name: string,
@@ -406,36 +331,17 @@ export default function DashboardPage() {
         totalSales: number
       }>()
 
-      console.log("DEBUG: Start of Top Selling Items Calculation")
-      console.log("Sales Category Snapshot Size:", salesByCategorySnapshot.size)
-
       // Combine items from all orders
       const allOrderItems: OrderItem[] = []
       salesByCategorySnapshot.docs.forEach(doc => {
         const orderData = doc.data() as Order
-        console.log("Processing Order:", {
-          orderId: doc.id,
-          status: orderData.status,
-          createdAt: orderData.createdAt,
-          items: orderData.items?.length
-        })
-
         if (orderData.items && orderData.items.length > 0) {
           allOrderItems.push(...orderData.items)
         }
       })
 
-      console.log("DEBUG: Total Order Items:", allOrderItems.length)
-
       // Process all items
       allOrderItems.forEach((item: OrderItem) => {
-        console.log("Processing Item:", {
-          itemId: item.itemId,
-          name: item.name,
-          quantity: item.quantity,
-          price: item.price
-        })
-
         const existingItem = topSellingItemsMap.get(item.itemId)
         if (existingItem) {
           existingItem.totalQuantity += item.quantity
@@ -462,10 +368,6 @@ export default function DashboardPage() {
           category: item.category
         }))
 
-      console.log("DEBUG: Top Selling Items Calculation Complete")
-      console.log("Top Selling Items Map Size:", topSellingItemsMap.size)
-      console.log("Top Selling Items:", JSON.stringify(topSellingItems, null, 2))
-
       setDashboardData({
         totalOrders: currentMonthOrdersSnapshot.size,
         totalSales: currentMonthTotalSales,
@@ -480,7 +382,7 @@ export default function DashboardPage() {
           total: totalInventoryItems,
           inStock: totalInStockItems,
           lowStock: totalLowStockItems,
-          details: inventoryDetails
+          details: allInventoryItemsDetailed
         },
         salesByCategory: translatedCategorySales,
         dailySalesData: [],
@@ -500,15 +402,7 @@ export default function DashboardPage() {
       // Use hardcoded ID if user's establishmentId is undefined or empty
       const establishmentId = user?.establishmentId || hardcodedEstablishmentId
       
-      console.log("🔍 Establishment ID Debug:", {
-        userEstablishmentId: user?.establishmentId,
-        usedEstablishmentId: establishmentId
-      })
-
       const ordersRef = collection(db, `restaurants/${establishmentId}/orders`)
-      
-      // Log the exact path being used
-      console.log("📂 Orders Collection Path:", `restaurants/${establishmentId}/orders`)
       
       // Fetch sales list (last 50 completed orders)
       const salesQuery = query(
@@ -519,9 +413,6 @@ export default function DashboardPage() {
       )
       
       const salesSnapshot = await getDocs(salesQuery)
-      
-      // Log number of orders found
-      console.log("🧾 Orders Found:", salesSnapshot.docs.length)
       
       const salesList = salesSnapshot.docs.map(doc => {
         const orderData = doc.data() as Order
@@ -540,13 +431,6 @@ export default function DashboardPage() {
 
       // Modify state update to preserve existing data
       setDashboardData(prevData => {
-        console.log("Previous Dashboard Data (Detailed):", {
-          ...prevData,
-          topSellingItems: prevData.topSellingItems,
-          topSellingItemsType: typeof prevData.topSellingItems,
-          topSellingItemsIsArray: Array.isArray(prevData.topSellingItems)
-        })
-        
         const newData = {
           ...prevData,
           salesByCategory: prevData.salesByCategory,
@@ -554,14 +438,6 @@ export default function DashboardPage() {
           topSellingItems: prevData.topSellingItems,
           salesList: salesList
         }
-
-        console.log("New Dashboard Data (Detailed):", {
-          salesByCategory: newData.salesByCategory,
-          dailySalesData: newData.dailySalesData,
-          topSellingItems: newData.topSellingItems,
-          topSellingItemsType: typeof newData.topSellingItems,
-          topSellingItemsIsArray: Array.isArray(newData.topSellingItems)
-        })
 
         return newData
       })

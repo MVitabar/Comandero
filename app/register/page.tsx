@@ -17,6 +17,7 @@ import { LanguageSwitcher } from "@/components/language-switcher"
 import { PasswordStrengthIndicator } from "@/components/password-strength-indicator"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { useNotifications } from "@/hooks/useNotifications"
+import { UserRole } from "@/types"
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -98,7 +99,8 @@ export default function RegisterPage() {
         formData.password, 
         {
           username: formData.username,
-          establishmentName: formData.establishmentName
+          establishmentName: formData.establishmentName,
+          role: UserRole.OWNER, // Asegura que el usuario inicial sea OWNER
         }
       )
 

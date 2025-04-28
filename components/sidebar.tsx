@@ -88,21 +88,6 @@ export function Sidebar() {
   // Establishment name from user's profile or restaurant settings
   const establishmentName = user?.username || user?.restaurantName || user?.currentEstablishmentName || "Comandero"
   
-  // Detailed debug logging
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      console.group('🏠 Sidebar Establishment Name Debug')
-      console.log('Full User Object:', user)
-      console.log('Establishment Name:', establishmentName)
-      console.log('User Properties:', {
-        username: user?.username,
-        restaurantName: user?.restaurantName,
-        currentEstablishmentName: user?.currentEstablishmentName
-      })
-      console.groupEnd()
-    }
-  }, [user])
-
   const navItems = [
     {
       name: pathname === "/dashboard" 

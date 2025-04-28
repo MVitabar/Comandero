@@ -27,17 +27,6 @@ export function TableGridView({
   const [sortBy, setSortBy] = useState("number")
 
   useEffect(() => {
-    console.group('📊 Table Grid View')
-    console.log('Tables Received:', {
-      tableCount: tables.length,
-      tableDetails: tables.map(table => ({
-        id: table.id,
-        number: table.number,
-        status: table.status,
-        seats: table.seats
-      }))
-    })
-    console.groupEnd()
   }, [tables])
 
   const processedTables = tables.map(table => ({

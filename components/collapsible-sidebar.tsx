@@ -258,28 +258,11 @@ export function CollapsibleSidebar() {
   // Filter navigation items based on user permissions
   const filteredNavItems = navItems.filter(item => {
     const hasPermission = canView(item.requiredPermission);
-    console.log(`Checking permission for ${item.name}:`, {
-      requiredPermission: item.requiredPermission,
-      hasPermission,
-      userRole: user?.role
-    });
     return hasPermission;
   });
 
   // Add debug logs
   useEffect(() => {
-    console.log('Sidebar Debug:', {
-      user,
-      isMobile,
-      filteredNavItems: filteredNavItems.length,
-      originalItems: navItems.length,
-      permissions: {
-        canViewDashboard: canView('dashboard'),
-        canViewOrders: canView('orders'),
-        canViewTables: canView('tables'),
-        userRole: user?.role
-      }
-    });
   }, [user, isMobile, filteredNavItems.length]);
 
   return (

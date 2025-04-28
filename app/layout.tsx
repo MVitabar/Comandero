@@ -54,18 +54,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   const pathname = usePathname()
 
-  // Comprehensive debug logging
-  React.useEffect(() => {
-    console.group('🔍 Authentication State');
-    console.log('User:', user ? { 
-      uid: user.uid, 
-      email: user.email, 
-      displayName: user.displayName 
-    } : null);
-    console.log('Loading:', loading);
-    console.groupEnd();
-  }, [user, loading])
-
   // Render loading state
   if (loading) {
     return (

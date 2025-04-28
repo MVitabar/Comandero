@@ -38,7 +38,7 @@ export const useNotifications = () => {
         '/icon.png'
       );
     } catch (error) {
-      console.error('Error sending notification:', error);
+      // Puedes mostrar un toast si lo deseas
     }
   };
 

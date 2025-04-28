@@ -182,13 +182,8 @@ export function TableCard({
   useEffect(() => {
     const fetchActiveOrder = async () => {
       try {
-        console.group('🍽️ Active Order Fetch')
-        console.log('Table Object:', JSON.stringify(table, null, 2))
-
         const restaurantId = user?.establishmentId || user?.uid || table.restaurantId || ''
         if (!restaurantId) {
-          console.warn('No restaurant ID available')
-          console.groupEnd()
           return
         }
 
@@ -211,14 +206,10 @@ export function TableCard({
             ...orderDoc.data()
           } as Order
 
-          console.log('Found Active Order:', JSON.stringify(orderData, null, 2))
           setActiveOrder(orderData)
         } else {
-          console.warn('No active orders found for this table', table.uid)
           setActiveOrder(null)
         }
-
-        console.groupEnd()
       } catch (error) {
         console.error('Error fetching active order:', error)
         setActiveOrder(null)
@@ -259,7 +250,6 @@ export function TableCard({
       const tableMapSnapshot = await getDoc(tableMapRef)
 
       if (!tableMapSnapshot.exists()) {
-        console.error('Table map not found')
         return
       }
 
@@ -295,13 +285,6 @@ export function TableCard({
       await updateDoc(tableMapRef, {
         'layout.tables': updatedTables,
         updatedAt: new Date()
-      })
-
-      // Log synchronization details
-      console.log('Table-Order Sync:', {
-        tableId: table.uid,
-        currentOrderStatus: order?.status,
-        newTableStatus
       })
 
       // Optional toast notification
@@ -342,7 +325,6 @@ export function TableCard({
       const tableMapSnapshot = await getDoc(tableMapRef)
 
       if (!tableMapSnapshot.exists()) {
-        console.error('Table map not found')
         return
       }
 
@@ -392,7 +374,7 @@ export function TableCard({
           "transition-all hover:shadow-md",
           getTableStatusColor()
         )}
-        onClick={() => console.log('Card clicked for table', table.number)}
+        onClick={() => {}}
       >
         <CardHeader className="pb-2">
           <CardTitle>
@@ -429,7 +411,6 @@ export function TableCard({
               variant="default" 
               className="w-full"
               onClick={() => {
-                console.log('Create Order Button Clicked', { table })
                 onCreateOrder && onCreateOrder()
               }}
             >
@@ -444,7 +425,6 @@ export function TableCard({
                 variant="outline" 
                 className="w-full"
                 onClick={() => {
-                  console.log('View Order Clicked', activeOrder)
                   setIsOrderDetailsOpen(true)
                 }}
               >

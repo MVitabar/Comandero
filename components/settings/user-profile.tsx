@@ -10,11 +10,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { doc, getDoc, updateDoc } from "firebase/firestore"
 import { updateProfile, User as FirebaseUser } from "firebase/auth"
-import { Loader2, Upload } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { UserRole } from "@/types/permissions"
 import { usePermissions } from "@/components/permissions-provider"
 import { UnauthorizedAccess } from "../unauthorized-access"
@@ -43,7 +42,6 @@ export function UserProfile() {
       const fetchUserData = async () => {
         try {
           if (!user.uid) {
-            console.error("Invalid user ID:", user.uid)
             return
           }
 
@@ -105,20 +103,10 @@ export function UserProfile() {
         url: window.location.href,
       });
     } catch (error) {
-      console.error("Error updating profile:", error)
       toast.error(t("settings.profile.actions.errorUpdatingProfile"))
     } finally {
       setLoading(false) 
     }
-  }
-
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((part) => part[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2)
   }
 
   // Verificar si puede ver el perfil
@@ -140,95 +128,82 @@ export function UserProfile() {
         <p className="text-muted-foreground">{t("settings.profile.description")}</p>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-8 items-start">
-        <div className="flex flex-col items-center space-y-4">
-          <Avatar className="h-24 w-24">
-            <AvatarImage src="" alt={userData.username} />
-            <AvatarFallback className="text-xl">{getInitials(userData.username)}</AvatarFallback>
-          </Avatar>
-          <Button variant="outline" size="sm" className="flex items-center gap-2">
-            <Upload className="h-4 w-4" />
-            {t("settings.profile.actions.uploadPhoto")}
-          </Button>
+      <form onSubmit={handleSubmit} className="flex-1 space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="username">{t("settings.profile.fields.username")}</Label>
+            <Input
+              id="username"
+              name="username"
+              value={userData.username}
+              onChange={handleChange}
+              disabled={loading || !canUpdate('profile')}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">{t("settings.profile.fields.email.label")}</Label>
+            <Input id="email" name="email" value={userData.email} disabled={true} className="bg-muted" />
+            <p className="text-xs text-muted-foreground">{t("settings.profile.fields.email.cannotBeChanged")}</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phoneNumber">{t("settings.profile.fields.phoneNumber")}</Label>
+            <Input
+              id="phoneNumber"
+              name="phoneNumber"
+              value={userData.phoneNumber}
+              onChange={handleChange}
+              disabled={loading}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="position">{t("settings.profile.fields.position.label")}</Label>
+            <Input
+              id="position"
+              name="position"
+              value={userData.position}
+              onChange={handleChange}
+              disabled={loading}
+              placeholder={t("settings.profile.fields.position.placeholder")}
+            />
+          </div>
+
+          {canChangeRoles && (
+            <div className="space-y-2">
+              <Label htmlFor="role">{t("settings.profile.fields.role.label")}</Label>
+              <Select value={userData.role} onValueChange={handleRoleChange} disabled={loading}>
+                <SelectTrigger id="role">
+                  <SelectValue placeholder={t("settings.profile.fields.role.placeholder")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(UserRole).map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {t(`settings.profile.fields.role.options.${role.toLowerCase()}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">{t("settings.profile.fields.username")}</Label>
-              <Input
-                id="username"
-                name="username"
-                value={userData.username}
-                onChange={handleChange}
-                disabled={loading || !canUpdate('profile')}
-              />
-            </div>
+        <Separator className="my-6" />
 
-            <div className="space-y-2">
-              <Label htmlFor="email">{t("settings.profile.fields.email.label")}</Label>
-              <Input id="email" name="email" value={userData.email} disabled={true} className="bg-muted" />
-              <p className="text-xs text-muted-foreground">{t("settings.profile.fields.email.cannotBeChanged")}</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phoneNumber">{t("settings.profile.fields.phoneNumber")}</Label>
-              <Input
-                id="phoneNumber"
-                name="phoneNumber"
-                value={userData.phoneNumber}
-                onChange={handleChange}
-                disabled={loading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="position">{t("settings.profile.fields.position.label")}</Label>
-              <Input
-                id="position"
-                name="position"
-                value={userData.position}
-                onChange={handleChange}
-                disabled={loading}
-                placeholder={t("settings.profile.fields.position.placeholder")}
-              />
-            </div>
-
-            {canChangeRoles && (
-              <div className="space-y-2">
-                <Label htmlFor="role">{t("settings.profile.fields.role.label")}</Label>
-                <Select value={userData.role} onValueChange={handleRoleChange} disabled={loading}>
-                  <SelectTrigger id="role">
-                    <SelectValue placeholder={t("settings.profile.fields.role.placeholder")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.values(UserRole).map((role) => (
-                      <SelectItem key={role} value={role}>
-                        {t(`settings.profile.fields.role.options.${role.toLowerCase()}`)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+        <div className="flex justify-end">
+          <Button type="submit" disabled={loading || !canUpdate('profile')}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {t("settings.profile.actions.submitting")}
+              </>
+            ) : (
+              t("settings.profile.actions.submit")
             )}
-          </div>
-
-          <Separator className="my-6" />
-
-          <div className="flex justify-end">
-            <Button type="submit" disabled={loading || !canUpdate('profile')}>
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t("settings.profile.actions.submitting")}
-                </>
-              ) : (
-                t("settings.profile.actions.submit")
-              )}
-            </Button>
-          </div>
-        </form>
-      </div>
+          </Button>
+        </div>
+      </form>
     </div>
   )
 }

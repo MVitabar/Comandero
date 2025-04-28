@@ -70,37 +70,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Debug method to check authentication state
   const debugAuthState = () => {
-    console.group('🔍 Authentication State Debug')
-    console.log('Firebase Context:', {
-      isInitialized,
-      authAvailable: !!auth,
-      dbAvailable: !!db,
-      error: error?.message
-    })
-
-    console.log('Current Auth State:', {
-      user: user ? {
-        id: user.uid,
-        email: user.email,
-        username: user.username,
-        role: user.role
-      } : 'No User',
-      loading,
-      pathname
-    })
-
-    // Check Firebase Auth current user
-    if (auth) {
-      const currentUser = auth.currentUser
-      console.log('Firebase Auth Current User:', currentUser ? {
-        uid: currentUser.uid,
-        email: currentUser.email,
-        emailVerified: currentUser.emailVerified
-      } : 'No Current User')
-    }
-
-    console.groupEnd()
-
     return {
       isAuthenticated: !!user,
       user,
@@ -117,16 +86,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Comprehensive initial state logging
   useEffect(() => {
-    console.group('🔐 AuthProvider Initial State');
-    console.log('User:', user ? { 
-      uid: user.uid, 
-      email: user.email 
-    } : null);
-    console.log('Loading:', loading);
-    console.log('Firebase Initialized:', isInitialized);
-    console.log('Auth Available:', !!auth);
-    console.log('Error:', error);
-    console.groupEnd();
   }, [])
 
   // Función para generar nombre de usuario
@@ -162,7 +121,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       return !querySnapshot.empty
     } catch (error) {
-      console.error('Error checking username:', error)
       return false
     }
   }
@@ -213,8 +171,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
-      // Send email verification
-      await sendEmailVerification(firebaseUser);
+      // Send email verification solo si no está verificado
+      if (!firebaseUser.emailVerified) {
+        await sendEmailVerification(firebaseUser);
+      }
 
       toast.success(t("auth.signUp.success", { username: newUser.username }))
       setUser(newUser);
@@ -224,8 +184,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         userId: firebaseUser.uid
       };
     } catch (error) {
-      console.error("Sign Up error:", error);
-      
       let errorMessage = "An unexpected error occurred";
       if (error instanceof Error) {
         switch (error.message) {
@@ -295,7 +253,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // If still no establishment ID, return null
       if (!establishmentId) {
-        console.error('❌ No establishment ID found for user');
         return null;
       }
 
@@ -325,7 +282,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             emailVerified: firebaseUser.emailVerified
           };
         } else {
-          console.error('❌ User document not found in any collection');
           return null;
         }
       }
@@ -340,7 +296,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       return userDetails;
     } catch (error) {
-      console.error('❌ Error fetching user details:', error);
       return null;
     }
   };
@@ -351,7 +306,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const restaurantDoc = await getDoc(doc(db, 'restaurants', establishmentId));
       return restaurantDoc.exists() ? restaurantDoc.data().name : undefined;
     } catch (error) {
-      console.error('Error retrieving establishment name:', error);
       return undefined;
     }
   };
@@ -384,15 +338,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     status: 'active',
     loading: false,
     login: async () => {
-      console.warn('Temporary login method')
       throw new Error('Temporary method')
     },
     logout: async () => {
-      console.warn('Temporary logout method')
       throw new Error('Temporary method')
     },
     signUp: async () => {
-      console.warn('Temporary signUp method')
       throw new Error('Temporary method')
     },
     emailVerified: false
@@ -451,6 +402,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Generate a consistent establishment ID
       const establishmentId = generateEstablishmentId(baseSlug);
+
+      // Si el rol solicitado es OWNER, verifica que no exista ya un OWNER para este establecimiento
+      if (userRole === UserRole.OWNER) {
+        const establishmentUsersRef = collection(db, 'restaurants', establishmentId, 'users');
+        const ownerQuery = query(establishmentUsersRef, where('role', '==', UserRole.OWNER), limit(1));
+        const ownerSnapshot = await getDocs(ownerQuery);
+        if (!usersSnapshot.empty && !ownerSnapshot.empty) {
+          throw new Error('Ya existe un OWNER para este establecimiento');
+        }
+      }
 
       // Use a transaction to ensure atomic document creation
       const userCreationResult = await runTransaction(db, async (transaction) => {
@@ -518,7 +479,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       return userCreationResult;
     } catch (error) {
-      console.error('Error initializing user profile:', error);
       return null;
     }
   };
@@ -526,10 +486,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Immediate loading state if Firebase is not initialized
     if (!isInitialized || !auth) {
-      console.warn('🚨 Firebase not fully initialized', { 
-        isInitialized, 
-        authAvailable: !!auth 
-      });
       setLoading(true)
       return
     }
@@ -548,12 +504,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Redirect logic
         if (!firebaseUser && !publicRoutes.includes(pathname)) {
-          console.log('🚪 Redirecting to login');
           router.push("/login")
         }
       },
       (authError) => {
-        console.error("🔥 Auth state change error:", authError)
         setLoading(false)
         toast.error("Error during authentication state change")
       }
@@ -564,8 +518,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Helper function to get device and location information
   const getUserActivityContext = () => {
-    // Note: In a real-world scenario, you'd use more sophisticated methods
-    // to detect device, location, and browser information
     return {
       ipAddress: 'TODO: Implement IP tracking',
       device: {
@@ -574,7 +526,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         browser: navigator.userAgent
       },
       location: {
-        // This would typically come from a geolocation service
         country: 'Unknown',
         city: 'Unknown'
       }
@@ -606,16 +557,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
 
-      // Verify email is verified
-      if (!firebaseUser.emailVerified) {
-        // Optional: Send verification email again
-        await sendEmailVerification(firebaseUser);
-        
-        return {
-          success: false,
-          error: 'Please verify your email. A new verification email has been sent.'
-        };
-      }
+      // Permitir login sin requerir email verificado (solo mostrar aviso, pero no bloquear)
+      // Puedes comentar o eliminar este bloque si quieres que sea opcional
+      // if (!firebaseUser.emailVerified) {
+      //   await sendEmailVerification(firebaseUser);
+      //   return {
+      //     success: false,
+      //     error: 'Please verify your email. A new verification email has been sent.'
+      //   };
+      // }
 
       // Fetch user details
       const customUser = await fetchUserDetails(firebaseUser);
@@ -666,8 +616,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         success: true
       };
     } catch (error) {
-      console.error("Login error:", error);
-      
       let errorMessage = "An unexpected error occurred";
       if (error instanceof Error) {
         switch (error.message) {
@@ -741,8 +689,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         success: true
       };
     } catch (error) {
-      console.error("Logout error:", error);
-      
       const errorMessage = error instanceof Error 
         ? error.message 
         : "An unexpected error occurred during logout";
@@ -824,4 +770,3 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 function t(arg0: string, arg1: { username: string }): string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | (() => React.ReactNode) | null | undefined {
   throw new Error("Function not implemented.")
 }
-

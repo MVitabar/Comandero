@@ -188,9 +188,6 @@ export default function InventoryPage() {
         'desserts', 'salads', 'sides'
       ]
       
-      console.log('Fetching inventory for establishment:', establishmentId)
-      console.log('Categories to fetch:', categories)
-      
       // Fetch items for each category
       const itemsPromises = categories.map(async (category) => {
         const categoryRef = doc(
@@ -211,11 +208,8 @@ export default function InventoryPage() {
         try {
           const itemsSnapshot = await getDocs(itemsQuery)
           
-          console.log(`Items in category ${category}:`, itemsSnapshot.docs.length)
-          
           return itemsSnapshot.docs.map(itemDoc => {
             const itemData = itemDoc.data()
-            console.log(`Item in ${category}:`, itemData)
             return {
               uid: itemDoc.id,
               category: category,
@@ -240,8 +234,6 @@ export default function InventoryPage() {
       const allItems = await Promise.all(itemsPromises)
       const flattenedItems = allItems.flat()
 
-      console.log('Total items fetched:', flattenedItems.length)
-      
       setInventoryItems(flattenedItems)
       setLoading(false)
     } catch (err) {

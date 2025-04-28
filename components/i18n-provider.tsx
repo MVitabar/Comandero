@@ -110,7 +110,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Validate language
     const validLanguages: string[] = ['en', 'es', 'pt'];
     if (!validLanguages.includes(lang)) {
-      console.warn(`CRITICAL: Invalid language: ${lang}. Defaulting to English.`);
       lang = 'en';
     }
 
@@ -128,7 +127,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Ensure the language is valid
     const validLanguages: string[] = ['en', 'es', 'pt'];
     if (!validLanguages.includes(lang)) {
-      console.warn(`CRITICAL: Invalid language: ${lang}. Defaulting to English.`);
       lang = 'en';
     }
 
@@ -166,8 +164,16 @@ export const useLanguage = () => {
   return context;
 };
 
-// New hook to match the import in other files
-export const useI18n = () => {
+// Añadido tipo explícito para el retorno de useI18n
+type UseI18nReturn = {
+  t: ReturnType<typeof useTranslation>["t"];
+  i18n: ReturnType<typeof useTranslation>["i18n"];
+  language: string;
+  changeLanguage: (lang: string) => void;
+  setLanguage: (lang: string) => void;
+};
+
+export const useI18n = (): UseI18nReturn => {
   const { t, i18n: i18nInstance } = useTranslation();
   const { language, changeLanguage, setLanguage } = useLanguage();
   
@@ -176,7 +182,7 @@ export const useI18n = () => {
     i18n: i18nInstance,
     language,
     changeLanguage,
-    setLanguage
+    setLanguage,
   };
 };
 
@@ -201,7 +207,7 @@ export const safeTranslate = (
     const translation = t(key);
     return translation || fallback || key;
   } catch (error) {
-    console.warn(`Translation error for key: ${key}`, error);
+    console.error('CRITICAL: Translation error for key:', error);
     return fallback || key;
   }
 };

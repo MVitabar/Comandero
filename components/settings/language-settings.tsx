@@ -37,8 +37,6 @@ export function LanguageSettings() {
               setLanguage(storedLanguage);
             }
           }
-        } catch (error) {
-          console.error("Error fetching language preference:", error)
         } finally {
           setLoading(false)
         }
@@ -115,12 +113,9 @@ export function LanguageSettings() {
         url: window.location.href,
       });
     } catch (error) {
-      console.error("Error saving language preference", error);
       toast.error(t("settings.language.actions.profileUpdateError"), {
         description: t("settings.language.actions.profileUpdateErrorDescription"),
       })
-
-
     } finally {
       setSaving(false)
     }

@@ -194,13 +194,7 @@ export default function OrdersPage() {
       const ordersRef = collection(db, 'restaurants', user.establishmentId, 'orders')
       const q = query(ordersRef, orderBy('createdAt', 'desc'))
       
-      console.group('🍽️ Order Fetching Debug')
-      console.log('Establishment ID:', user.establishmentId)
-      console.log('Orders Collection Path:', `restaurants/${user.establishmentId}/orders`)
-      
       const querySnapshot = await getDocs(q)
-      
-      console.log('Total Orders Found:', querySnapshot.docs.length)
       
       const fetchedOrders = querySnapshot.docs.map(doc => {
         const data = doc.data();
@@ -307,7 +301,6 @@ export default function OrdersPage() {
       setOrders(fetchedOrders)
     } catch (error) {
       console.error("Error fetching orders:", error)
-      console.groupEnd()
       toast.error(t("orders.error.fetchFailed"))
     } finally {
       setLoading(false)
@@ -607,15 +600,6 @@ export default function OrdersPage() {
       return statusMatch && (searchQuery === '' || searchMatch);
     }
   );
-
-  console.log("Filtered Orders Debug:", {
-    totalOrders: orders.length,
-    filteredOrdersCount: filteredOrders.length,
-    selectedStatus,
-    searchQuery,
-    allStatuses: [...new Set(orders.map(order => order.status))],
-    filteredOrderStatuses: [...new Set(filteredOrders.map(order => order.status))]
-  });
 
   // Modificar handleStatusChange para usar el nuevo tipo
   const handleStatusChange = (status: FilterStatus) => {

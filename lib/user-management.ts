@@ -55,11 +55,6 @@ export async function createTeamMember(
     throw new Error('Only owners can create owner accounts');
   }
 
-  // Comprehensive logging for debugging
-  console.group('🔍 Create Team Member Debug');
-  console.log('Current User Object:', JSON.stringify(currentUser, null, 2));
-  console.log('User Data:', JSON.stringify(userData, null, 2));
-
   // Dynamically retrieve establishment information
   let establishmentId: string | undefined;
   let establishmentName: string | undefined;
@@ -73,11 +68,6 @@ export async function createTeamMember(
       const userData = userDocSnap.data();
       establishmentId = userData.establishmentId;
       establishmentName = userData.currentEstablishmentName;
-      
-      console.log('Establishment Info from User Document:', {
-        establishmentId,
-        establishmentName
-      });
     }
 
     // If no establishment ID found, try querying restaurants
@@ -93,18 +83,12 @@ export async function createTeamMember(
         const restaurantDoc = querySnapshot.docs[0];
         establishmentId = restaurantDoc.id;
         establishmentName = restaurantDoc.data().name;
-        
-        console.log('Establishment Info from Restaurants Collection:', {
-          establishmentId,
-          establishmentName
-        });
       }
     }
 
     // Fallback to using establishment name if no ID found
     if (!establishmentId && userData.establishmentName) {
       establishmentId = userData.establishmentName.toLowerCase().replace(/[^a-z0-9]/g, '-');
-      console.log('Fallback Establishment ID:', establishmentId);
     }
 
   } catch (error) {
@@ -113,23 +97,9 @@ export async function createTeamMember(
 
   // Final check and error handling
   if (!establishmentId) {
-    console.error('Establishment ID retrieval failed', {
-      currentUser: {
-        uid: currentUser.uid,
-        role: currentUser.role
-      },
-      userData: {
-        establishmentName: userData.establishmentName,
-        establishmentId: userData.establishmentId
-      }
-    });
-    console.groupEnd(); // Close the debug group
     throw new Error(`No establishment ID found for user ${currentUser.uid}. 
       Please ensure the user is associated with an establishment.`);
   }
-
-  console.log('Final Establishment ID:', establishmentId);
-  console.groupEnd(); // Close the debug group
 
   // Proceed with user creation using the retrieved establishment ID
   const userCredential = await createUserWithEmailAndPassword(

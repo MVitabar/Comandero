@@ -22,16 +22,9 @@ export function OrderDetailsDialog({
 
   const descriptionId = `order-details-description-${table?.number || 'unknown'}`
 
-  // DEBUGGING: Log all relevant information
-  React.useEffect(() => {
-    console.group('OrderDetailsDialog Debug')
-    console.log('Open:', open)
-    console.log('Order:', order)
-    console.log('Table:', table)
-    console.log('onEditOrder:', onEditOrder)
-    console.log('Order Status:', order?.status)
-    console.groupEnd()
-  }, [open, order, table, onEditOrder])
+  // --- LIMPIEZA DE LOGS ---
+  // Eliminados todos los console.log innecesarios para limpiar la consola
+  // --- FIN LIMPIEZA DE LOGS ---
 
   // Determine if the order can be edited based on its status
   const canEditOrder = 
@@ -58,18 +51,11 @@ export function OrderDetailsDialog({
             
             {/* DEBUGGING: Explicit conditional rendering */}
             {(() => {
-              console.log('Edit Button Conditions:', {
-                canEditOrder,
-                onEditOrderExists: !!onEditOrder,
-                orderStatus: order.status
-              })
-              
               return canEditOrder && onEditOrder ? (
                 <Button 
                   variant="outline" 
                   size="sm"
                   onClick={() => {
-                    console.log('Edit Order Button Clicked', order)
                     onEditOrder()
                   }}
                 >

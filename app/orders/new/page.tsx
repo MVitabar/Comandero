@@ -76,17 +76,12 @@ export default function NewOrderPage() {
         status: cleanedOrder.status || 'pending'
       })
 
-      // Notificación in-app con Sonner
-      toast.success("Pedido Criado")
-
       // Notificación push con OneSignal
       await sendNotification({
         title: "Nuevo Pedido",
         message: `Mesa ${order.tableNumber} - Total: $${order.total}`,
         url: `/orders/${newOrderRef.id}`
       })
-
-      toast.success("Pedido Criado com sucesso")
 
       // Optional: Navigate back to orders page or show order details
       router.push('/orders')

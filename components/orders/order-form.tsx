@@ -176,20 +176,13 @@ export function OrderForm({
 
   // Memoize fetchMenuItems to prevent unnecessary re-renders
   const memoizedFetchMenuItems = useCallback(async () => {
-    console.group('fetchMenuItems Debug')
-    console.log('DB:', db)
-    console.log('User:', user)
-
     if (!db || !user) {
-      console.log('Missing db or user, cannot fetch menu items')
-      console.groupEnd()
       setLoading(false)
       return;
     }
 
     // Add type-safe check for establishmentId
     if (!user.establishmentId) {
-      console.error('No establishment ID found for user')
       toast.error(t("orders.errors.noEstablishmentId"))
       setLoading(false)
       return
@@ -201,30 +194,24 @@ export function OrderForm({
 
       // Fetch inventory reference using establishmentId
       const inventoryRef = collection(db, 'restaurants', user.establishmentId, 'inventory')
-      console.log('Inventory Reference:', inventoryRef.path)
 
       // Fetch all category documents
       const categoriesSnapshot = await getDocs(inventoryRef)
-      console.log('Categories Found:', categoriesSnapshot.docs.map(doc => doc.id))
 
       // Iterate through categories
       for (const categoryDoc of categoriesSnapshot.docs) {
         const category = categoryDoc.id
-        console.log(`Processing Category: ${category}`)
 
         // Reference to items subcollection for this category
         const itemsRef = collection(db, 'restaurants', user.establishmentId, 'inventory', category, 'items')
         
         // Fetch items for this category
         const itemsSnapshot = await getDocs(itemsRef)
-        console.log(`Items in ${category}:`, itemsSnapshot.docs.length)
 
         // Process each item in the category
         const categoryItems = itemsSnapshot.docs.map(itemDoc => {
           const itemData = itemDoc.data()
-          console.group('Item Data Debug')
-          console.log('Raw Item Data:', itemData)
-          
+
           // Determine stock, with more flexible parsing
           let stock = 0
           if (typeof itemData.quantity === 'number') {
@@ -246,9 +233,6 @@ export function OrderForm({
             // Add any other relevant fields
           }
 
-          console.log('Processed Menu Item:', menuItem)
-          console.groupEnd()
-
           return menuItem
         })
 
@@ -256,11 +240,9 @@ export function OrderForm({
         menuItems.push(...categoryItems)
       }
 
-      console.log('Total Menu Items:', menuItems.length)
       setMenuItems(menuItems)
       setLoading(false)
     } catch (error) {
-      console.error('Error fetching menu items:', error)
       setLoading(false)
       toast.error(t("orders.errors.fetchMenuItems", {
         error: error instanceof Error ? error.message : "Unknown error"
@@ -270,7 +252,6 @@ export function OrderForm({
 
   // Ensure fetchMenuItems is called when db and user are available
   useEffect(() => {
-    console.log('useEffect triggered for fetchMenuItems')
     if (db && user) {
       memoizedFetchMenuItems()
     }
@@ -316,7 +297,6 @@ export function OrderForm({
         setSelectedTable(availableTables[0])
       }
     } catch (error) {
-      console.error("Error fetching tables:", error)
       toast.error(t("orders.errors.fetchTables", {
         error: error instanceof Error ? error.message : "Unknown error"
       }))
@@ -516,28 +496,13 @@ export function OrderForm({
 
       // Use onOrderCreated callback if provided
       if (!onOrderCreated) {
-        console.error('No onOrderCreated callback provided');
         toast.error(t("orders.errors.noOrderCreatedCallback"));
         return;
       }
 
       try {
-        console.group('Order Creation Process');
-        console.log('Order Details:', {
-          items: orderItems.map(item => ({
-            name: item.name,
-            quantity: item.quantity,
-            price: item.price
-          })),
-          total: calculateTotal(),
-          orderType,
-          tableNumber
-        });
-
         const result = await onOrderCreated(orderData);
         
-        console.log('Order Creation Result:', result);
-
         // Reset form after successful submission
         resetForm();
 
@@ -564,13 +529,9 @@ export function OrderForm({
           }
         } catch (err) {
           // Opcional: log o toast de error de notificación, sin bloquear el flujo
-          console.error("Error enviando notificación push:", err);
         }
 
-        console.groupEnd();
       } catch (error) {
-        console.groupEnd();
-        console.error('Order Creation Failed:', error);
         toast.error(t("orders.errors.orderCreationFailed"), {
           description: `Error al crear el pedido: ${error}`
         });
@@ -578,7 +539,6 @@ export function OrderForm({
 
       // Después de crear el pedido, reducir el stock
       if (!user.establishmentId) {
-        console.error('No establishment ID found for user');
         toast.error(t("orders.errors.noEstablishmentId"))
         return;
       }
@@ -598,17 +558,15 @@ export function OrderForm({
       const failedStockReductions = stockReductionResults.filter(result => !result.success)
       
       if (failedStockReductions.length > 0) {
-        console.error('Stock reduction errors:', failedStockReductions)
         toast.error(t("inventory.stockReductionError"), {
           description: failedStockReductions.map(result => result.error).join(', ')
         })
       }
 
     } catch (error) {
-      console.error("Erro ao criar pedido:", error)
       toast.error(t("orders.errors.orderCreationFailed"), {
-        description: `Error ao criar o pedido: ${error}`
-      })
+        description: `Error al crear el pedido: ${error}`
+      });
     }
   }
 
@@ -696,24 +654,8 @@ export function OrderForm({
         })
     ) as Order;
 
-    console.log('🧹 Cleaned Order Object:', JSON.stringify(cleanOrder, null, 2));
-
     // Validate order before creation
-    console.log('Debug: Order Creation Attempt', {
-      orderItems: orderItems.length,
-      orderType,
-      tableNumber,
-      userExists: !!user,
-      userEstablishmentId: user?.establishmentId
-    })
-
-    // Ensure order has at least some meaningful data
     if (orderItems.length === 0) {
-      console.error('Order creation failed: No items in order', {
-        orderType,
-        tableNumber,
-        user: user?.uid
-      })
       toast.error(t("orders.errors.noItemsInOrder"))
       return
     }
@@ -753,28 +695,13 @@ export function OrderForm({
 
     // Use onOrderCreated callback if provided
     if (!onOrderCreated) {
-      console.error('No onOrderCreated callback provided');
       toast.error(t("orders.errors.noOrderCreatedCallback"));
       return;
     }
 
     try {
-      console.group('Order Creation Process');
-      console.log('Order Details:', {
-        items: orderItems.map(item => ({
-          name: item.name,
-          quantity: item.quantity,
-          price: item.price
-        })),
-        total: calculateTotal(),
-        orderType,
-        tableNumber
-      });
-
       const result = await onOrderCreated(cleanOrder);
       
-      console.log('Order Creation Result:', result);
-
       // Reset form after successful submission
       resetForm();
 
@@ -801,13 +728,9 @@ export function OrderForm({
         }
       } catch (err) {
         // Opcional: log o toast de error de notificación, sin bloquear el flujo
-        console.error("Error enviando notificación push:", err);
       }
 
-      console.groupEnd();
     } catch (error) {
-      console.groupEnd();
-      console.error('Order Creation Failed:', error);
       toast.error(t("orders.errors.orderCreationFailed"), {
         description: `Error al crear el pedido: ${error}`
       });
@@ -815,7 +738,6 @@ export function OrderForm({
 
     // Después de crear el pedido, reducir el stock
     if (!user.establishmentId) {
-      console.error('No establishment ID found for user');
       toast.error(t("orders.errors.noEstablishmentId"))
       return;
     }
@@ -835,7 +757,6 @@ export function OrderForm({
     const failedStockReductions = stockReductionResults.filter(result => !result.success)
     
     if (failedStockReductions.length > 0) {
-      console.error('Stock reduction errors:', failedStockReductions)
       toast.error(t("inventory.stockReductionError"), {
         description: failedStockReductions.map(result => result.error).join(', ')
       })
@@ -869,9 +790,6 @@ export function OrderForm({
 
   // Modify the useEffect to handle category selection more robustly
   useEffect(() => {
-    console.group('Menu Items Update')
-    console.log('Menu Items:', menuItems)
-    
     // Set initial category if not set and menu items exist
     if (menuItems.length > 0) {
       // Get unique categories from menu items, filtering out undefined
@@ -883,13 +801,10 @@ export function OrderForm({
         )
       )
 
-      console.log('Unique Categories:', uniqueCategories)
-
       if (uniqueCategories.length > 0) {
         // Set the first category if no category is selected
         if (!selectedCategory) {
           const firstCategory = uniqueCategories[0]
-          console.log('Setting Initial Category:', firstCategory)
           setSelectedCategory(firstCategory)
         }
 
@@ -900,14 +815,11 @@ export function OrderForm({
           )
           
           if (firstItemInCategory) {
-            console.log('Setting Initial Item:', firstItemInCategory.uid)
             setSelectedItem(firstItemInCategory.uid)
           }
         }
       }
     }
-
-    console.groupEnd()
   }, [menuItems])
 
   // Toggle QR Code display
@@ -982,22 +894,10 @@ export function OrderForm({
 
   // Render menu items for the selected category
   const renderMenuItems = (): React.ReactNode => {
-    console.group('Render Menu Items Debug')
-    console.log('Selected Category:', selectedCategory)
-    console.log('All Menu Items:', menuItems)
-
     // Filter items by selected category
     const filteredItems = menuItems.filter(
       item => item.category === selectedCategory
     )
-
-    console.log('Filtered Items:', filteredItems)
-    console.log('Filtered Items Details:', filteredItems.map(item => ({
-      name: item.name,
-      stock: item.stock ?? 'undefined',  // Use nullish coalescing to handle undefined
-      price: item.price
-    })))
-    console.groupEnd()
 
     if (filteredItems.length === 0) {
       return (
@@ -1045,11 +945,6 @@ export function OrderForm({
       )
     )
 
-    console.group('Category Selector Debug')
-    console.log('Unique Categories:', uniqueCategories)
-    console.log('Current Selected Category:', selectedCategory)
-    console.groupEnd()
-
     if (uniqueCategories.length === 0) {
       return (
         <div className="text-muted-foreground text-sm">
@@ -1065,7 +960,6 @@ export function OrderForm({
           // Type assertion to ensure it's a MenuItemCategory
           const category = value as MenuItemCategory
           
-          console.log('Category Changed:', category)
           setSelectedCategory(category)
           
           // Reset selected item when category changes

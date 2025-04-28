@@ -42,8 +42,6 @@ export function NotificationSettings() {
           if (prefsDoc.exists()) {
             setPreferences(prefsDoc.data() as NotificationPreferences)
           }
-        } catch (error) {
-          console.error("Error fetching notification preferences:", error)
         } finally {
           setLoading(false)
         }
@@ -81,7 +79,6 @@ export function NotificationSettings() {
         url: window.location.href,
       });
     } catch (error) {
-      console.error("Error saving notification preferences:", error)
       toast.error(t("settings.notifications.actions.profileUpdateError"), {
         description: t("settings.notifications.actions.profileUpdateErrorDescription"),
       })

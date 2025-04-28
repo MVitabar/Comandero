@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "@/components/auth-provider"
@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
+import { UserRole } from "@/types"
 import "@/styles/globals.css"
 
 export default function LoginPage() {
@@ -23,9 +24,29 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const { login } = useAuth()
+  const { login, user } = useAuth()
   const { t } = useI18n()
   const router = useRouter()
+
+  useEffect(() => {
+    if (user && !loading) {
+      // Redirigir según el rol
+      switch (user.role) {
+        case UserRole.OWNER:
+        case UserRole.ADMIN:
+        case UserRole.MANAGER:
+          router.replace("/dashboard")
+          break
+        case UserRole.WAITER:
+        case UserRole.CHEF:
+        case UserRole.BARMAN:
+          router.replace("/orders")
+          break
+        default:
+          router.replace("/dashboard")
+      }
+    }
+  }, [user, loading, router])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -63,16 +84,12 @@ export default function LoginPage() {
         setErrors({ 
           form: result.error || t("login.unexpectedError")
         })
-        
-        toast.error(result.error || t("login.unexpectedError"))
       }
     } catch (error) {
       console.error("Login error:", error)
       setErrors({ 
         form: t("login.unexpectedError")
       })
-      
-      toast.error(t("login.unexpectedError"))
     } finally {
       setLoading(false)
     }

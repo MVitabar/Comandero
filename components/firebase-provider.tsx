@@ -41,13 +41,6 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   })
 
   useEffect(() => {
-    console.group('🔥 Firebase Initialization');
-    console.log('Environment Variables:');
-    console.log('API Key:', process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? '✅ Set' : '❌ Not Set');
-    console.log('Auth Domain:', process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN);
-    console.log('Project ID:', process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
-    console.groupEnd();
-
     let app: FirebaseApp | null = null
     let db: Firestore | null = null
     let auth: Auth | null = null
@@ -64,14 +57,9 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
         ? initializeApp(firebaseConfig) 
         : getApps()[0]
 
-      console.log('🟢 Firebase App Initialized:', app.name);
-
       // Initialize Firestore and Auth
       db = getFirestore(app)
       auth = getAuth(app)
-
-      console.log('🔐 Authentication Service:', auth ? '✅ Available' : '❌ Not Available');
-      console.log('📊 Firestore Service:', db ? '✅ Available' : '❌ Not Available');
 
       // Additional auth configuration
       if (auth) {
@@ -96,22 +84,6 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const validateAndPropagateUser = (user: User | null) => {
-    console.group('🔍 User State Validation')
-    
-    // Detailed logging of all potential user sources
-    console.log('Incoming User:', user ? {
-      id: user.uid,
-      email: user.email,
-      username: user.username,
-      role: user.role
-    } : '❌ No User')
-
-    console.log('Current Authentication Context:', {
-      windowUser: (window as any).user,
-      authProviderUser: authUser,
-      firebaseStateUser: firebaseState.user
-    })
-
     // Comprehensive user validation with fallback mechanisms
     const isValidUser = user && (
       // Primary validation
@@ -135,30 +107,18 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
         loading: false,
         login: async (email: string, password: string) => {
           // Placeholder implementation
-          console.warn('Login method called on reconstructed user')
           return { success: false, error: 'Not implemented' }
         },
         logout: async () => {
           // Placeholder implementation
-          console.warn('Logout method called on reconstructed user')
           return { success: false, error: 'Not implemented' }
         },
         signUp: async (email: string, password: string) => {
           // Placeholder implementation
-          console.warn('SignUp method called on reconstructed user')
           return { success: false, error: 'Not implemented' }
         }
       } as User
     }
-
-    console.log('User Validation:', {
-      isValid: !!isValidUser,
-      hasId: !!user?.uid,
-      hasEmail: !!user?.email,
-      reconstructed: !!reconstructedUser
-    })
-
-    console.groupEnd()
 
     // Return validated or reconstructed user
     return isValidUser ? user : reconstructedUser
@@ -176,17 +136,9 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   }, [authUser])
 
   useEffect(() => {
-    console.group('🔍 Firebase Provider State');
-    console.log('App:', firebaseState.app ? '✅ Initialized' : '❌ Not Initialized');
-    console.log('Auth:', firebaseState.auth ? '✅ Available' : '❌ Not Available');
-    console.log('User:', firebaseState.user ? '✅ Logged In' : '❌ Not Logged In', 
-      firebaseState.user ? {
-        id: firebaseState.user.uid,
-        email: firebaseState.user.email
-      } : null
-    );
-    console.log('Error:', firebaseState.error?.message || 'No Errors');
-    console.groupEnd();
+    if (firebaseState.error) {
+      console.error('Firebase Error:', firebaseState.error);
+    }
   }, [firebaseState])
 
   return <FirebaseContext.Provider value={firebaseState}>{children}</FirebaseContext.Provider>

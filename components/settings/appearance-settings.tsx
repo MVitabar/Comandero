@@ -33,7 +33,8 @@ export function AppearanceSettings() {
             setTheme(prefsDoc.data().theme as Theme)
           }
         } catch (error) {
-          console.error("Error fetching appearance preference:", error)
+          setLoading(false)
+          throw error
         } finally {
           setLoading(false)
         }
@@ -68,7 +69,6 @@ export function AppearanceSettings() {
         url: window.location.href,
       })
     } catch (error) {
-      console.error("Error saving appearance preference:", error)
       toast.error(t("settings.appearance.actions.save.error.title"), {
         description: t("settings.appearance.actions.save.error.description"),
       })
