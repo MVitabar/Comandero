@@ -89,6 +89,9 @@ export interface User {
   // Security-related fields
   twoFactorEnabled?: boolean
   securityLevel?: 'low' | 'medium' | 'high'
+  
+  // Opcional: Player ID de OneSignal para notificaciones push
+  oneSignalPlayerId?: string;
 }
 
 export interface LoginAttempt {

@@ -546,11 +546,26 @@ export function OrderForm({
           description: `Pedido creado por ${calculateTotal()}`
         });
 
-        await sendNotification({
-          title: t("orders.push.orderCreatedTitle"),
-          message: t("orders.push.orderCreatedMessage", { tableNumber, total: calculateTotal() }),
-          url: window.location.href,
-        });
+        // Notificación push usando endpoint seguro
+        try {
+          // Obtén el playerId del usuario destino (ajusta según tu lógica)
+          const playerId = user.oneSignalPlayerId; // O la fuente correcta
+
+          if (playerId) {
+            await fetch('/api/send-notification', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                title: t("orders.push.orderCreatedTitle"),
+                message: t("orders.push.orderCreatedMessage", { tableNumber, total: calculateTotal() }),
+                playerId,
+              }),
+            });
+          }
+        } catch (err) {
+          // Opcional: log o toast de error de notificación, sin bloquear el flujo
+          console.error("Error enviando notificación push:", err);
+        }
 
         console.groupEnd();
       } catch (error) {
@@ -768,11 +783,26 @@ export function OrderForm({
         description: `Pedido creado por ${calculateTotal()}`
       });
 
-      await sendNotification({
-        title: t("orders.push.orderCreatedTitle"),
-        message: t("orders.push.orderCreatedMessage", { tableNumber, total: calculateTotal() }),
-        url: window.location.href,
-      });
+      // Notificación push usando endpoint seguro
+      try {
+        // Obtén el playerId del usuario destino (ajusta según tu lógica)
+        const playerId = user.oneSignalPlayerId; // O la fuente correcta
+
+        if (playerId) {
+          await fetch('/api/send-notification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: t("orders.push.orderCreatedTitle"),
+              message: t("orders.push.orderCreatedMessage", { tableNumber, total: calculateTotal() }),
+              playerId,
+            }),
+          });
+        }
+      } catch (err) {
+        // Opcional: log o toast de error de notificación, sin bloquear el flujo
+        console.error("Error enviando notificación push:", err);
+      }
 
       console.groupEnd();
     } catch (error) {
