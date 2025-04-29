@@ -51,6 +51,9 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@r
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useNotifications } from "@/hooks/useNotifications"
 import { toast } from "sonner"
+import * as XLSX from "xlsx"
+import { Download } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export default function DashboardPage() {
   const { sendNotification } = useNotifications()
@@ -573,6 +576,46 @@ export default function DashboardPage() {
     if (totalInStock < totalMinStockThreshold * 1.5) return 'warning'
     
     return 'healthy'
+  }
+
+  const handleExportGeneralExcel = () => {
+    const wb = XLSX.utils.book_new();
+    const wsSales = XLSX.utils.json_to_sheet(dashboardData.dailySalesData || []);
+    XLSX.utils.book_append_sheet(wb, wsSales, "Ventas por Día");
+    const wsProducts = XLSX.utils.json_to_sheet(dashboardData.topSellingItems || []);
+    XLSX.utils.book_append_sheet(wb, wsProducts, "Top Productos");
+    const wsInventory = XLSX.utils.json_to_sheet(dashboardData.inventoryItems.details || []);
+    XLSX.utils.book_append_sheet(wb, wsInventory, "Inventario");
+    XLSX.writeFile(wb, `Reporte-General-${new Date().toISOString().slice(0,10)}.xlsx`);
+    toast.success("Reporte general descargado en Excel");
+  }
+
+  const handleExportGeneralPDF = async () => {
+    const jsPDF = (await import("jspdf")).default;
+    const autoTable = (await import("jspdf-autotable")).default;
+    const doc = new jsPDF();
+    doc.text("Ventas por Día", 14, 14);
+    autoTable(doc, {
+      startY: 20,
+      head: [['Fecha', 'Ventas']],
+      body: (dashboardData.dailySalesData || []).map(row => [row.date, row.sales]),
+    });
+    let y = (doc as any).lastAutoTable?.finalY + 10 || 30;
+    doc.text("Top Productos", 14, y);
+    autoTable(doc, {
+      startY: y + 6,
+      head: [['Producto', 'Cantidad']],
+      body: (dashboardData.topSellingItems || []).map(row => [row.name, row.quantity]),
+    });
+    y = (doc as any).lastAutoTable?.finalY + 10 || y + 30;
+    doc.text("Inventario", 14, y);
+    autoTable(doc, {
+      startY: y + 6,
+      head: [['Producto', 'Stock']],
+      body: (dashboardData.inventoryItems.details || []).map(row => [row.name, row.inStock]),
+    });
+    doc.save(`Reporte-General-${new Date().toISOString().slice(0,10)}.pdf`);
+    toast.success("Reporte general descargado en PDF");
   }
 
   return (
@@ -1119,6 +1162,31 @@ export default function DashboardPage() {
         </Card>
         </div>
       </div>
+
+      {/* Reporte General como Footer */}
+      <Card className="mt-12">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Reporte General</CardTitle>
+            <CardDescription>
+              Descarga un informe completo de todas las métricas del negocio en Excel o PDF.
+            </CardDescription>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={handleExportGeneralExcel} variant="outline">
+              <Download className="w-4 h-4 mr-2" /> Excel
+            </Button>
+            <Button onClick={handleExportGeneralPDF} variant="outline">
+              <Download className="w-4 h-4 mr-2" /> PDF
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p>
+            El archivo incluirá ventas por día, productos más vendidos, inventario y más, según los datos actualmente visibles en el dashboard.
+          </p>
+        </CardContent>
+      </Card>
     </div>
   )
 }
