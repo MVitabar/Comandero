@@ -44,6 +44,12 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { AddItemsDialog } from "@/components/orders/add-items-dialog";
 import { filterOrdersByRole } from '@/lib/orderFilters';
 import { usePermissions } from '@/hooks/usePermissions';
+import {
+  splitOrderItemsByCategory,
+  canViewBothSections,
+  canViewOnlyFood,
+  canViewOnlyDrinks,
+} from '@/lib/orderFilters';
 
 // Language codes
 type LanguageCode = 'en' | 'es' | 'pt';
@@ -511,79 +517,103 @@ export default function OrdersPage() {
           <>
             {/* Vista de tarjetas para móviles y desktop: ocupar todo el ancho disponible */}
             <div className="grid gap-4 grid-cols-1 ">
-              {filteredOrders.map((order) => (
-                <Card key={order.id} className="w-full">
-                  <CardHeader className="flex flex-row items-center justify-end space-y-0 pb-2">
-                    <Badge variant={getStatusBadgeVariant(order.status as BaseOrderStatus)}>
-                      {translateStatus(order.status, i18n?.language as LanguageCode)}
-                    </Badge>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <p className="text-xs text-muted-foreground">{t("commons.tableNumber")}</p>
-                        <p>{order.tableNumber 
-                          ? `${getOrderTypeLabel(order.orderType)} ${order.tableNumber}` 
-                          : getOrderTypeLabel(order.orderType)}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">{t("orders.errors.headers.waiter")}</p>
-                        <p>
-                          {order.createdBy?.displayName || order.createdBy?.email || t("orders.unknownUser")}
-                          {order.createdBy?.role && (
-                            <span className="text-xs text-muted-foreground ml-1">
-                              ({t(`roles.${order.createdBy.role.toLowerCase()}`)})</span>
+              {filteredOrders.map((order) => {
+                const { comidas, bebidas } = splitOrderItemsByCategory(order.items || []);
+                return (
+                  <Card key={order.id} className="w-full">
+                    <CardHeader className="flex flex-row items-center justify-end space-y-0 pb-2">
+                      <Badge variant={getStatusBadgeVariant(order.status as BaseOrderStatus)}>
+                        {translateStatus(order.status, i18n?.language as LanguageCode)}
+                      </Badge>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <p className="text-xs text-muted-foreground">{t("commons.tableNumber")}</p>
+                          <p>{order.tableNumber 
+                            ? `${getOrderTypeLabel(order.orderType)} ${order.tableNumber}` 
+                            : getOrderTypeLabel(order.orderType)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">{t("orders.errors.headers.waiter")}</p>
+                          <p>
+                            {order.createdBy?.displayName || order.createdBy?.email || t("orders.unknownUser")}
+                            {order.createdBy?.role && (
+                              <span className="text-xs text-muted-foreground ml-1">
+                                ({t(`roles.${order.createdBy.role.toLowerCase()}`)})</span>
+                            )}
+                          </p>
+                        </div>
+                        <div className="col-span-2">
+                          {/* Reemplazado: Detalle de ítems por secciones */}
+                          {/* Sección de comidas */}
+                          {(canViewBothSections(user?.role) || canViewOnlyFood(user?.role)) && (
+                            <>
+                              <h4 className="font-semibold mb-1">Comidas</h4>
+                              {comidas.length > 0 ? (
+                                <ul className="mb-2">
+                                  {comidas.map(item => (
+                                    <li key={item.id}>{item.name} x{item.quantity}</li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p className="text-muted-foreground mb-2">Sin comidas</p>
+                              )}
+                            </>
                           )}
-                        </p>
-                      </div>
-                      <div className="col-span-2">
-                        <p className="text-xs text-muted-foreground">{t("orders.errors.headers.items")}</p>
-                        <p>{(() => {
-                          const orderItems = Array.isArray(order.items) 
-                            ? order.items 
-                            : (order.items ? Object.values(order.items).map(item => item as OrderItem) : [])
-                          
-                          return orderItems.length > 0 
-                            ? orderItems.map(item => item.name).join(", ") 
-                            : t("orders.noItemsInOrder")
-                        })()}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">{t("commons.table.headers.price")}</p>
-                        <p>R$ {order.total.toFixed(2)}</p>
-                      </div>
-                      <div className="flex items-center justify-end">
-                        <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleViewOrder(order)} title="Ver pedido">
-                            <Eye className="h-5 w-5" />
-                          </Button>
-                          {canCreate('orders') && (
-                            <Button variant="ghost" size="icon" onClick={() => {
-                              setSelectedOrder(order);
-                              setIsAddItemsDialogOpen(true);
-                            }} title="Agregar ítems">
-                              <PlusSquare className="h-5 w-5" />
-                            </Button>
-                          )}
-                          {canUpdate('orders') && (
-                            <Button variant="ghost" size="icon" onClick={() => openStatusDialog(order)} title="Cambiar status">
-                              <Repeat className="h-5 w-5" />
-                            </Button>
-                          )}
-                          {canDelete('orders') && (
-                            <Button variant="ghost" size="icon" onClick={() => {
-                              setSelectedOrder(order);
-                              setIsDeleteDialogOpen(true);
-                            }} title="Eliminar">
-                              <Trash className="h-5 w-5" />
-                            </Button>
+                          {/* Sección de bebidas */}
+                          {(canViewBothSections(user?.role) || canViewOnlyDrinks(user?.role)) && (
+                            <>
+                              <h4 className="font-semibold mb-1">Bebidas</h4>
+                              {bebidas.length > 0 ? (
+                                <ul>
+                                  {bebidas.map(item => (
+                                    <li key={item.id}>{item.name} x{item.quantity}</li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p className="text-muted-foreground">Sin bebidas</p>
+                              )}
+                            </>
                           )}
                         </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">{t("commons.table.headers.price")}</p>
+                          <p>R$ {order.total.toFixed(2)}</p>
+                        </div>
+                        <div className="flex items-center justify-end">
+                          <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="icon" onClick={() => handleViewOrder(order)} title="Ver pedido">
+                              <Eye className="h-5 w-5" />
+                            </Button>
+                            {canCreate('orders') && (
+                              <Button variant="ghost" size="icon" onClick={() => {
+                                setSelectedOrder(order);
+                                setIsAddItemsDialogOpen(true);
+                              }} title="Agregar ítems">
+                                <PlusSquare className="h-5 w-5" />
+                              </Button>
+                            )}
+                            {canUpdate('orders') && (
+                              <Button variant="ghost" size="icon" onClick={() => openStatusDialog(order)} title="Cambiar status">
+                                <Repeat className="h-5 w-5" />
+                              </Button>
+                            )}
+                            {canDelete('orders') && (
+                              <Button variant="ghost" size="icon" onClick={() => {
+                                setSelectedOrder(order);
+                                setIsDeleteDialogOpen(true);
+                              }} title="Eliminar">
+                                <Trash className="h-5 w-5" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </>
         )}

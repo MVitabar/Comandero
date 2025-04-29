@@ -116,6 +116,8 @@ export function OrderDetailsDialog({
   };
   // DEPURACIÓN FIN
 
+  const { comidas, bebidas } = splitOrderItemsByCategory(liveOrder.items || []);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]" aria-describedby="order-details-description">
@@ -165,162 +167,34 @@ export function OrderDetailsDialog({
           <div className="grid grid-cols-4 items-center gap-4">
             <span className="text-sm font-medium">{t("orders.details.items")}:</span>
             <div className="col-span-3">
-              {(() => {
-                // Fallback seguro: asegura que siempre se pasa un array
-                const orderItems = Array.isArray(liveOrder.items)
-                  ? liveOrder.items
-                  : (liveOrder.items ? Object.values(liveOrder.items).map(item => item as OrderItem) : []);
-                const { comidas, bebidas } = splitOrderItemsByCategory(orderItems);
-
-                // Para roles que ven ambas secciones
-                if (canViewBothSections(user?.role)) {
-                  return (
-                    <>
-                      {comidas.length > 0 && (
-                        <div className="mb-1">
-                          <span className="font-semibold text-xs text-muted-foreground">Comidas:</span>
-                          {comidas.map((item) => (
-                            <div
-                              key={item.id}
-                              className="flex flex-col md:flex-row md:justify-between md:items-center gap-2 p-2 border-b border-muted last:border-b-0"
-                            >
-                              <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 flex-1">
-                                <span className="font-medium">{item.name}</span>
-                                <span className="text-xs text-muted-foreground">
-                                  {item.quantity} x {new Intl.NumberFormat(i18n.language, { style: 'currency', currency: 'BRL' }).format(item.price)}
-                                </span>
-                                <span className="text-xs ml-0 md:ml-2">({item.status || 'pending'})</span>
-                              </div>
-                              {(user?.role === 'chef' && comidas.length > 0) ? (
-                                <div className="flex gap-2 mt-2 md:mt-0">
-                                  {getAvailableStatusActions(item.status).map(action => (
-                                    <Button
-                                      key={action.status}
-                                      size="sm"
-                                      disabled={item.status === action.status}
-                                      onClick={() => handleUpdateItemStatus(item, action.status as OrderItemStatus)}
-                                    >
-                                      {action.label}
-                                    </Button>
-                                  ))}
-                                </div>
-                              ) : null}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      {bebidas.length > 0 && (
-                        <div>
-                          <span className="font-semibold text-xs text-muted-foreground">Bebidas:</span>
-                          {bebidas.map((item) => (
-                            <div
-                              key={item.id}
-                              className="flex flex-col md:flex-row md:justify-between md:items-center gap-2 p-2 border-b border-muted last:border-b-0"
-                            >
-                              <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 flex-1">
-                                <span className="font-medium">{item.name}</span>
-                                <span className="text-xs text-muted-foreground">
-                                  {item.quantity} x {new Intl.NumberFormat(i18n.language, { style: 'currency', currency: 'BRL' }).format(item.price)}
-                                </span>
-                                <span className="text-xs ml-0 md:ml-2">({item.status || 'pending'})</span>
-                              </div>
-                              {(user?.role === 'barman' && bebidas.length > 0) ? (
-                                <div className="flex gap-2 mt-2 md:mt-0">
-                                  {getAvailableStatusActions(item.status).map(action => (
-                                    <Button
-                                      key={action.status}
-                                      size="sm"
-                                      disabled={item.status === action.status}
-                                      onClick={() => handleUpdateItemStatus(item, action.status as OrderItemStatus)}
-                                    >
-                                      {action.label}
-                                    </Button>
-                                  ))}
-                                </div>
-                              ) : null}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      {comidas.length === 0 && bebidas.length === 0 && (
-                        <span className="text-muted-foreground">{t("orders.noItemsInOrder")}</span>
-                      )}
-                    </>
-                  );
-                }
-                // Solo comida (chef)
-                if (canViewOnlyFood(user?.role)) {
-                  return comidas.length > 0
-                    ? comidas.map((item) => (
-                        <div
-                          key={item.id}
-                          className="flex flex-col md:flex-row md:justify-between md:items-center gap-2 p-2 border-b border-muted last:border-b-0"
-                        >
-                          <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 flex-1">
-                            <span className="font-medium">{item.name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {item.quantity} x {new Intl.NumberFormat(i18n.language, { style: 'currency', currency: 'BRL' }).format(item.price)}
-                            </span>
-                            <span className="text-xs ml-0 md:ml-2">({item.status || 'pending'})</span>
-                          </div>
-                          {(user?.role === 'chef' && comidas.length > 0) ? (
-                            <div className="flex gap-2 mt-2 md:mt-0">
-                              {getAvailableStatusActions(item.status).map(action => (
-                                <Button
-                                  key={action.status}
-                                  size="sm"
-                                  disabled={item.status === action.status}
-                                  onClick={() => handleUpdateItemStatus(item, action.status as OrderItemStatus)}
-                                >
-                                  {action.label}
-                                </Button>
-                              ))}
-                            </div>
-                          ) : null}
-                        </div>
-                      ))
-                    : <span className="text-muted-foreground">{t("orders.noItemsInOrder")}</span>;
-                }
-                // Solo bebidas (barman)
-                if (canViewOnlyDrinks(user?.role)) {
-                  return bebidas.length > 0
-                    ? bebidas.map((item) => (
-                        <div
-                          key={item.id}
-                          className="flex flex-col md:flex-row md:justify-between md:items-center gap-2 p-2 border-b border-muted last:border-b-0"
-                        >
-                          <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 flex-1">
-                            <span className="font-medium">{item.name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {item.quantity} x {new Intl.NumberFormat(i18n.language, { style: 'currency', currency: 'BRL' }).format(item.price)}
-                            </span>
-                            <span className="text-xs ml-0 md:ml-2">({item.status || 'pending'})</span>
-                          </div>
-                          {(user?.role === 'barman' && bebidas.length > 0) ? (
-                            <div className="flex gap-2 mt-2 md:mt-0">
-                              {getAvailableStatusActions(item.status).map(action => (
-                                <Button
-                                  key={action.status}
-                                  size="sm"
-                                  disabled={item.status === action.status}
-                                  onClick={() => handleUpdateItemStatus(item, action.status as OrderItemStatus)}
-                                >
-                                  {action.label}
-                                </Button>
-                              ))}
-                            </div>
-                          ) : null}
-                        </div>
-                      ))
-                    : <span className="text-muted-foreground">{t("orders.noItemsInOrder")}</span>;
-                }
-                // Fallback para otros roles
-                return orderItems.length > 0
-                  ? orderItems.map((item) => (
-                      <span key={item.id}>{item.name}</span>
-                    ))
-                  : <span className="text-muted-foreground">{t("orders.noItemsInOrder")}</span>;
-              })()}
+              {(canViewBothSections(user?.role) || canViewOnlyFood(user?.role)) && (
+                <>
+                  <h4 className="font-semibold mb-1">Comidas</h4>
+                  {comidas.length > 0 ? (
+                    <ul className="mb-2">
+                      {comidas.map(item => (
+                        <li key={item.id}>{item.name} x{item.quantity}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-muted-foreground mb-2">Sin comidas</p>
+                  )}
+                </>
+              )}
+              {(canViewBothSections(user?.role) || canViewOnlyDrinks(user?.role)) && (
+                <>
+                  <h4 className="font-semibold mb-1">Bebidas</h4>
+                  {bebidas.length > 0 ? (
+                    <ul>
+                      {bebidas.map(item => (
+                        <li key={item.id}>{item.name} x{item.quantity}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-muted-foreground">Sin bebidas</p>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
