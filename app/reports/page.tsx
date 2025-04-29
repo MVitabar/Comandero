@@ -77,15 +77,29 @@ export default function ReportsPage() {
       const querySnapshot = await getDocs(q)
 
       const fetchedOrders = querySnapshot.docs.map(doc => {
-        const data = doc.data()
-        return {
-          tableId: data.tableId || '',
-          tableMapId: data.tableMapId || '',
-          items: data.items || [],
-          total: data.total || 0,
-          createdAt: data.createdAt?.toDate() || new Date(),
-          ...data
-        } as Order
+        const docData = doc.data()
+        const order: Order = {
+          id: doc.id,
+          tableId: docData.tableId,
+          items: docData.items,
+          total: docData.total,
+          createdAt: docData.createdAt,
+          updatedAt: docData.updatedAt || docData.createdAt || new Date(),
+          orderType: docData.orderType || 'table',
+          status: docData.status || 'pending',
+          restaurantId: docData.restaurantId || '',
+          userId: docData.userId || '',
+          paymentInfo: docData.paymentInfo || undefined,
+          subtotal: docData.subtotal || docData.total || 0,
+          discount: docData.discount || 0,
+          waiter: docData.waiter || '',
+          type: docData.type || 'table',
+          specialRequests: docData.specialRequests || '',
+          dietaryRestrictions: docData.dietaryRestrictions || [],
+          debugContext: docData.debugContext || undefined,
+          createdBy: docData.createdBy || docData.userId || '',
+        }
+        return order
       })
 
       setOrders(fetchedOrders)
@@ -268,8 +282,8 @@ export default function ReportsPage() {
       const items = order.items.map((item) => `${item.quantity}x ${item.name}`).join("; ")
 
       csvContent += [
-        order.tableMapId,
-        `${order.tableMapId} #${order.tableNumber || 'N/A'}`,
+        order.id,
+        `${order.tableId} #${order.tableNumber || 'N/A'}`,
         order.waiter || 'N/A',
         date,
         time,
@@ -449,7 +463,7 @@ export default function ReportsPage() {
                       </TableHeader>
                       <TableBody>
                         {filteredOrders.slice(0, 20).map((order) => (
-                          <TableRow key={order.tableMapId}>
+                          <TableRow key={order.id}>
                             <TableCell className="font-medium">{order.tableNumber}</TableCell>
                             <TableCell>{order.waiter}</TableCell>
                             <TableCell>
