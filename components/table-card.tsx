@@ -26,19 +26,33 @@ import { doc, getDoc, updateDoc, collection, query, where, getDocs, limit, serve
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { OrderDetailsDialog } from './orders/order-details-dialog'
 import { AddItemsDialog } from "@/components/orders/add-items-dialog";
-import { TableCardProps, Order, TableItem, PaymentInfo, PaymentMethod } from '@/types'
+import { TableItem, Order, PaymentInfo, PaymentMethod, UserRole } from '@/types'
 import { DialogDescription } from "@radix-ui/react-dialog"
 import { toast } from "sonner"
-import { UserRole } from '@/types'
+
+export interface TableCardProps {
+  table: TableItem;
+  hasActiveOrder?: boolean;
+  orderStatus?: string;
+  activeOrder?: Order | null;
+  onViewOrder?: (() => void) | undefined;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  onCreateOrder?: () => void;
+  onMarkAsServed?: () => void;
+  onCloseOrder?: () => void;
+  isEditing?: boolean;
+}
 
 export function TableCard({
   table,
   hasActiveOrder = false,
   orderStatus = "",
+  activeOrder = null,
+  onViewOrder,
   onEdit,
   onDelete,
   onCreateOrder,
-  onViewOrder,
   onMarkAsServed,
   onCloseOrder,
   isEditing = false,
@@ -47,7 +61,6 @@ export function TableCard({
   const { db } = useFirebase()
   const { user } = useAuth()
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [activeOrder, setActiveOrder] = useState<Order | null>(null)
   const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false)
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null)
@@ -173,52 +186,6 @@ export function TableCard({
 
     return preparedOrder
   }
-
-  // Fetch active order details
-  useEffect(() => {
-    const fetchActiveOrder = async () => {
-      try {
-        const restaurantId = user?.establishmentId || user?.uid || table.restaurantId || ''
-        if (!restaurantId) {
-          return
-        }
-
-        // Query for active orders for this table
-        const ordersRef = collection(db, `restaurants/${restaurantId}/orders`)
-        
-        const q = query(
-          ordersRef, 
-          where('tableId', '==', table.uid),
-          where('status', '!=', 'finished'),
-          limit(1)
-        )
-
-        const querySnapshot = await getDocs(q)
-        
-        if (!querySnapshot.empty) {
-          const orderDoc = querySnapshot.docs[0]
-          const data = orderDoc.data()
-          const orderData = {
-            ...data,
-            id: orderDoc.id,
-            docId: orderDoc.id, // opcional, para compatibilidad
-            // Forzamos restaurantId por si faltara en datos legacy
-            restaurantId: data.restaurantId || user?.establishmentId || user?.uid || table.restaurantId || ''
-          } as Order
-
-          setActiveOrder(orderData)
-        } else {
-          setActiveOrder(null)
-        }
-      } catch (error) {
-        console.error('Error fetching active order:', error)
-        setActiveOrder(null)
-      }
-    }
-
-    // Always attempt to fetch and sync
-    fetchActiveOrder()
-  }, [table.uid, user?.uid, db])
 
   // Determine table and order status
   const getTableStatusColor = () => {

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useTranslation } from 'react-i18next' 
 import { TableMap } from './table-maps-list'
 import { useFirebase } from '@/components/firebase-provider'
-import { doc, getDoc, collection, addDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore'
+import { doc, getDoc, collection, addDoc, setDoc, serverTimestamp, updateDoc, onSnapshot } from 'firebase/firestore'
 import { TableCard } from '@/components/table-card'
 import { Order, OrderItem } from '@/types'
 import { useAuth } from '@/components/auth-provider'
@@ -41,6 +41,7 @@ export default function TableMapViewDialog({
   const [isLoading, setIsLoading] = useState(true)
   const [selectedTable, setSelectedTable] = useState<RestaurantTable | null>(null)
   const [isOrderFormOpen, setIsOrderFormOpen] = useState(false)
+  const [orders, setOrders] = useState<Order[]>([])
 
   useEffect(() => {
     async function fetchTables() {
@@ -90,6 +91,19 @@ export default function TableMapViewDialog({
       fetchTables()
     }
   }, [db, user, isOpen, tableMap.id, t])
+
+  useEffect(() => {
+    if (!db || !user || !isOpen) return;
+
+    const restaurantId = user.establishmentId || user.uid;
+    const ordersRef = collection(db, `restaurants/${restaurantId}/orders`);
+    const unsubscribe = onSnapshot(ordersRef, (snapshot) => {
+      const fetchedOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+      setOrders(fetchedOrders);
+    });
+
+    return () => unsubscribe();
+  }, [db, user, isOpen]);
 
   const handleCreateOrder = async (table: RestaurantTable) => {
     setSelectedTable(table)
@@ -350,24 +364,39 @@ export default function TableMapViewDialog({
                   const bNumber = parseInt(b.name.replace(/\D/g, ''), 10)
                   return aNumber - bNumber
                 })
-                .map(table => (
-                  <TableCard 
-                    key={table.id} 
-                    table={{
-                      uid: table.id || '',
-                      number: parseInt(table.name.replace('Mesa ', ''), 10), 
-                      seats: table.capacity,
-                      shape: 'square', 
-                      width: 100, 
-                      height: 100, 
-                      x: 0, 
-                      y: 0, 
-                      status: table.status,
-                      mapId: table.mapId
-                    }}
-                    onCreateOrder={() => handleCreateOrder(table)}
-                  />
-                ))
+                .map(table => {
+                  // Encuentra la orden activa asociada a la mesa
+                  const activeOrder = orders.find(order =>
+                    order.tableId === table.id &&
+                    order.status !== 'closed' &&
+                    order.status !== 'cancelled' &&
+                    order.status !== 'finished'
+                  );
+                  return (
+                    <TableCard
+                      key={table.id}
+                      table={{
+                        uid: table.id || '',
+                        number: parseInt(table.name.replace(/\D/g, ''), 10),
+                        seats: table.capacity,
+                        shape: 'square', // Ajusta si tienes info real
+                        width: 100,
+                        height: 100,
+                        x: 0,
+                        y: 0,
+                        status: activeOrder ? 'occupied' : 'available',
+                        mapId: table.mapId,
+                        name: table.name,
+                        restaurantId: table.restaurantId,
+                      }}
+                      hasActiveOrder={!!activeOrder}
+                      orderStatus={activeOrder?.status || ''}
+                      activeOrder={activeOrder}
+                      onViewOrder={activeOrder ? () => {/* Aquí puedes abrir el detalle de la orden */} : undefined}
+                      onCreateOrder={() => handleCreateOrder(table)}
+                    />
+                  );
+                })
             )}
           </div>
         </DialogContent>

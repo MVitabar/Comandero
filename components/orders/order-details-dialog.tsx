@@ -116,7 +116,13 @@ export function OrderDetailsDialog({
   };
   // DEPURACIÓN FIN
 
-  const { comidas, bebidas } = splitOrderItemsByCategory(liveOrder.items || []);
+  // Convierte los ítems a array de forma segura antes de dividir por categoría
+  const itemsArray = Array.isArray(liveOrder.items)
+    ? liveOrder.items
+    : liveOrder.items
+      ? Object.values(liveOrder.items) as OrderItem[]
+      : [];
+  const { comidas, bebidas } = splitOrderItemsByCategory(itemsArray);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
