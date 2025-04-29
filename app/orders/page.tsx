@@ -33,7 +33,8 @@ import {
   doc, 
   getDoc, 
   deleteDoc, 
-  updateDoc 
+  updateDoc, 
+  onSnapshot 
 } from "firebase/firestore";
 import * as crypto from 'crypto';
 import { useRouter } from "next/navigation";
@@ -41,6 +42,8 @@ import { OrderDetailsDialog } from "@/components/orders/order-details-dialog"
 import { UserRole } from "@/types/permissions";
 import { useNotifications } from "@/hooks/useNotifications";
 import { AddItemsDialog } from "@/components/orders/add-items-dialog";
+import { filterOrdersByRole } from '@/lib/orderFilters';
+import { usePermissions } from '@/hooks/usePermissions';
 
 // Language codes
 type LanguageCode = 'en' | 'es' | 'pt';
@@ -164,6 +167,7 @@ export default function OrdersPage() {
   const { user } = useAuth()
   const router = useRouter();
   const { sendNotification } = useNotifications();
+  const { canCreate, canUpdate, canDelete } = usePermissions();
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -177,64 +181,25 @@ export default function OrdersPage() {
   const [selectedStatus, setSelectedStatus] = useState<BaseOrderStatus>('pending');
 
   useEffect(() => {
-    fetchOrders()
-  }, [db, user])
+    if (!db || !user) return;
+    setLoading(true);
 
-  const fetchOrders = async () => {
-    if (!db || !user) return
-
-    // Validate establishmentId before proceeding
+    // Verifica que el usuario tenga un establecimiento asignado
     if (!user.establishmentId) {
-      console.error('No establishment ID found for user')
-      toast.error("Establishment ID not found")
-      setLoading(false)
-      return
+      console.error('No establishment ID found for user');
+      toast.error("Establishment ID not found");
+      setLoading(false);
+      return;
     }
 
-    setLoading(true)
-    try {
-      // Use restaurant-specific orders subcollection with establishmentId
-      const ordersRef = collection(db, 'restaurants', user.establishmentId, 'orders')
-      const q = query(ordersRef, orderBy('createdAt', 'desc'))
-      
-      const querySnapshot = await getDocs(q)
-      
+    const ordersRef = collection(db, 'restaurants', user.establishmentId, 'orders');
+    const q = query(ordersRef, orderBy('createdAt', 'desc'));
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const fetchedOrders = querySnapshot.docs.map(doc => {
         const data = doc.data();
-        
-        // Precise table number extraction
-        const extractTableNumber = (input: any, orderType?: string): number | undefined => {
-          // Si no hay tipo de orden, devolver undefined
-          if (!orderType) return undefined;
 
-          // Mapeo de tipos de orden a etiquetas
-          const orderTypeLabels: Record<string, string> = {
-            'table': t('orders.type.table'),
-            'delivery': t('orders.type.delivery'),
-            'counter': t('orders.type.counter'),
-            'takeaway': t('orders.type.takeaway')
-          };
-
-          // Si el tipo de orden no está en el mapeo, devolver undefined
-          if (!orderTypeLabels[orderType]) return undefined;
-
-          // Para pedidos de mesa, extraer número de mesa
-          if (orderType === 'table') {
-            // Lógica original de extracción de número de mesa
-            const tableNumber = typeof input === 'number' 
-              ? input 
-              : (typeof input === 'string' 
-                ? parseInt(input, 10) 
-                : undefined);
-            
-            return tableNumber;
-          }
-
-          // Para otros tipos de pedido, devolver undefined
-          return undefined;
-        };
-
-        // Normalize items to match Firebase structure
+        // Normalización (puedes adaptar esto según tu helper)
         const normalizedItems = Array.isArray(data.items) 
           ? Object.values(data.items).map((item: any) => ({
               id: item.id || `temp-${Date.now()}`,
@@ -249,7 +214,7 @@ export default function OrdersPage() {
               customDietaryRestrictions: Array.isArray(item.customDietaryRestrictions) 
                 ? item.customDietaryRestrictions 
                 : []
-            } as OrderItem))
+            }))
           : (data.items 
               ? Object.values(data.items).map((item: any) => ({
                   id: item.id || `temp-${Date.now()}`,
@@ -264,12 +229,12 @@ export default function OrdersPage() {
                   customDietaryRestrictions: Array.isArray(item.customDietaryRestrictions) 
                     ? item.customDietaryRestrictions 
                     : []
-                } as OrderItem))
+                }))
               : []);
 
         return {
           id: doc.id,
-          tableNumber: extractTableNumber(data.tableNumber, data.orderType),
+          tableNumber: data.tableNumber,
           orderType: data.orderType || data.type || 'table',
           type: data.type || data.orderType || 'table',
           status: data.status || 'pending',
@@ -298,154 +263,20 @@ export default function OrdersPage() {
             email: data.createdBy?.email || null,
             role: data.createdBy?.role || 'unknown'
           }
-        } as Order;
+        };
       });
 
-      setOrders(fetchedOrders)
-    } catch (error) {
-      console.error("Error fetching orders:", error)
-      toast.error(t("orders.error.fetchFailed"))
-    } finally {
-      setLoading(false)
-    }
-  }
+      setOrders(fetchedOrders);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching orders in real-time:", error);
+      toast.error("Error en la suscripción de órdenes");
+      setLoading(false);
+    });
 
-  // Function to fetch a specific order by ID
-  const fetchOrderById = async (orderId: string) => {
-    try {
-      // Validate inputs
-      if (!orderId) {
-        toast.error(t("orders.error.invalidOrderId"))
-        return null;
-      }
+    return () => unsubscribe();
+  }, [db, user]);
 
-      // Ensure user and establishment ID exist
-      if (!user || !user.establishmentId) {
-        toast.error(t("orders.error.userNotFound"))
-        return null;
-      }
-
-      // Construct the reference to the specific order document
-      const orderRef = doc(
-        db, 
-        'restaurants', 
-        user.establishmentId, 
-        'orders', 
-        orderId
-      );
-
-      // Fetch the specific order document
-      const orderDoc = await getDoc(orderRef);
-
-      if (!orderDoc.exists()) {
-        toast.error(t("orders.error.orderNotFound"))
-        return null;
-      }
-
-      const data = orderDoc.data();
-
-      // Use the same normalization logic as in fetchOrders
-      const extractTableNumber = (input: any, orderType?: string): number | undefined => {
-        // Si no hay tipo de orden, devolver undefined
-        if (!orderType) return undefined;
-
-        // Mapeo de tipos de orden a etiquetas
-        const orderTypeLabels: Record<string, string> = {
-          'table': t('orders.type.table'),
-          'delivery': t('orders.type.delivery'),
-          'counter': t('orders.type.counter'),
-          'takeaway': t('orders.type.takeaway')
-        };
-
-        // Si el tipo de orden no está en el mapeo, devolver undefined
-        if (!orderTypeLabels[orderType]) return undefined;
-
-        // Para pedidos de mesa, extraer número de mesa
-        if (orderType === 'table') {
-          // Lógica original de extracción de número de mesa
-          const tableNumber = typeof input === 'number' 
-            ? input 
-            : (typeof input === 'string' 
-              ? parseInt(input, 10) 
-              : undefined);
-          
-          return tableNumber;
-        }
-
-        // Para otros tipos de pedido, devolver undefined
-        return undefined;
-      };
-
-      const normalizedItems = Array.isArray(data.items) 
-        ? Object.values(data.items).map((item: any) => ({
-            id: item.id || `temp-${Date.now()}`,
-            itemId: item.itemId,
-            name: item.name,
-            category: item.category,
-            quantity: Number(item.quantity),
-            price: Number(item.price),
-            stock: Number(item.stock),
-            unit: item.unit,
-            notes: item.notes || '',
-            customDietaryRestrictions: Array.isArray(item.customDietaryRestrictions) 
-              ? item.customDietaryRestrictions 
-              : []
-          } as OrderItem))
-        : (data.items ? Object.values(data.items).map((item: any) => ({
-            id: item.id || `temp-${Date.now()}`,
-            itemId: item.itemId,
-            name: item.name,
-            category: item.category,
-            quantity: Number(item.quantity),
-            price: Number(item.price),
-            stock: Number(item.stock),
-            unit: item.unit,
-            notes: item.notes || '',
-            customDietaryRestrictions: Array.isArray(item.customDietaryRestrictions) 
-              ? item.customDietaryRestrictions 
-              : []
-          } as OrderItem)) : []);
-
-      const normalizedOrder: Order = {
-        id: orderDoc.id,
-        tableNumber: extractTableNumber(data.tableNumber, data.orderType),
-        orderType: data.orderType || data.type || 'table',
-        type: data.type || data.orderType || 'table',
-        status: data.status || 'pending',
-        userId: data.userId || data.uid,
-        uid: data.uid || data.userId,
-        restaurantId: data.restaurantId || user.establishmentId,
-        items: normalizedItems,
-        subtotal: data.subtotal || data.total || 0,
-        total: data.total || data.subtotal || 0,
-        discount: data.discount || 0,
-        tax: data.tax,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date(),
-        tableId: data.tableId || data.debugContext?.orderContext?.tableId,
-        mapId: data.mapId || data.debugContext?.orderContext?.mapId,
-        waiter: data.waiter || data.debugContext?.userInfo?.uid || user.email,
-        specialRequests: data.specialRequests || '',
-        paymentInfo: {
-          method: data.paymentInfo?.method || 'other',
-          amount: data.paymentInfo?.amount || data.total || 0
-        },
-        debugContext: data.debugContext,
-        createdBy: {
-          uid: data.createdBy?.uid || user.uid,
-          displayName: data.createdBy?.displayName || user.displayName || 'Unknown',
-          email: data.createdBy?.email || user.email || null,
-          role: data.createdBy?.role || user.role || 'unknown'
-        }
-      };
-
-      return normalizedOrder;
-    } catch (error) {
-      console.error("Error fetching specific order:", error);
-      toast.error(t("orders.error.fetchSpecificOrderFailed"));
-      return null;
-    }
-  }
 
   const handleUpdateStatus = async () => {
     if (!db || !user || !selectedOrder || !selectedOrder.id) return
@@ -577,62 +408,42 @@ export default function OrdersPage() {
     'beverage', 'beverages'
   ];
 
-  // Función para filtrar órdenes basada en el rol del usuario
-  const filterOrdersByUserRole = (orders: Order[], user: any): Order[] => {
-    if (!user || !user.role) return orders;
-
-    switch (user.role) {
-      case UserRole.CHEF:
-        // Mostrar solo pedidos con ítems de cocina
-        return orders.filter(order => 
-          order.items.some(item => 
-            KITCHEN_CATEGORIES.includes(item.category?.toLowerCase())
-          )
-        );
-      case UserRole.BARMAN:
-        // Mostrar pedidos que contengan al menos un ítem de bebidas
-        return orders.filter(order => 
-          order.items.some(item => 
-            BAR_CATEGORIES.includes(item.category?.toLowerCase())
-          )
-        );
-      case UserRole.OWNER:
-      case UserRole.ADMIN:
-      case UserRole.MANAGER:
-        // Administradores ven todas las órdenes
-        return orders;
-      default:
-        // Rol desconocido: no mostrar órdenes
-        return [];
-    }
-  };
-
   // Definir un tipo que incluya 'all' junto con BaseOrderStatus
   type FilterStatus = BaseOrderStatus | 'all';
 
   // Aplicar filtro de roles y luego filtro de búsqueda y status
-  const filteredOrders = filterOrdersByUserRole(orders, user).filter(
-    (order) => {
-      // Verificar si coincide con el status seleccionado
-      const statusMatch = 
-        statusFilter === 'all' || 
-        order.status === statusFilter;
+  const filteredOrders = user?.role
+    ? filterOrdersByRole({ orders, role: user.role }).filter(
+        (order) => {
+          // Verificar si coincide con el status seleccionado
+          const statusMatch =
+            statusFilter === 'all' ||
+            order.status === statusFilter;
 
-      // Verificar si coincide con la búsqueda
-      const searchMatch = 
-        searchQuery === '' || 
-        (order.id || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (order.tableNumber?.toString() || '').includes(searchQuery) ||
-        (order.waiter || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (order.status || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        // Buscar en los nombres de los items
-        order.items.some(item => 
-          item.name.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+          // Verificar si coincide con la búsqueda
+          const searchMatch =
+            searchQuery === '' ||
+            (order.id || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (order.tableNumber?.toString() || '').includes(searchQuery) ||
+            (order.waiter || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (order.status || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            // Buscar en los nombres de los items
+            order.items.some(item =>
+              item.name.toLowerCase().includes(searchQuery.toLowerCase())
+            );
 
-      // Retornar true si coincide con status Y con búsqueda
-      return statusMatch && (searchQuery === '' || searchMatch);
-    }
+          // Retornar true si coincide con status Y con búsqueda
+          return statusMatch && (searchQuery === '' || searchMatch);
+        }
+      )
+    : [];
+
+  // Helper para roles administrativos y mozo
+  const isAdminOrWaiter = (
+    user?.role === UserRole.WAITER ||
+    user?.role === UserRole.ADMIN ||
+    user?.role === UserRole.MANAGER ||
+    user?.role === UserRole.OWNER
   );
 
   // Función para abrir el diálogo de status correctamente
@@ -698,93 +509,11 @@ export default function OrdersPage() {
           </div>
         ) : (
           <>
-            {/* Vista de tabla para escritorio */}
-            <Table className="hidden md:table w-full">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">{t("orders.errors.headers.id")}</TableHead>
-                  <TableHead>{t("commons.tableNumber")}</TableHead>
-                  <TableHead>{t("orders.errors.headers.waiter")}</TableHead>
-                  <TableHead>{t("orders.errors.headers.items")}</TableHead>
-                  <TableHead>{t("commons.table.headers.status")}</TableHead>
-                  <TableHead className="text-right">{t("commons.table.headers.price")}</TableHead>
-                  <TableHead className="text-right">{t("orders.errors.headers.actions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOrders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell>{order.id}</TableCell>
-                    <TableCell>
-                      {order.tableNumber 
-                        ? `${getOrderTypeLabel(order.orderType)} ${order.tableNumber}` 
-                        : getOrderTypeLabel(order.orderType)}
-                    </TableCell>
-                    <TableCell>
-                      {order.createdBy?.displayName || order.createdBy?.email || t("orders.unknownUser")}
-                      {order.createdBy?.role && (
-                        <span className="text-xs text-muted-foreground ml-1">
-                          ({t(`roles.${order.createdBy.role.toLowerCase()}`)})</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {(() => {
-                        const orderItems = Array.isArray(order.items) 
-                          ? order.items 
-                          : (order.items ? Object.values(order.items).map(item => item as OrderItem) : [])
-                        
-                        return orderItems.length > 0 
-                          ? orderItems.map(item => item.name).join(", ") 
-                          : t("orders.noItemsInOrder")
-                      })()}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusBadgeVariant(order.status as BaseOrderStatus)}>
-                        {translateStatus(order.status, i18n?.language as LanguageCode)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">R$ {order.total.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">{t("commons.openMenu")}</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent forceMount style={{ zIndex: 9999 }}>
-                          <DropdownMenuItem onClick={() => handleViewOrder(order)}>
-                            VER PEDIDO
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => {
-                            setSelectedOrder(order);
-                            setIsAddItemsDialogOpen(true);
-                          }}>
-                            AGREGAR ITEMS
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => openStatusDialog(order)}>
-                            CAMBIAR STATUS
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => {
-                            setSelectedOrder(order);
-                            setIsDeleteDialogOpen(true);
-                          }}>
-                            ELIMINAR
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-
-            {/* Vista de tarjetas para móviles */}
-            <div className="grid gap-4 md:hidden">
+            {/* Vista de tarjetas para móviles y desktop: ocupar todo el ancho disponible */}
+            <div className="grid gap-4 grid-cols-1 ">
               {filteredOrders.map((order) => (
                 <Card key={order.id} className="w-full">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">{t("orders.errors.headers.id")}: {order.id}</CardTitle>
+                  <CardHeader className="flex flex-row items-center justify-end space-y-0 pb-2">
                     <Badge variant={getStatusBadgeVariant(order.status as BaseOrderStatus)}>
                       {translateStatus(order.status, i18n?.language as LanguageCode)}
                     </Badge>
@@ -828,96 +557,28 @@ export default function OrdersPage() {
                           <Button variant="ghost" size="icon" onClick={() => handleViewOrder(order)} title="Ver pedido">
                             <Eye className="h-5 w-5" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => { setSelectedOrder(order); setIsAddItemsDialogOpen(true); }} title="Agregar ítems">
-                            <PlusSquare className="h-5 w-5" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => openStatusDialog(order)} title="Cambiar status">
-                            <Repeat className="h-5 w-5" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => { setSelectedOrder(order); setIsDeleteDialogOpen(true); }} title="Eliminar">
-                            <Trash className="h-5 w-5" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {/* Vista de tarjetas para desktop */}
-            <div className="hidden md:block">
-              {filteredOrders.map((order) => (
-                <Card key={order.id} className="w-full">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">{t("orders.errors.headers.id")}: {order.id}</CardTitle>
-                    <Badge variant={getStatusBadgeVariant(order.status as BaseOrderStatus)}>
-                      {translateStatus(order.status, i18n?.language as LanguageCode)}
-                    </Badge>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <p className="text-xs text-muted-foreground">{t("commons.tableNumber")}</p>
-                        <p>{order.tableNumber 
-                          ? `${getOrderTypeLabel(order.orderType)} ${order.tableNumber}` 
-                          : getOrderTypeLabel(order.orderType)}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">{t("orders.errors.headers.waiter")}</p>
-                        <p>
-                          {order.createdBy?.displayName || order.createdBy?.email || t("orders.unknownUser")}
-                          {order.createdBy?.role && (
-                            <span className="text-xs text-muted-foreground ml-1">
-                              ({t(`roles.${order.createdBy.role.toLowerCase()}`)})</span>
-                          )}
-                        </p>
-                      </div>
-                      <div className="col-span-2">
-                        <p className="text-xs text-muted-foreground">{t("orders.errors.headers.items")}</p>
-                        <p>{(() => {
-                          const orderItems = Array.isArray(order.items) 
-                            ? order.items 
-                            : (order.items ? Object.values(order.items).map(item => item as OrderItem) : [])
-                          
-                          return orderItems.length > 0 
-                            ? orderItems.map(item => item.name).join(", ") 
-                            : t("orders.noItemsInOrder")
-                        })()}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">{t("commons.table.headers.price")}</p>
-                        <p>R$ {order.total.toFixed(2)}</p>
-                      </div>
-                      <div className="flex items-center justify-end">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">{t("commons.openMenu")}</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent forceMount style={{ zIndex: 9999 }}>
-                            <DropdownMenuItem onClick={() => handleViewOrder(order)}>
-                              VER PEDIDO
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => {
+                          {canCreate('orders') && (
+                            <Button variant="ghost" size="icon" onClick={() => {
                               setSelectedOrder(order);
                               setIsAddItemsDialogOpen(true);
-                            }}>
-                              AGREGAR ITEMS
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openStatusDialog(order)}>
-                              CAMBIAR STATUS
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => {
+                            }} title="Agregar ítems">
+                              <PlusSquare className="h-5 w-5" />
+                            </Button>
+                          )}
+                          {canUpdate('orders') && (
+                            <Button variant="ghost" size="icon" onClick={() => openStatusDialog(order)} title="Cambiar status">
+                              <Repeat className="h-5 w-5" />
+                            </Button>
+                          )}
+                          {canDelete('orders') && (
+                            <Button variant="ghost" size="icon" onClick={() => {
                               setSelectedOrder(order);
                               setIsDeleteDialogOpen(true);
-                            }}>
-                              ELIMINAR
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                            }} title="Eliminar">
+                              <Trash className="h-5 w-5" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </CardContent>

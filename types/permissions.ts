@@ -153,6 +153,33 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
       }
     }
   },
+  [UserRole.BARMAN]: {
+    profile: { view: true, create: false, update: false, delete: false },
+    language: { view: true, create: false, update: false, delete: false },
+    appearance: { view: true, create: false, update: false, delete: false },
+    notifications: { view: true, create: false, update: false, delete: false },
+    'users-management': { view: false, create: false, update: false, delete: false },
+    dashboard: { view: false, create: false, update: false, delete: false },
+    orders: { view: true, create: false, update: false, delete: false },
+    tables: { view: true, create: false, update: false, delete: false },
+    inventory: { view: true, create: false, update: false, delete: false },
+    reports: { view: false, create: false, update: false, delete: false },
+    settings: {
+      view: false,
+      create: false,
+      update: false,
+      delete: false,
+      sections: {
+        profile: false,
+        appearance: false,
+        language: false,
+        notifications: false,
+        establishment: false,
+        security: false,
+        billing: false,
+      }
+    }
+  },
 
   [UserRole.WAITER]: {
     profile: { view: true, create: false, update: true, delete: false },
@@ -164,34 +191,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     orders: { view: true, create: true, update: true, delete: false },
     tables: { view: true, create: true, update: true, delete: false },
     inventory: { view: false, create: false, update: false, delete: false },
-    reports: { view: false, create: false, update: false, delete: false },
-    settings: {
-      view: true,
-      create: false,
-      update: true,
-      delete: false,
-      sections: {
-        profile: true,
-        appearance: true,
-        language: true,
-        notifications: true,
-        establishment: false,
-        security: false,
-        billing: false
-      }
-    }
-  },
-
-  [UserRole.BARMAN]: {
-    profile: { view: true, create: false, update: true, delete: false },
-    language: { view: true, create: true, update: true, delete: true },
-    appearance: { view: true, create: true, update: true, delete: true },
-    notifications: { view: true, create: true, update: true, delete: true },
-    'users-management': { view: false, create: false, update: false, delete: false },
-    dashboard: { view: false, create: false, update: false, delete: false },
-    orders: { view: true, create: true, update: true, delete: false },
-    tables: { view: true, create: false, update: false, delete: false },
-    inventory: { view: true, create: false, update: false, delete: false },
     reports: { view: false, create: false, update: false, delete: false },
     settings: {
       view: true,

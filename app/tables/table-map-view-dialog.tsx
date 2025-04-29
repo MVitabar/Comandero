@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button'
 import { useTranslation } from 'react-i18next' 
 import { TableMap } from './table-maps-list'
 import { useFirebase } from '@/components/firebase-provider'
-import { doc, getDoc, collection, addDoc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, collection, addDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { TableCard } from '@/components/table-card'
-import { Order } from '@/types'
+import { Order, OrderItem } from '@/types'
 import { useAuth } from '@/components/auth-provider'
 import {toast} from 'sonner'
 import { OrderForm } from '@/components/orders/order-form'
@@ -20,6 +20,7 @@ interface RestaurantTable {
   capacity: number
   status: 'available' | 'occupied' | 'reserved'
   mapId: string
+  restaurantId?: string
 }
 
 interface TableMapViewDialogProps {
@@ -161,7 +162,7 @@ export default function TableMapViewDialog({
       const sanitizedOrderData: Order = {
         ...order,
         uid: user?.uid || order.uid || '',
-        restaurantId: restaurantId,
+        restaurantId: order.restaurantId || user?.establishmentId || user?.uid || selectedTable?.restaurantId || '',
         status: order.status || 'pending',
         
         // Normalize items to match OrderItem interface
@@ -252,34 +253,50 @@ export default function TableMapViewDialog({
         }
       }
 
+      // Asegura que cada item tenga su propio status (por defecto 'pending')
+      if (Array.isArray(sanitizedOrderData.items)) {
+        sanitizedOrderData.items = sanitizedOrderData.items.map((item: OrderItem) => ({
+          ...item,
+          status: item.status || 'pending'
+        }));
+      }
+
       // Clean the order data
       const cleanedOrderData = cleanOrderData(sanitizedOrderData);
 
-      // Save order to Firestore
-      const newOrderRef = await addDoc(ordersRef, {
+      // Convierte el array de items a un objeto/mapa solo para guardar en Firestore
+      const cleanedOrderDataForFirestore = {
         ...cleanedOrderData,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        status: cleanedOrderData.status || 'pending'
-      })
+        items: Array.isArray(cleanedOrderData.items)
+          ? Object.fromEntries(
+              (cleanedOrderData.items as OrderItem[]).map((item: OrderItem, idx: number) => [idx, item])
+            )
+          : cleanedOrderData.items,
+        createdAt: serverTimestamp(), // <-- Asegura el timestamp de Firestore
+      };
+
+      // Save order to Firestore
+      const docRef = await addDoc(ordersRef, cleanedOrderDataForFirestore);
+      // Actualiza el campo id con el id real del documento
+      await updateDoc(docRef, { id: docRef.id });
 
       // Update table status
       if (selectedTable) {
         const tableRef = doc(db, 'restaurants', restaurantId, 'tables', selectedTable.id || '')
         await setDoc(tableRef, {
           status: 'occupied',
-          activeOrderId: newOrderRef.id
+          activeOrderId: docRef.id
         }, { merge: true })  // Use merge to avoid overwriting existing data
       }
 
       toast.success(t('orders.orderCreated'), {
-        description: t('orders.orderCreatedDescription', { orderId: newOrderRef.id })
+        description: t('orders.orderCreatedDescription', { orderId: docRef.id })
       })
 
       // Close order form
       handleCloseOrderForm()
 
-      return newOrderRef.id
+      return docRef.id
     } catch (error) {
       console.error('❌ Order Creation Error:', error)
       

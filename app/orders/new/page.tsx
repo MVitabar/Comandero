@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useI18n } from "@/components/i18n-provider"
 import { useFirebase } from "@/components/firebase-provider"
 import { useAuth } from "@/components/auth-provider"
-import { collection, query, orderBy, getDocs, addDoc, serverTimestamp } from "firebase/firestore"
+import { collection, query, orderBy, getDocs, addDoc, serverTimestamp, updateDoc } from "firebase/firestore"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -75,6 +75,9 @@ export default function NewOrderPage() {
         updatedAt: serverTimestamp(),
         status: cleanedOrder.status || 'pending'
       })
+
+      // IMPORTANTE: Guarda el id generado por Firestore en el documento
+      await updateDoc(newOrderRef, { id: newOrderRef.id });
 
       // Notificación push con OneSignal
       await sendNotification({

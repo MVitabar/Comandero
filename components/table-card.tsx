@@ -197,10 +197,13 @@ export function TableCard({
         
         if (!querySnapshot.empty) {
           const orderDoc = querySnapshot.docs[0]
+          const data = orderDoc.data()
           const orderData = {
-            ...orderDoc.data(),
+            ...data,
             id: orderDoc.id,
-            docId: orderDoc.id // <-- Añade docId para compatibilidad con AddItemsDialog
+            docId: orderDoc.id, // opcional, para compatibilidad
+            // Forzamos restaurantId por si faltara en datos legacy
+            restaurantId: data.restaurantId || user?.establishmentId || user?.uid || table.restaurantId || ''
           } as Order
 
           setActiveOrder(orderData)

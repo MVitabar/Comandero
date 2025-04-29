@@ -19,7 +19,8 @@ export enum MenuItemCategory {
   MainCourse = 'main_course',
   Dessert = 'dessert',
   Drink = 'drink',
-  Sides = 'sides'
+  Sides = 'sides',
+  Salad = "Salad"
 }
 
 export enum InventoryCategory {
@@ -185,6 +186,8 @@ export interface DietaryRestriction {
   eggFree?: boolean;
 }
 
+export type OrderItemStatus = 'pending' | 'preparing' | 'ready' | 'delivered' | 'finished';
+
 export interface OrderItem {
   id: string;
   itemId: string;
@@ -201,6 +204,7 @@ export interface OrderItem {
   isVegan?: boolean;
   isGlutenFree?: boolean;
   isLactoseFree?: boolean;
+  status?: OrderItemStatus; // Opcional para compatibilidad retroactiva
 }
 
 export interface PaymentInfo {
@@ -853,6 +857,31 @@ export type DashboardData = {
     total: number
     paymentMethod: string
   }[]
+}
+
+// --- Helpers de categorías para filtrado de órdenes por rol ---
+// Categorías consideradas comida (incluye variantes en plural y minúsculas)
+export const FOOD_CATEGORIES = [
+  'appetizer', 'appetizers',
+  'main_course', 'main_courses',
+  'dessert', 'desserts',
+  'salad', 'salads',
+  'sides', 'side'
+];
+
+// Categorías consideradas bebida
+export const DRINK_CATEGORIES = [
+  'drink', 'drinks', 'beverage', 'beverages'
+];
+
+export function isFoodCategory(category?: string): boolean {
+  if (!category) return false;
+  return FOOD_CATEGORIES.includes(category.toLowerCase());
+}
+
+export function isDrinkCategory(category?: string): boolean {
+  if (!category) return false;
+  return DRINK_CATEGORIES.includes(category.toLowerCase());
 }
 
 // --- PATCH: Corrección de tipos, unificación y compatibilidad global ---

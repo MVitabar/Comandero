@@ -135,21 +135,16 @@ export function OrderForm({
       id: `temp-${Date.now()}`,
       itemId: menuItem.uid,
       name: menuItem.name,
-      category: menuItem.category || 'uncategorized', // Añadir valor por defecto
+      category: menuItem.category || 'uncategorized',
       price: menuItem.price,
-      quantity: quantity,
-      unit: menuItem.unit || '', // Añadir valor por defecto para unit
-      stock: menuItem.stock || 0, // Añadir valor por defecto para stock
-      customDietaryRestrictions: itemDietaryRestrictions,
-      notes: notes
+      quantity,
+      unit: menuItem.unit || '',
+      stock: menuItem.stock || 0,
+      notes,
+      status: 'pending',
     };
 
-    const existingItemIndex = orderItems.findIndex(
-      (item) =>
-        item.itemId === menuItem.uid &&
-        JSON.stringify(item.customDietaryRestrictions || []) === JSON.stringify(itemDietaryRestrictions || []) &&
-        item.notes === notes
-    );
+    const existingItemIndex = orderItems.findIndex((item) => item.itemId === menuItem.uid)
 
     if (existingItemIndex >= 0) {
       const totalRequestedQuantity = orderItems[existingItemIndex].quantity + quantity;
@@ -158,10 +153,8 @@ export function OrderForm({
           stock: menuItem.stock,
           quantity: totalRequestedQuantity
         }));
-
         return;
       }
-
       const updatedItems = [...orderItems];
       updatedItems[existingItemIndex].quantity += quantity;
       setOrderItems(updatedItems);
