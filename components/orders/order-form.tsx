@@ -433,7 +433,6 @@ export function OrderForm({
         id: `temp-order-${Date.now()}`,
         tableId: orderType === 'table' ? (selectedTable?.uid || '') : '',
         tableNumber: finalTableNumber as number,
-        tableMapId: selectedTable?.mapId || '', // Use mapId instead of tableMapId
         orderType,
         type: orderType,
         status: 'pending' as BaseOrderStatus,
@@ -590,7 +589,6 @@ export function OrderForm({
       restaurantId: user?.establishmentId || '',
       tableId: table?.id || '',
       tableNumber: orderType === 'table' ? parseInt(tableNumber) : 0,
-      tableMapId: table?.tableMapId || '',
       waiter: user?.displayName || user?.email || user?.uid || 'Owner',
       items: orderItems,
       total: calculateTotal(),
@@ -617,7 +615,6 @@ export function OrderForm({
           orderType,
           tableNumber,
           tableId: table?.id,
-          tableMapId: table?.tableMapId
         }
       },
       createdBy: {
