@@ -105,7 +105,11 @@ export function AddItemsDialog({ order, open, onClose, onItemsAdded }: AddItemsD
         </DialogHeader>
         <div className="space-y-4">
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger>Seleccionar categoría</SelectTrigger>
+            <SelectTrigger>
+              {selectedCategory
+                ? categories.find(c => c.id === selectedCategory)?.name || "Seleccionar categoría"
+                : "Seleccionar categoría"}
+            </SelectTrigger>
             <SelectContent>
               {categories.map(cat => (
                 <SelectItem key={cat.id} value={cat.id}>{cat.name || cat.id}</SelectItem>
@@ -113,7 +117,11 @@ export function AddItemsDialog({ order, open, onClose, onItemsAdded }: AddItemsD
             </SelectContent>
           </Select>
           <Select value={selectedItem} onValueChange={setSelectedItem} disabled={!selectedCategory}>
-            <SelectTrigger>Seleccionar producto</SelectTrigger>
+            <SelectTrigger>
+              {selectedItem
+                ? items.find(i => i.uid === selectedItem)?.name || "Seleccionar producto"
+                : "Seleccionar producto"}
+            </SelectTrigger>
             <SelectContent>
               {items.map(item => (
                 <SelectItem key={item.uid} value={item.uid}>{item.name}</SelectItem>

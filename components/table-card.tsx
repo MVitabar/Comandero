@@ -450,14 +450,14 @@ export function TableCard({
       )}
 
       {/* Add Items Dialog */}
-      {activeOrder && activeOrder.docId && (
+      {activeOrder && (activeOrder.docId || activeOrder.id) && (
         <AddItemsDialog
-          order={activeOrder}
+          order={{ ...activeOrder, docId: activeOrder.docId || activeOrder.id }}
           open={showAddItemsModal}
           onClose={() => setShowAddItemsModal(false)}
           onItemsAdded={() => {
             // Opcional: refresca el pedido activo aquí si lo deseas
-            // fetchActiveOrder();
+            // fetchActiveOrder && fetchActiveOrder();
           }}
         />
       )}
