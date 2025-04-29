@@ -229,13 +229,14 @@ export interface Order {
   createdAt: Date;
   updatedAt: Date;
   tableId?: string;
-  tableMapId?: string;
+  mapId?: string;
   waiter?: string;
   specialRequests?: string;
   dietaryRestrictions?: string[];
   paymentInfo: PaymentInfo;
   closedAt?: Date | null;
   uid?: string;
+  docId?: string;
   debugContext?: {
     userInfo?: {
       uid?: string;
@@ -247,7 +248,7 @@ export interface Order {
       orderType?: string;
       tableNumber?: string | number;
       tableId?: string;
-      tableMapId?: string;
+      mapId?: string;
     };
     timestamp?: Date;
   };
@@ -274,7 +275,7 @@ export interface TableItem {
   restaurantId?: string
   id?: string
   name?: string
-  mapId?: string
+  mapId: string
 }
 
 export interface TableCardProps {
@@ -308,7 +309,7 @@ export interface RestaurantTable {
   capacity: number;
   x?: number;
   y?: number;
-  tableMapId: string;
+  mapId: string;
   status: 'available' | 'occupied' | 'reserved';
 }
 

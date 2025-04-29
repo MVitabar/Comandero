@@ -44,7 +44,7 @@ export interface RestaurantTable {
   capacity: number
   x?: number
   y?: number
-  tableMapId: string
+  mapId: string
   restaurantId?: string
   status: 'available' | 'occupied' | 'reserved'
 }

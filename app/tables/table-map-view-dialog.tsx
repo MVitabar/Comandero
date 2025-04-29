@@ -19,7 +19,7 @@ interface RestaurantTable {
   name: string
   capacity: number
   status: 'available' | 'occupied' | 'reserved'
-  tableMapId: string
+  mapId: string
 }
 
 interface TableMapViewDialogProps {
@@ -64,11 +64,12 @@ export default function TableMapViewDialog({
         const tableMapData = tableMapSnapshot.data()
         const tablesInMap = tableMapData?.layout?.tables || []
 
-        // Ensure each table has a unique identifier
-        const processedTables = tablesInMap.map((table: { id: any; status: any }) => ({
+        // Ensure each table has a unique identifier and always attach mapId
+        const processedTables = tablesInMap.map((table: any) => ({
           ...table,
-          id: table.id || uuidv4(), // Generate ID if not present
-          status: table.status || 'available' // Default status if not set
+          id: table.id || uuidv4(),
+          status: table.status || 'available',
+          mapId: table.mapId ?? tableMap.id
         }))
 
         setTables(processedTables)
@@ -227,7 +228,7 @@ export default function TableMapViewDialog({
           // Fallback to 0 if no number can be extracted
           return 0;
         })(),
-        tableMapId: order.tableMapId || '',
+        mapId: order.mapId || selectedTable?.mapId || '',
         waiter: order.waiter || user?.email || '',
         orderType: order.orderType || 'table',
         type: order.type || 'table',
@@ -245,7 +246,7 @@ export default function TableMapViewDialog({
             orderType: order.orderType || 'table',
             tableNumber: `Mesa ${selectedTable?.name || 1}`,
             tableId: order.tableId || selectedTable?.id || '',
-            tableMapId: order.tableMapId || ''
+            mapId: order.mapId || selectedTable?.mapId || '',
           },
           timestamp: new Date()
         }
@@ -295,10 +296,14 @@ export default function TableMapViewDialog({
     setIsOrderFormOpen(false)
   }
 
+  // Accesibilidad: ids únicos para descripciones de los diálogos
+  const mainDescriptionId = `table-map-desc-${tableMap.id}`;
+  const orderFormDescriptionId = selectedTable ? `order-form-desc-${selectedTable.id}` : 'order-form-desc';
+
   if (isLoading) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent>
+        <DialogContent className="max-w-6xl h-[80vh] overflow-y-auto" aria-describedby={mainDescriptionId}>
           <DialogHeader>
             <DialogTitle className="sr-only">{t('tables.tableMaps.loadingTitle')}</DialogTitle>
           </DialogHeader>
@@ -311,10 +316,10 @@ export default function TableMapViewDialog({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-6xl h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl h-[80vh] overflow-y-auto" aria-describedby={mainDescriptionId}>
           <DialogHeader>
             <DialogTitle>{tableMap.name}</DialogTitle>
-            <DialogDescription>{tableMap.description}</DialogDescription>
+            <DialogDescription id={mainDescriptionId}>{tableMap.description}</DialogDescription>
           </DialogHeader>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -340,7 +345,8 @@ export default function TableMapViewDialog({
                       height: 100, 
                       x: 0, 
                       y: 0, 
-                      status: table.status
+                      status: table.status,
+                      mapId: table.mapId
                     }}
                     onCreateOrder={() => handleCreateOrder(table)}
                   />
@@ -352,13 +358,13 @@ export default function TableMapViewDialog({
 
       {isOrderFormOpen && selectedTable && (
         <Dialog open={isOrderFormOpen} onOpenChange={handleCloseOrderForm}>
-          <DialogContent className="max-w-4xl">
+          <DialogContent className="max-w-4xl" aria-describedby={orderFormDescriptionId}>
             <DialogHeader>
               <DialogTitle>{t('orders.createOrder')} - {selectedTable.name}</DialogTitle>
+              <DialogDescription id={orderFormDescriptionId} className="sr-only">
+                {t('orders.createOrder')} {t('commons.for')} {selectedTable.name}
+              </DialogDescription>
             </DialogHeader>
-            <div className="sr-only" id="order-form-title">
-              {t('orders.createOrder')} {t('commons.for')} {selectedTable.name}
-            </div>
             <OrderForm 
               initialTableNumber={selectedTable.name}
               onOrderCreated={(order) => handleOrderCreation(order)}

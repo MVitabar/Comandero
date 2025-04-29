@@ -29,17 +29,20 @@ export function TableGridView({
   useEffect(() => {
   }, [tables])
 
+  // Refuerza que cada mesa tenga mapId antes de renderizar, usando undefined en vez de null
+  // Si viene de RestaurantTable, toma tableMapId como mapId
+  // Corrige tipos: number y seats siempre deben ser number; solo accede a propiedades válidas
   const processedTables = tables.map(table => ({
     ...table,
-    id: table.id || `table_${Math.random().toString(36).substr(2, 9)}`,
-    number: table.number || 0,
-    seats: table.seats || 4,
+    id: table.id || table.uid || `table_${Math.random().toString(36).substr(2, 9)}`,
+    number: typeof table.number === 'number'
+      ? table.number
+      : (typeof table.name === 'string' ? parseInt(table.name.replace(/\D/g, ''), 10) || 0 : 0),
+    seats: typeof table.seats === 'number'
+      ? table.seats
+      : (typeof (table as any).capacity === 'number' ? (table as any).capacity : 4),
     status: table.status || 'available',
-    shape: table.shape || 'square',
-    width: table.width || 50,
-    height: table.height || 50,
-    x: table.x || 0,
-    y: table.y || 0
+    mapId: table.mapId ?? (table as any).tableMapId ?? undefined
   }))
 
   const filteredTables = processedTables

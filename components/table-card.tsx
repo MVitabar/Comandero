@@ -25,6 +25,7 @@ import { useAuth } from "@/components/auth-provider"
 import { doc, getDoc, updateDoc, collection, query, where, getDocs, limit, serverTimestamp } from "firebase/firestore"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { OrderDetailsDialog } from './orders/order-details-dialog'
+import { AddItemsDialog } from "@/components/orders/add-items-dialog";
 import { TableCardProps, Order, TableItem, PaymentInfo, PaymentMethod } from '@/types'
 import { DialogDescription } from "@radix-ui/react-dialog"
 import { toast } from "sonner"
@@ -50,6 +51,7 @@ export function TableCard({
   const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false)
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null)
+  const [showAddItemsModal, setShowAddItemsModal] = useState(false);
 
   // Determine restaurant ID
   const restaurantId = user?.establishmentId || user?.uid || table.restaurantId || ''
@@ -136,12 +138,6 @@ export function TableCard({
         table.id || 
         '',
       
-      tableMapId: 
-        activeOrder.tableMapId || 
-        table.mapId || 
-        table.id || 
-        undefined,
-      
       waiter: 
         activeOrder.waiter || 
         user?.username || 
@@ -202,8 +198,9 @@ export function TableCard({
         if (!querySnapshot.empty) {
           const orderDoc = querySnapshot.docs[0]
           const orderData = {
+            ...orderDoc.data(),
             id: orderDoc.id,
-            ...orderDoc.data()
+            docId: orderDoc.id // <-- Añade docId para compatibilidad con AddItemsDialog
           } as Order
 
           setActiveOrder(orderData)
@@ -245,8 +242,15 @@ export function TableCard({
 
       const restaurantId = user.currentEstablishmentName || user.uid
 
-      // Fetch the table map that contains this table
-      const tableMapRef = doc(db, 'restaurants', restaurantId, 'tableMaps', table.mapId || '')
+      // Referencia robusta al mapa de mesas usando solo mapId
+      const mapId = table.mapId || '';
+      console.log('DEBUG table al cerrar orden:', table);
+      console.log('DEBUG mapId:', mapId);
+      if (!mapId) {
+        throw new Error('Missing mapId for this table');
+      }
+      const tableMapRef = doc(db, 'restaurants', restaurantId, 'tableMaps', mapId);
+
       const tableMapSnapshot = await getDoc(tableMapRef)
 
       if (!tableMapSnapshot.exists()) {
@@ -310,18 +314,31 @@ export function TableCard({
     try {
       if (!db || !user || !activeOrder) return
 
-      const restaurantId = user.currentEstablishmentName || user.uid
-
-      // Update order with payment method
-      const orderRef = doc(db, `restaurants/${restaurantId}/orders`, activeOrder.id)
+      const restaurantId = user?.establishmentId || user?.uid || table.restaurantId || '';
+      if (!restaurantId || !activeOrder?.id) {
+        console.log('DEBUG restaurantId:', restaurantId);
+        console.log('DEBUG activeOrder.id:', activeOrder?.id);
+        console.log('DEBUG user:', user);
+        console.log('DEBUG table:', table);
+        console.log('DEBUG activeOrder:', activeOrder);
+        throw new Error('Missing restaurantId or orderId');
+      }
+      // Referencia correcta a la orden
+      const orderRef = doc(db, 'restaurants', restaurantId, 'orders', activeOrder.id);
       await updateDoc(orderRef, {
         status: 'closed',
         'paymentInfo.method': selectedPaymentMethod,
         closedAt: serverTimestamp()
       })
 
-      // Fetch the table map that contains this table
-      const tableMapRef = doc(db, `restaurants/${restaurantId}/tableMaps`, table.mapId || '')
+      // Referencia robusta al mapa de mesas usando solo mapId
+      const mapId = table.mapId || '';
+      console.log('DEBUG table al cerrar orden:', table);
+      console.log('DEBUG mapId:', mapId);
+      if (!mapId) {
+        throw new Error('Missing mapId for this table');
+      }
+      const tableMapRef = doc(db, `restaurants/${restaurantId}/tableMaps`, mapId);
       const tableMapSnapshot = await getDoc(tableMapRef)
 
       if (!tableMapSnapshot.exists()) {
@@ -406,7 +423,7 @@ export function TableCard({
         </CardContent>
 
         <CardFooter className="flex flex-col space-y-2">
-          {table.status === 'available' && (
+          {table.status === 'available' && !activeOrder && (
             <Button 
               variant="default" 
               className="w-full"
@@ -431,16 +448,22 @@ export function TableCard({
                 <ClipboardList className="h-4 w-4 mr-2" />
                 {t("tableCard.actions.viewOrder")}
               </Button>
-              {activeOrder.status === 'ready' && (
-                <Button 
-                  variant="default" 
-                  className="w-full" 
-                  onClick={handleCloseTableAndOrder}
-                >
-                  <Receipt className="h-4 w-4 mr-2" />
-                  {t("tableCard.actions.closeOrder")}
-                </Button>
-              )}
+              <Button 
+                variant="secondary" 
+                className="w-full"
+                onClick={() => setShowAddItemsModal(true)}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                {t("tableCard.actions.addItems")}
+              </Button>
+              <Button 
+                variant="default" 
+                className="w-full" 
+                onClick={handleCloseTableAndOrder}
+              >
+                <Receipt className="h-4 w-4 mr-2" />
+                {t("tableCard.actions.closeOrder")}
+              </Button>
             </>
           )}
         </CardFooter>
@@ -453,6 +476,19 @@ export function TableCard({
           open={isOrderDetailsOpen}
           onOpenChange={(open) => setIsOrderDetailsOpen(open)}
           onClose={() => setIsOrderDetailsOpen(false)}
+        />
+      )}
+
+      {/* Add Items Dialog */}
+      {activeOrder && activeOrder.docId && (
+        <AddItemsDialog
+          order={activeOrder}
+          open={showAddItemsModal}
+          onClose={() => setShowAddItemsModal(false)}
+          onItemsAdded={() => {
+            // Opcional: refresca el pedido activo aquí si lo deseas
+            // fetchActiveOrder();
+          }}
         />
       )}
 

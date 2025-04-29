@@ -28,10 +28,10 @@ export function OrderDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px]" aria-describedby="order-details-description">
         <DialogHeader>
           <DialogTitle>{t("orders.details.title")}</DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="order-details-description">
             {t("orders.details.description")}
           </DialogDescription>
         </DialogHeader>

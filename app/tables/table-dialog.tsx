@@ -95,12 +95,13 @@ export default function TableDialog({
       const newTableNumber = tableCount + 1
       const generatedTableName = `Mesa ${newTableNumber}`
 
+      // Cuando crees o edites una mesa, asegúrate de incluir tableMapId/mapId
       const newTable: RestaurantTable = {
         id: newTableId,
         name: tableName || generatedTableName,
         capacity: tableCapacity,
-        tableMapId: tableMap.id,
         status: 'available',
+        mapId: tableMap.id, 
         x: 0, 
         y: 0, 
         restaurantId: restaurantId 
@@ -134,10 +135,10 @@ export default function TableDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent aria-describedby="table-dialog-description">
         <DialogHeader>
           <DialogTitle>{t("tableDialog.title")}</DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="table-dialog-description">
             {t("tableDialog.description")}
           </DialogDescription>
         </DialogHeader>

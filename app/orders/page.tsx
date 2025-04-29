@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, MoreHorizontal, Edit, Trash, X } from "lucide-react"
+import { Plus, Search, MoreHorizontal, Edit, Trash, X, Eye, PlusSquare, Repeat } from "lucide-react"
 import Link from "next/link"
 import { t, TFunction } from 'i18next';
 import { Order, OrderStatus, FlexibleOrderStatus, BaseOrderStatus, OrderItem } from "@/types"
@@ -40,6 +40,7 @@ import { useRouter } from "next/navigation";
 import { OrderDetailsDialog } from "@/components/orders/order-details-dialog"
 import { UserRole } from "@/types/permissions";
 import { useNotifications } from "@/hooks/useNotifications";
+import { AddItemsDialog } from "@/components/orders/add-items-dialog";
 
 // Language codes
 type LanguageCode = 'en' | 'es' | 'pt';
@@ -170,8 +171,10 @@ export default function OrdersPage() {
   const [isOrderDetailsDialogOpen, setIsOrderDetailsDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false)
-  // Estado para filtrar status, incluyendo 'all'
-  const [selectedStatus, setSelectedStatus] = useState<FilterStatus>('all');
+  const [isAddItemsDialogOpen, setIsAddItemsDialogOpen] = useState(false)
+  // Estados separados para filtro global y status dialog
+  const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
+  const [selectedStatus, setSelectedStatus] = useState<BaseOrderStatus>('pending');
 
   useEffect(() => {
     fetchOrders()
@@ -281,7 +284,7 @@ export default function OrdersPage() {
           createdAt: data.createdAt?.toDate() || new Date(),
           updatedAt: data.updatedAt?.toDate() || new Date(),
           tableId: data.tableId || data.debugContext?.orderContext?.tableId,
-          tableMapId: data.tableMapId || data.debugContext?.orderContext?.tableMapId,
+          mapId: data.mapId || data.debugContext?.orderContext?.mapId,
           waiter: data.createdBy?.username || data.createdBy?.email || data.waiter || 'Unknown',
           specialRequests: data.specialRequests || '',
           paymentInfo: {
@@ -420,7 +423,7 @@ export default function OrdersPage() {
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate() || new Date(),
         tableId: data.tableId || data.debugContext?.orderContext?.tableId,
-        tableMapId: data.tableMapId || data.debugContext?.orderContext?.tableMapId,
+        mapId: data.mapId || data.debugContext?.orderContext?.mapId,
         waiter: data.waiter || data.debugContext?.userInfo?.uid || user.email,
         specialRequests: data.specialRequests || '',
         paymentInfo: {
@@ -455,9 +458,40 @@ export default function OrdersPage() {
     }
 
     try {
+      const STATUS_OPTIONS: BaseOrderStatus[] = [
+        'pending', 'preparing', 'ready', 'delivered', 'cancelled', 'closed', 'ordering', 'served', 'finished'
+      ]; // Excluye 'null' para no mostrar opción inválida
+
+      if (!selectedStatus || !STATUS_OPTIONS.includes(selectedStatus as BaseOrderStatus)) {
+        toast.error(t("orders.error.selectStatus"));
+        return;
+      }
+      const validStatus = selectedStatus as BaseOrderStatus;
       const orderRef = doc(db, 'restaurants', user.establishmentId, 'orders', String(selectedOrder.id))
-      const validStatus = selectedStatus === 'all' ? 'pending' : selectedStatus as BaseOrderStatus;
       await updateDoc(orderRef, { status: validStatus, updatedAt: new Date() })
+
+      // Si la orden es de mesa y el status es "finished" o "closed", liberar la mesa
+      const tableMapId = selectedOrder.mapId || selectedOrder.debugContext?.orderContext?.mapId;
+      const tableId = selectedOrder.tableId || selectedOrder.debugContext?.orderContext?.tableId;
+      if (
+        (validStatus === "finished" || validStatus === "closed") &&
+        tableId &&
+        tableMapId
+      ) {
+        const tableMapRef = doc(db, 'restaurants', user.establishmentId, 'tableMaps', tableMapId)
+        const tableMapSnap = await getDoc(tableMapRef)
+        if (tableMapSnap.exists()) {
+          const tableMapData = tableMapSnap.data()
+          const tables = (tableMapData.layout?.tables || []).map((t: any) =>
+            t.id === tableId ? { ...t, status: "available", activeOrderId: null } : t
+          )
+          await updateDoc(tableMapRef, {
+            "layout.tables": tables,
+            updatedAt: new Date()
+          })
+        }
+      }
+
       setOrders(orders => orders.map(order => order.id === selectedOrder.id ? { ...order, status: validStatus, updatedAt: new Date() } : order))
       setIsStatusDialogOpen(false)
       toast.success(
@@ -581,8 +615,8 @@ export default function OrdersPage() {
     (order) => {
       // Verificar si coincide con el status seleccionado
       const statusMatch = 
-        selectedStatus === 'all' || 
-        order.status === selectedStatus;
+        statusFilter === 'all' || 
+        order.status === statusFilter;
 
       // Verificar si coincide con la búsqueda
       const searchMatch = 
@@ -601,16 +635,20 @@ export default function OrdersPage() {
     }
   );
 
-  // Modificar handleStatusChange para usar el nuevo tipo
-  const handleStatusChange = (status: FilterStatus) => {
-    if (!selectedOrder) return;
-    setSelectedStatus(status);
+  // Función para abrir el diálogo de status correctamente
+  const openStatusDialog = (order: Order) => {
+    setSelectedOrder(order);
+    setSelectedStatus(order.status as BaseOrderStatus);
+    setIsStatusDialogOpen(true);
   };
 
   const handleViewOrder = (order: Order) => {
     setSelectedOrder(order)
     setIsOrderDetailsDialogOpen(true)
   }
+
+  // Genera un id único para la descripción del diálogo de status
+  const statusDescriptionId = selectedOrder ? `dialog-status-description-${selectedOrder.id}` : 'dialog-status-description';
 
   return (
     <div className="flex flex-col h-[calc(100vh-200px)] overflow-hidden">
@@ -635,7 +673,7 @@ export default function OrdersPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <Select defaultValue="all">
+        <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as FilterStatus)}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder={t("orders.filter.allStatuses")} />
           </SelectTrigger>
@@ -714,21 +752,24 @@ export default function OrdersPage() {
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent>
+                        <DropdownMenuContent forceMount style={{ zIndex: 9999 }}>
                           <DropdownMenuItem onClick={() => handleViewOrder(order)}>
-                            {t("orders.actions.view")}
+                            VER PEDIDO
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => {
                             setSelectedOrder(order);
-                            setIsStatusDialogOpen(true);
+                            setIsAddItemsDialogOpen(true);
                           }}>
-                            {t("orders.actions.updateStatus")}
+                            AGREGAR ITEMS
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openStatusDialog(order)}>
+                            CAMBIAR STATUS
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => {
                             setSelectedOrder(order);
                             setIsDeleteDialogOpen(true);
                           }}>
-                            {t("orders.actions.delete")}
+                            ELIMINAR
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -783,27 +824,97 @@ export default function OrdersPage() {
                         <p>R$ {order.total.toFixed(2)}</p>
                       </div>
                       <div className="flex items-center justify-end">
+                        <div className="flex items-center gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => handleViewOrder(order)} title="Ver pedido">
+                            <Eye className="h-5 w-5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => { setSelectedOrder(order); setIsAddItemsDialogOpen(true); }} title="Agregar ítems">
+                            <PlusSquare className="h-5 w-5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => openStatusDialog(order)} title="Cambiar status">
+                            <Repeat className="h-5 w-5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => { setSelectedOrder(order); setIsDeleteDialogOpen(true); }} title="Eliminar">
+                            <Trash className="h-5 w-5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Vista de tarjetas para desktop */}
+            <div className="hidden md:block">
+              {filteredOrders.map((order) => (
+                <Card key={order.id} className="w-full">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">{t("orders.errors.headers.id")}: {order.id}</CardTitle>
+                    <Badge variant={getStatusBadgeVariant(order.status as BaseOrderStatus)}>
+                      {translateStatus(order.status, i18n?.language as LanguageCode)}
+                    </Badge>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <p className="text-xs text-muted-foreground">{t("commons.tableNumber")}</p>
+                        <p>{order.tableNumber 
+                          ? `${getOrderTypeLabel(order.orderType)} ${order.tableNumber}` 
+                          : getOrderTypeLabel(order.orderType)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">{t("orders.errors.headers.waiter")}</p>
+                        <p>
+                          {order.createdBy?.displayName || order.createdBy?.email || t("orders.unknownUser")}
+                          {order.createdBy?.role && (
+                            <span className="text-xs text-muted-foreground ml-1">
+                              ({t(`roles.${order.createdBy.role.toLowerCase()}`)})</span>
+                          )}
+                        </p>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="text-xs text-muted-foreground">{t("orders.errors.headers.items")}</p>
+                        <p>{(() => {
+                          const orderItems = Array.isArray(order.items) 
+                            ? order.items 
+                            : (order.items ? Object.values(order.items).map(item => item as OrderItem) : [])
+                          
+                          return orderItems.length > 0 
+                            ? orderItems.map(item => item.name).join(", ") 
+                            : t("orders.noItemsInOrder")
+                        })()}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">{t("commons.table.headers.price")}</p>
+                        <p>R$ {order.total.toFixed(2)}</p>
+                      </div>
+                      <div className="flex items-center justify-end">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              {t("orders.errors.headers.actions")}
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">{t("commons.openMenu")}</span>
+                              <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent>
+                          <DropdownMenuContent forceMount style={{ zIndex: 9999 }}>
                             <DropdownMenuItem onClick={() => handleViewOrder(order)}>
-                              {t("orders.actions.view")}
+                              VER PEDIDO
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => {
                               setSelectedOrder(order);
-                              setIsStatusDialogOpen(true);
+                              setIsAddItemsDialogOpen(true);
                             }}>
-                              {t("orders.actions.updateStatus")}
+                              AGREGAR ITEMS
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openStatusDialog(order)}>
+                              CAMBIAR STATUS
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => {
                               setSelectedOrder(order);
                               setIsDeleteDialogOpen(true);
                             }}>
-                              {t("orders.actions.delete")}
+                              ELIMINAR
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -846,46 +957,47 @@ export default function OrdersPage() {
 
       {isStatusDialogOpen && selectedOrder && (
         <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
-          <DialogContent>
+          <DialogContent aria-describedby={statusDescriptionId}>
             <DialogHeader>
-              <DialogTitle>{t("dialog.confirm.title")}</DialogTitle>
-              <DialogDescription>
-                {t("dialog.confirm.description")}
-              </DialogDescription>
+              <DialogTitle>{t("orders.changeStatusTitle")}</DialogTitle>
+              <DialogDescription id={statusDescriptionId}>{t("orders.changeStatusDescription")}</DialogDescription>
             </DialogHeader>
-            <Select 
-              value={selectedStatus} 
-              onValueChange={(value: string) => {
-                // Type guard to ensure only valid statuses are set
-                if (Object.keys(STATUS_TRANSLATIONS).includes(value)) {
-                  setSelectedStatus(value as BaseOrderStatus)
-                }
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={t("orders.dialogs.updateStatus.selectStatus")} />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.keys(STATUS_TRANSLATIONS).map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {translateStatus(status, i18n?.language as LanguageCode)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <DialogFooter>
-              <Button 
-                variant="outline" 
-                onClick={() => setIsStatusDialogOpen(false)}
+            <div className="space-y-4">
+              <Select
+                value={selectedStatus}
+                onValueChange={(value) => setSelectedStatus(value as BaseOrderStatus)}
               >
-                {t("dialog.confirm.cancelButton")}
+                <SelectTrigger>
+                  <SelectValue placeholder={t("orders.selectStatus")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {[
+                    'pending', 'preparing', 'ready', 'delivered', 'cancelled', 'closed', 'ordering', 'served', 'finished'
+                  ].map(status => (
+                    <SelectItem key={status} value={status}>
+                      {translateStatus(status, i18n?.language as LanguageCode)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button onClick={handleUpdateStatus} className="w-full">
+                {t("orders.changeStatusButton")}
               </Button>
-              <Button onClick={handleUpdateStatus}>
-                {t("dialog.confirm.confirmButton")}
-              </Button>
-            </DialogFooter>
+            </div>
           </DialogContent>
         </Dialog>
+      )}
+
+      {isAddItemsDialogOpen && selectedOrder && (
+        <AddItemsDialog
+          order={selectedOrder}
+          open={isAddItemsDialogOpen}
+          onClose={() => setIsAddItemsDialogOpen(false)}
+          onItemsAdded={() => {
+            setIsAddItemsDialogOpen(false);
+            // Opcional: recargar la orden o mostrar un toast
+          }}
+        />
       )}
 
       {/* Order Details Dialog */}

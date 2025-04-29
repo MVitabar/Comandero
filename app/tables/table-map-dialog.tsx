@@ -83,12 +83,12 @@ export default function TableMapDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent aria-describedby="table-map-description">
         <DialogHeader>
           <DialogTitle>
             {initialData ? t('tables.tableMaps.editMap') : t('tables.tableMaps.createMap')}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="table-map-description">
             {initialData ? t('tables.tableMaps.editMapDescription') : t('tables.tableMaps.createMapDescription')}
           </DialogDescription>
         </DialogHeader>
