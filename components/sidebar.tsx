@@ -152,6 +152,7 @@ export function Sidebar() {
         onClick={() => setIsOpen(!isOpen)}
       >
         {isOpen ? <X /> : <Menu />}
+        <span className="sr-only">{t("commons.close")}</span>
       </Button>
 
       {/* Sidebar */}

@@ -787,7 +787,7 @@ export default function DashboardPage() {
                               <div className="flex flex-col w-full">
                                 <div className="flex justify-between items-center mb-2">
                                   <span className="font-semibold text-sm sm:text-base text-gray-800">
-                                    {category}
+                                    {t(`categories.${category}`)}
                                   </span>
                                 </div>
                                 <div className="flex space-x-2">
@@ -934,7 +934,7 @@ export default function DashboardPage() {
                                   <TableBody>
                                     <TableRow className="hover:bg-gray-100 transition-colors">
                                       <TableCell className="text-xs sm:text-sm text-gray-700">
-                                        {item.category}
+                                        {t(`categories.${item.category}`)}
                                       </TableCell>
                                       <TableCell className="text-xs sm:text-sm text-gray-700">
                                         {item.total}
@@ -1167,24 +1167,20 @@ export default function DashboardPage() {
       <Card className="mt-12">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Reporte General</CardTitle>
-            <CardDescription>
-              Descarga un informe completo de todas las métricas del negocio en Excel o PDF.
-            </CardDescription>
+            <CardTitle>{t('dashboard.report.title')}</CardTitle>
+            <CardDescription>{t('dashboard.report.description')}</CardDescription>
           </div>
           <div className="flex gap-2">
             <Button onClick={handleExportGeneralExcel} variant="outline">
-              <Download className="w-4 h-4 mr-2" /> Excel
+              <Download className="w-4 h-4 mr-2" /> {t('dashboard.report.excel')}
             </Button>
             <Button onClick={handleExportGeneralPDF} variant="outline">
-              <Download className="w-4 h-4 mr-2" /> PDF
+              <Download className="w-4 h-4 mr-2" /> {t('dashboard.report.pdf')}
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <p>
-            El archivo incluirá ventas por día, productos más vendidos, inventario y más, según los datos actualmente visibles en el dashboard.
-          </p>
+          <p>{t('dashboard.report.fileDescription')}</p>
         </CardContent>
       </Card>
     </div>

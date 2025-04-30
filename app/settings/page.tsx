@@ -48,28 +48,28 @@ export default function SettingsPage() {
   const availableTabs = [
     {
       id: "profile",
-      label: t("settings.tabs.profile"),
+      label: t("settings.profile.title"),
       icon: <User className="h-4 w-4" />,
       content: <UserProfile />,
       permission: settingsPermissions?.profile
     },
     {
       id: "appearance",
-      label: t("settings.tabs.appearance"),
+      label: t("settings.appearance.title"),
       icon: <Palette className="h-4 w-4" />,
       content: <AppearanceSettings />,
       permission: settingsPermissions?.appearance
     },
     {
       id: "language",
-      label: t("settings.tabs.language"),
+      label: t("settings.language.title"),
       icon: <Globe className="h-4 w-4" />,
       content: <LanguageSettings />,
       permission: settingsPermissions?.language
     },
     {
       id: "notifications",
-      label: t("settings.tabs.notifications"),
+      label: t("settings.notifications.title"),
       icon: <Bell className="h-4 w-4" />,
       content: <NotificationSettings />,
       permission: settingsPermissions?.notifications
@@ -77,21 +77,21 @@ export default function SettingsPage() {
     // Additional tabs only for owner and admin
     {
       id: "establishment",
-      label: t("settings.tabs.establishment"),
+      label: t("settings.establishment.title"),
       icon: <Store className="h-4 w-4" />,
       content: <EstablishmentSettings />,
       permission: settingsPermissions?.establishment
     },
     {
       id: "security",
-      label: t("settings.tabs.security"),
+      label: t("settings.security.title"),
       icon: <Shield className="h-4 w-4" />,
       content: <SecuritySettings />,
       permission: settingsPermissions?.security
     },
     {
       id: "billing",
-      label: t("settings.tabs.billing"),
+      label: t("settings.billing.title"),
       icon: <CreditCard className="h-4 w-4" />,
       content: <BillingSettings />,
       permission: settingsPermissions?.billing

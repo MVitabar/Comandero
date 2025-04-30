@@ -11,11 +11,13 @@ import { Label } from '@/components/ui/label'
 import { doc, updateDoc } from 'firebase/firestore'
 import { UserRole } from '@/types/permissions'
 import { UserProfileData } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 export function UserProfile() {
   const { canView, canDo } = usePermissions() as { canView: (module: string | number) => boolean; canDo?: (module: string | number, action: string) => boolean }
   const { user } = useAuth()
   const { db } = useFirebase()
+  const { t } = useTranslation()
 
   // Verificar acceso a perfil
   if (!canView('profile')) {
@@ -113,7 +115,7 @@ export function UserProfile() {
               disabled={loading}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Seleccionar Rol" />
+                <SelectValue placeholder={t("profile.selectRole")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={UserRole.ADMIN}>Administrador</SelectItem>
@@ -125,7 +127,7 @@ export function UserProfile() {
           </div>
         )}
         <Button type="submit" disabled={loading}>
-          {loading ? 'Guardando...' : 'Guardar Cambios'}
+          {loading ? t("profile.saving") : t("profile.saveChanges")}
         </Button>
       </form>
     </div>

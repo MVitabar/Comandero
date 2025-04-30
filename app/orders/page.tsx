@@ -155,16 +155,10 @@ const getStatusBadgeVariant = (status?: BaseOrderStatus): BadgeVariant => {
 
 // Función auxiliar para obtener la etiqueta de tipo de pedido
 const getOrderTypeLabel = (orderType?: string): string => {
-  const orderTypeLabels: Record<string, string> = {
-    'table': 'Mesa',
-    'delivery': 'Delivery',
-    'counter': 'Mostrador',
-    'takeaway': 'Para llevar'
-  };
-
-  return orderType && orderTypeLabels[orderType] 
-    ? orderTypeLabels[orderType] 
-    : 'Desconocido';
+  // Utiliza traducciones en vez de hardcodeado
+  return orderType
+    ? t(`orders.types.${orderType}`)
+    : t('orders.types.unknown');
 };
 
 export default function OrdersPage() {
@@ -549,7 +543,7 @@ export default function OrdersPage() {
                           {/* Sección de comidas */}
                           {(canViewBothSections(user?.role) || canViewOnlyFood(user?.role)) && (
                             <>
-                              <h4 className="font-semibold mb-1">Comidas</h4>
+                              <h4 className="font-semibold mb-1">{t("orders.types.food")}</h4>
                               {comidas.length > 0 ? (
                                 <ul className="mb-2">
                                   {comidas.map(item => (
@@ -557,14 +551,14 @@ export default function OrdersPage() {
                                   ))}
                                 </ul>
                               ) : (
-                                <p className="text-muted-foreground mb-2">Sin comidas</p>
+                                <p className="text-muted-foreground mb-2">{t("orders.emptyState.noFood")}</p>
                               )}
                             </>
                           )}
                           {/* Sección de bebidas */}
                           {(canViewBothSections(user?.role) || canViewOnlyDrinks(user?.role)) && (
                             <>
-                              <h4 className="font-semibold mb-1">Bebidas</h4>
+                              <h4 className="font-semibold mb-1">{t("orders.types.drinks")}</h4>
                               {bebidas.length > 0 ? (
                                 <ul>
                                   {bebidas.map(item => (
@@ -572,7 +566,7 @@ export default function OrdersPage() {
                                   ))}
                                 </ul>
                               ) : (
-                                <p className="text-muted-foreground">Sin bebidas</p>
+                                <p className="text-muted-foreground">{t("orders.emptyState.noDrinks")}</p>
                               )}
                             </>
                           )}

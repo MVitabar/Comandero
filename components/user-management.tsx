@@ -16,11 +16,13 @@ import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from '@
 import { User } from '@/types'
 import { toast } from "sonner"
 import { useNotifications } from "@/hooks/useNotifications"
+import { useTranslation } from 'react-i18next';
 
 export function UserManagement() {
   const { canView, canDo } = usePermissions() as { canView: (module: string | number) => boolean; canDo?: (module: string | number, action: string) => boolean }
   const { db } = useFirebase()
   const { sendNotification } = useNotifications();
+  const { t } = useTranslation();
   
   // Especificar el tipo de estado como User[]
   const [users, setUsers] = useState<User[]>([])
@@ -62,9 +64,9 @@ export function UserManagement() {
       
       // Filtrar el usuario eliminado del estado
       setUsers(prevUsers => prevUsers.filter(user => user.id !== userId))
-      toast.success("Usuario eliminado correctamente.");
+      toast.success(t("users.deleted"));
       await sendNotification({
-        title: "Usuario eliminado",
+        title: t("users.deleted"),
         message: `Se eliminó el usuario con ID ${userId}`,
         url: window.location.href,
       });
@@ -102,7 +104,7 @@ export function UserManagement() {
                     variant="destructive" 
                     onClick={() => handleDeleteUser(user.id ?? '')}
                   >
-                    Eliminar
+                    {t("commons.delete")}
                   </Button>
                 )}
               </TableCell>

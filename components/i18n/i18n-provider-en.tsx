@@ -1,4 +1,5 @@
-export const ptTranslations = {
+export const enTranslations = {
+  
   "commons": {
     "yes": "Yes",
     "no": "No",
@@ -66,7 +67,15 @@ export const ptTranslations = {
         "tooManyAttempts": "Too many failed attempts. Try again later."
       }
     },
-    "deleted": "Deleted"
+    "deleted": "Deleted",
+    "nextSlide": "Próximo slide",
+    "previousSlide": "Slide anterior",
+   
+    "noResults": "Nenhum resultado encontrado",
+    "next": "Próximo",
+    "previous": "Anterior",
+    "accept": "Aceitar",
+    "retry": "Tentar novamente"
   },
 
   "tableMaps": {
@@ -89,6 +98,18 @@ export const ptTranslations = {
       "confirmDescription": "Are you sure you want to delete the table map '{{name}}'?",
       "success": "Table Map Deleted",
       "error": "Error deleting table map"
+    }
+  },
+  "dialog":{
+    "delete":{
+      "title": "Delete Order",
+      "description": "Are you sure you want to delete the order?",
+      "confirmTitle": "Delete Table Order",
+      "confirmDescription": "Are you sure you want to delete the order?",
+      "success": "Order Deleted",
+      "error": "Error deleting order",
+      "confirmButton": "Delete",
+      "cancelButton": "Cancel"
     }
   },
 
@@ -125,7 +146,8 @@ export const ptTranslations = {
     "created": "created",
     "close": "Close",
     "error": "Error",
-    "deleted": "Deleted"
+    "deleted": "Deleted",
+    "update": "Update"
   },
 
   "tables": {
@@ -145,6 +167,7 @@ export const ptTranslations = {
       "title": "Table Maps",
       "createMap": "Create Table Map",
       "editMap": "Edit Table Map",
+      "editMapDescription": "Edit Table Map Description",
       "mapName": "Map Name",
       "mapDescription": "Map Description",
       "noMapsFound": "No Table Maps Found",
@@ -171,6 +194,10 @@ export const ptTranslations = {
         "error": "Error deleting table map"
       },
       "fetchError": "Error fetching table maps"
+    },
+    "allStatuses": "All statuses",
+    "statuses": {
+      "available": "Available"
     }
   },
   
@@ -264,6 +291,13 @@ export const ptTranslations = {
         "warning": "Low Stock",
         "healthy": "Healthy Stock"
       }
+    },
+    "report": {
+      "title": "Report",
+      "description": "Download a complete report of all metrics of the business in Excel or PDF.",
+      "excel": "Excel",
+      "pdf": "PDF",
+      "fileDescription": "The file will include sales by day, best selling products, inventory and more, according to the data currently visible in the dashboard.",
     },
     
     "errors": {
@@ -378,7 +412,24 @@ export const ptTranslations = {
         "other": "Other"
       }
     },
-    "confirmPayment": "Confirm Payment"
+    "confirmPayment": "Confirm Payment",
+    "itemUnavailable": "(Indisponível)",
+    "stockAvailable": "- R$ {{price}} ({{stock}} disponível)",
+    "changeStatusTitle": "Change Status",
+    "changeStatusDescription": "Change order status",
+    "changeStatusButton": "Change Status",
+    "types": {
+      "table": "Table",
+      "delivery": "Delivery",
+      "counter": "Counter",
+      "takeaway": "Takeaway",
+      "food": "Food",
+      "drinks": "Drinks"
+    },
+    "emptyState": {
+      "noFood": "No food items in this order",
+      "noDrinks": "No drink items in this order"
+    },
   },
 
   "ordersPage": {
@@ -439,7 +490,8 @@ export const ptTranslations = {
     "success": {
       "statusUpdated": "Order status updated",
       "orderDeleted": "Order deleted"
-    }
+    },
+    
   },
 
   "newOrder": {
@@ -471,6 +523,7 @@ export const ptTranslations = {
       "noItems": "Please add at least one item to the order",
       "orderCreationFailed": "Failed to create order"
     },
+    
     "success": {
       "orderCreated": "Order Created",
       "orderCreatedDescription": "The order for Table {{tableNumber}} was created successfully"
@@ -571,8 +624,19 @@ export const ptTranslations = {
       "desserts": "Desserts",
       "appetizers": "Appetizers",
       "salads": "Salads",
-      "sides": "Sides"
-    }
+      "sides": "Sides",
+      "uncategorized": "Uncategorized"
+    },
+    "lowStockAlert": "Low Stock Alert",
+    "lowStockAlertDescription": "Receive an alert when an item's stock is low",
+    "lowStockAlertSuccess": "Low stock alert enabled for {{itemName}}",
+    "lowStockAlertError": "Failed to enable low stock alert for {{itemName}}",
+    "lowStockAlertDisabled": "Low stock alert disabled for {{itemName}}",
+    "lowStockAlertDisabledDescription": "Receive an alert when an item's stock is low",
+    "lowStockAlertDisabledSuccess": "Low stock alert disabled for {{itemName}}",
+    "lowStockAlertDisabledError": "Failed to disable low stock alert for {{itemName}}",
+    "lowStockAlertDisabledToast": "Low stock alert disabled for {{itemName}}",
+    "lowStockAlertDisabledToastError": "Failed to disable low stock alert for {{itemName}}"
   },
 
   "users": {
@@ -611,7 +675,8 @@ export const ptTranslations = {
     "delete": "Delete",
     "confirmDelete": "Confirm Delete",
     "confirmDeleteDescription": "Are you sure you want to delete user '{{username}}'?",
-    "deleteUser": "Delete User"
+    "deleteUser": "Delete User",
+    "deleted": "User deleted"
   },
 
   "login": {
@@ -732,10 +797,14 @@ export const ptTranslations = {
             "admin": "Admin",
             "manager": "Manager", 
             "chef": "Chef",
-            "waiter": "Waiter"
+            "waiter": "Waiter",
+            "barman": "Bartender"
           }
         }
-      }
+      },
+      "selectRole": "Select Role",
+      "saving": "Saving...",
+      "saveChanges": "Save Changes"
     },
     "appearance": {
       "title": "Appearance",
@@ -838,6 +907,62 @@ export const ptTranslations = {
       "role": "Role",
       "phoneNumber": "Phone Number",
       "position": "Position"
+    },
+    "establishment": {
+      "title": "Establishment",
+      "description": "Manage your establishment settings and information",
+      "name": "Establishment Name",
+      "address": "Address",
+      "phone": "Phone Number",
+      "email": "Email",
+      "logo": "Logo",
+      "favicon": "Favicon",
+      "timezone": "Timezone",
+      "currency": "Currency",
+      "language": "Language",
+      "businessInfo": "Business Information",
+      "actions": {
+        "submit": "Save Changes",
+        "submitting": "Saving...",
+        "establishmentUpdated": "Establishment Settings Updated",
+        "establishmentUpdateSuccess": "Your establishment settings have been successfully updated.",
+        "establishmentUpdateFailed": "Update Failed",
+        "establishmentUpdateError": "An error occurred while updating your establishment settings."
+      }
+    },
+    "security": {
+      "title": "Security",
+      "description": "Manage your security settings and preferences",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "twoFactor": "Two Factor Authentication",
+      "actions": {
+        "submit": "Save Changes",
+        "submitting": "Saving...",
+        "securityUpdated": "Security Settings Updated",
+        "securityUpdateSuccess": "Your security settings have been successfully updated.",
+        "securityUpdateFailed": "Update Failed",
+        "securityUpdateError": "An error occurred while updating your security settings."
+      }
+    },
+    "billing": {
+      "title": "Billing",
+
+      "description": "Manage your billing settings and preferences",
+      "businessInfo": "Business Information",
+      "paymentMethod": "Payment Method",
+      "billingHistory": "Billing History",
+      "cardNumber": "Card Number",
+      "expirationDate": "Expiration Date",
+      "cvv": "CVV",
+      "actions": {
+        "submit": "Save Changes",
+        "submitting": "Saving...",
+        "billingUpdated": "Billing Settings Updated",
+        "billingUpdateSuccess": "Your billing settings have been successfully updated.",
+        "billingUpdateFailed": "Update Failed",
+        "billingUpdateError": "An error occurred while updating your billing settings."
+      }
     }
   },
 
@@ -894,7 +1019,8 @@ export const ptTranslations = {
       "createOrder": "Create Order",
       "changeStatus": "Change Status",
       "viewOrder": "View Order",
-      "closeOrder": "Close Order"
+      "closeOrder": "Close Order",
+      "addItems": "Add Items"
     },
     "errors": {
       "sync": "Failed to sync table status",
@@ -915,27 +1041,30 @@ export const ptTranslations = {
       "description": "Currently no orders in the system. Start creating new orders to see them here."
     },
     "loading": "Loading orders..."
-  }
+  },
+  "errors": {
+    "onlyOwnersCanCreate": "Only owners can create owner accounts",
+    "noEstablishmentId": "No establishment ID found for user"
+  },
+  "categories": {
+    "appetizers": "Appetizers",
+    "desserts": "Desserts",
+    "drinks": "Drinks",
+    "main_courses": "Main Courses",
+    "salads": "Salads",
+    "sides": "Sides"
+  },
+  "roles": {
+      "owner": "Owner",
+      "admin": "Admin", 
+      "manager": "Manager",
+      "staff": "Staff",
+      "waiter": "Waiter",
+      "barman": "Barman",
+      "default": "User"
+    },
 };
 
-export const enTranslations = {
-  settings: {
-    profile: {
-      fields: {
-        role: {
-          label: "Role",
-          options: {
-            owner: "Owner",
-            admin: "Administrator",
-            manager: "Manager",
-            chef: "Chef",
-            waiter: "Waiter",
-            barman: "Bartender"
-          }
-        }
-      }
-    }
-  }
-};
 
-export default ptTranslations;
+
+export default enTranslations;

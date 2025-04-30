@@ -914,8 +914,8 @@ export function OrderForm({
             >
               {item.name} 
               {(item.stock ?? 0) > 0 
-                ? ` - R$ ${item.price.toFixed(2)} (${item.stock} disponíveis)` 
-                : ' (Indisponível)'
+                ? ` - R$ ${item.price.toFixed(2)} (${t("orders.stockAvailable", { stock: item.stock })})` 
+                : t("orders.itemUnavailable")
               }
             </SelectItem>
           ))}

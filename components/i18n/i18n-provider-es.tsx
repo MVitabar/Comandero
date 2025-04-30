@@ -1,4 +1,5 @@
 export const esTranslations = {
+  
   "commons": {
     "yes": "Sí",
     "no": "No",
@@ -13,10 +14,10 @@ export const esTranslations = {
     "search": "Buscar",
     "filter": "Filtrar",
     "actions": "Acciones",
-    "tableNumber": "Número de Mesa",
+    "tableNumber": "Número de mesa",
     "close": "Cerrar",
     "button": {
-      "add": "Añadir",
+      "add": "Agregar",
       "edit": "Editar",
       "delete": "Eliminar",
       "cancel": "Cancelar",
@@ -27,9 +28,9 @@ export const esTranslations = {
       "created": "Creado"
     },
     "status": {
-      "lowStock": "Stock Bajo",
-      "inStock": "En Stock",
-      "outOfStock": "Sin Stock"
+      "lowStock": "Bajo stock",
+      "inStock": "En stock",
+      "outOfStock": "Agotado"
     },
     "table": {
       "headers": {
@@ -44,74 +45,95 @@ export const esTranslations = {
       }
     },
     "error": {
-      "generic": "Ha ocurrido un error",
-      "required": "Este campo es obligatorio",
+      "generic": "Error al cargar",
+      "required": "Este campo es requerido",
       "invalid": "Entrada inválida",
       "configurationError": "Error de configuración de Firebase. Por favor, contacte al soporte",
-      "serviceUnavailable": "Servicio de autenticación no disponible. Intente nuevamente más tarde"
+      "serviceUnavailable": "Servicio de autenticación no disponible. Intente de nuevo más tarde"
     },
     "noItemsFound": "No se encontraron elementos",
     "searchPlaceholder": "Buscar...",
-    "confirmDelete": "¿Está seguro de que desea eliminar este elemento? Esta acción no se puede deshacer.",
+    "confirmDelete": "¿Estás seguro de que quieres eliminar este elemento? Esta acción no se puede deshacer.",
     "currency": "{{value}}",
     "password": "Contraseña",
-    "emailRequired": "El correo electrónico es obligatorio",
-    "passwordRequired": "La contraseña es obligatoria",
+    "emailRequired": "Email es requerido",
+    "passwordRequired": "Contraseña es requerida",
     "login": {
       "error": {
-        "emailRequired": "El correo electrónico es obligatorio",
-        "passwordRequired": "La contraseña es obligatoria",
-        "invalidCredentials": "Correo electrónico o contraseña inválidos",
-        "tooManyAttempts": "Demasiados intentos fallidos. Intente nuevamente más tarde."
+        "emailRequired": "Email es requerido",
+        "passwordRequired": "Contraseña es requerida",
+        
+        "invalidCredentials": "Credenciales inválidas",
+        "tooManyAttempts": "Demasiados intentos fallidos. Intente de nuevo más tarde."
       }
     },
-    "deleted": "Eliminado"
+    "deleted": "Eliminado",
+    "nextSlide": "Próximo slide",
+    "previousSlide": "Slide anterior",
+   
+    "noResults": "No se encontraron resultados",
+    "next": "Próximo",
+    "previous": "Anterior",
+    "accept": "Aceptar",
+    "retry": "Reintentar"
   },
 
   "tableMaps": {
-    "title": "Mapas de Mesas",
-    "description": "Administre los diseños de mesas de su restaurante",
-    "createMap": "Crear Mapa de Mesas",
-    "editMap": "Editar Mapa de Mesas",
-    "mapName": "Nombre del Mapa",
-    "mapDescription": "Descripción del Mapa",
-    "mapDescriptionPlaceholder": "Describa el diseño del mapa de mesas",
-    "addNew": "Añadir Nuevo Mapa",
-    "noMapsFound": "No se encontraron mapas de mesas",
-    "saveError": "Error al guardar el mapa de mesas",
-    "createError": "Error al crear el mapa de mesas",
-    "updateError": "Error al actualizar el mapa de mesas",
-    "deleteError": "Error al eliminar el mapa de mesas",
-    "loadingTitle": "Cargando Mapa de Mesas",
+    "title": "Mapas de mesas",
+    "description": "Gestionar los layouts de las mesas en tu restaurante",
+    "createMap": "Crear mapa de mesas",
+    "editMap": "Editar mapa de mesas",
+    "mapName": "Nombre del mapa",
+    "mapDescription": "Descripción del mapa",
+    "mapDescriptionPlaceholder": "Describe el layout del mapa",
+    "addNew": "Agregar nuevo mapa",
+    "noMapsFound": "No se encontraron mapas",
+    "saveError": "Error guardando el mapa",
+    "createError": "Error creando el mapa",
+    "updateError": "Error actualizando el mapa",
+    "deleteError": "Error eliminando el mapa",
+    "loadingTitle": "Cargando mapa",
     "delete": {
-      "confirmTitle": "Eliminar Mapa de Mesas",
-      "confirmDescription": "¿Está seguro de que desea eliminar el mapa de mesas '{{name}}'?",
-      "success": "Mapa de Mesas Eliminado",
-      "error": "Error al eliminar el mapa de mesas"
+      "confirmTitle": "Eliminar mapa",
+      "confirmDescription": "¿Estás seguro de que quieres eliminar el mapa '{{name}}'?",
+      "success": "Mapa eliminado",
+      "error": "Error eliminando el mapa"
+    }
+  },
+  "dialog":{
+    "delete":{
+      "title": "Eliminar Orden",
+      "description": "¿Estás seguro de que quieres eliminar la orden?",
+      "confirmTitle": "Eliminar Orden",
+      "confirmDescription": "¿Estás seguro de que quieres eliminar la orden?",
+      "success": "Orden eliminada",
+      "error": "Error eliminando la orden",
+      "confirmButton": "Eliminar",
+      "cancelButton": "Cancelar"
     }
   },
 
   "tableDialog": {
-    "title": "Añadir Nueva Mesa",
-    "description": "Crear una nueva mesa para su restaurante",
+    "title": "Agregar nueva mesa",
+    "description": "Crear una nueva mesa para tu restaurante",
     "labels": {
-      "tableName": "Nombre de la Mesa",
-      "tableCapacity": "Capacidad de la Mesa"
+      "tableName": "Nombre de la mesa",
+      "tableCapacity": "Capacidad de la mesa"
     },
     "placeholders": {
-      "tableName": "Ingrese el nombre de la mesa",
-      "tableCapacity": "Ingrese la capacidad de la mesa"
+      "tableName": "Introduce el nombre de la mesa",
+      "tableCapacity": "Introduce la capacidad de la mesa"
     },
     "actions": {
       "cancel": "Cancelar",
-      "create": "Crear Mesa"
+      "create": "Crear mesa"
     },
     "errors": {
-      "invalidCapacity": "La capacidad de la mesa debe ser mayor que 0",
-      "create": "Error al crear mesa"
+      "invalidCapacity": "La capacidad de la mesa debe ser mayor a 0",
+      "create": "Error creando la mesa"
     },
     "success": {
-      "create": "Mesa creada con éxito"
+      "create": "Mesa creada exitosamente"
     }
   },
 
@@ -124,52 +146,58 @@ export const esTranslations = {
     "created": "Creado",
     "close": "Cerrar",
     "error": "Error",
-    "deleted": "Eliminado"
+    "deleted": "Eliminado",
+    "update": "Actualizar"
   },
 
   "tables": {
-    "pageTitle": "Mesas del Restaurante",
-    "addTable": "Añadir Nueva Mesa",
-    "tableName": "Nombre de la Mesa",
-    "tableCapacity": "Capacidad",
+    "pageTitle": "Mesas en el restaurante",
+    "addTable": "Agregar nueva mesa",
+    "tableName": "Nombre de la mesa",
+    "tableCapacity": "Capacidad de la mesa",
     "tableStatus": "Estado",
-    "search": "Buscar Mesas",
+    "search": "Buscar mesas",
     "sortBy": "Ordenar por",
-    "tableNumber": "Número de Mesa",
+    "tableNumber": "Número de la mesa",
     "seats": "Asientos",
-    "noTablesMatchFilter": "Ninguna mesa coincide con el filtro",
-    "noTablesInMap": "Ninguna mesa en el mapa",
+    "noTablesMatchFilter": "No se encontraron mesas",
+    "noTablesInMap": "No se encontraron mesas en el mapa",
     "actions": "Acciones",
     "tableMaps": {
-      "title": "Mapas de Mesas",
-      "createMap": "Crear Mapa de Mesas",
-      "editMap": "Editar Mapa de Mesas",
-      "mapName": "Nombre del Mapa",
-      "mapDescription": "Descripción del Mapa",
-      "noMapsFound": "No se encontraron Mapas de Mesas",
-      "createMapDescription": "Crear un nuevo mapa de mesas para su restaurante",
-      "mapNamePlaceholder": "Ingrese el nombre del mapa",
-      "mapDescriptionPlaceholder": "Ingrese la descripción del mapa",
-      "layout": "Diseño",
-      "addTable": "Añadir Mesa",
-      "tablePosition": "Posición de la Mesa",
-      "tableCapacity": "Capacidad",
-      "viewMap": "Ver Mapa de Mesas",
-      "addMap": "Añadir Mapa de Mesas",
-      "deleteMap": "Eliminar Mapa de Mesas",
-      "mapCreationFailed": "Error al Crear el Mapa de Mesas",
-      "mapUpdateFailed": "Error al Actualizar el Mapa de Mesas",
-      "mapDeletionFailed": "Error al Eliminar el Mapa de Mesas",
-      "mapCreated": "Mapa de Mesas Creado",
-      "mapUpdated": "Mapa de Mesas Actualizado",
-      "mapDeleted": "Mapa de Mesas Eliminado",
+      "title": "Mapas de mesas",
+      "createMap": "Crear mapa de mesas",
+      "editMap": "Editar mapa de mesas",
+      "editMapDescription": "Editar mapa de mesas",
+      "mapName": "Nombre del mapa",
+      "mapDescription": "Descripción del mapa",
+      "noMapsFound": "No se encontraron mapas",
+      "createMapDescription": "Crear un nuevo mapa de mesas para tu restaurante",
+      "mapNamePlaceholder": "Introduce el nombre del mapa",
+      "mapDescriptionPlaceholder": "Introduce la descripción del mapa",
+      "layout": "Layout",
+      "addTable": "Agregar mesa",
+      "tablePosition": "Posición de la mesa",
+      "tableCapacity": "Capacidad de la mesa",
+      "viewMap": "Ver mapa de mesas",
+      "addMap": "Agregar mapa",
+      "deleteMap": "Eliminar mapa",
+      "mapCreationFailed": "Error creando el mapa",
+      "mapUpdateFailed": "Error actualizando el mapa",
+      "mapDeletionFailed": "Error eliminando el mapa",
+      "mapCreated": "Mapa creado",
+      "mapUpdated": "Mapa actualizado",
+      "mapDeleted": "Mapa eliminado",
       "delete": {
-        "confirmTitle": "Eliminar Mapa de Mesas",
-        "confirmDescription": "¿Está seguro de que desea eliminar el mapa de mesas '{{name}}'?",
-        "success": "Mapa de Mesas Eliminado",
-        "error": "Error al eliminar el mapa de mesas"
+        "confirmTitle": "Eliminar mapa",
+        "confirmDescription": "¿Estás seguro de que quieres eliminar el mapa '{{name}}'?",
+        "success": "Mapa eliminado",
+        "error": "Error eliminando el mapa"
       },
-      "fetchError": "Error al buscar mapas de mesas"
+      "fetchError": "Error obteniendo los mapas"
+    },
+    "allStatuses": "Todos los estados",
+    "statuses": {
+      "available": "Disponible"
     }
   },
   
@@ -177,285 +205,310 @@ export const esTranslations = {
   "sidebar": {
     "appName": "Comandero",
     "role": "Rol",
-    "dashboard": "Panel de Control",
+    "dashboard": "Dashboard",
     "orders": "Pedidos",
     "tables": "Mesas",
     "inventory": "Inventario",
     "users": "Usuarios",
-    "settings": "Configuraciones",
-    "advancedReports": "Informes Avanzados",
-    "logout": "Cerrar Sesión",
+    "settings": "Configuración",
+    "advancedReports": "Informes avanzados",
+    "logout": "Cerrar sesión",
     "language": "Idioma",
-    "installApp": "Descargar Aplicación",
+    "installApp": "Descargar App",
     "languages": {
       "english": "Inglés",
       "spanish": "Español", 
-      "portuguese": "Portugués"
+      "portuguese": "Portugues"
     }
   },
 
   "dashboard": {
-    "title": "Panel de Control",
+    "title": "Dashboard",
     "goodMorning": "Buenos días",
-    "goodAfternoon": "Buenas tardes", 
+    "goodAfternoon": "Buenas tardes",
     "goodEvening": "Buenas noches",
     "user": "Usuario",
-    "welcomeMessage": "Bienvenido a su panel de control, donde puede administrar las operaciones de su restaurante y seguir el rendimiento.",
-  
+    "welcomeMessage": "Bienvenido a tu dashboard, donde puedes gestionar las operaciones de tu restaurante y rastrear el desempeño.",
+    
     "totalSales": {
-      "title": "Ventas Totales",
-      "performance": "Rendimiento este mes",
-      "trend": "Comparado con el mes anterior",
-      "comparedToLastMonth": "comparado con el mes pasado"
+      "title": "Ventas totales",
+      "performance": "Desempeño este mes",
+      "trend": "Tendencia de ventas",
+      "comparedToLastMonth": "comparado con el mes anterior"
     },
-  
+    
     "dailySales": {
-      "title": "Ventas Diarias"
+      "title": "Ventas diarias"
     },
-  
+    
     "salesByCategory": {
-      "title": "Ventas por Categoría",
-      "description": "Distribución de ventas entre diferentes categorías de productos",
+      "title": "Ventas por categoría",
+      "description": "Desglose del desempeño de ventas por categoría de producto",
       "noSalesData": "No hay datos de ventas disponibles",
       "categories": {
-        "main_courses": "Platos Principales",
+        "main_courses": "Platos principales",
         "drinks": "Bebidas", 
         "desserts": "Postres",
         "appetizers": "Entradas",
         "salads": "Ensaladas",
-        "sides": "Guarniciones",
-        "uncategorized": "Sin Categoría"
+        "sides": "Acompañamientos",
+        "uncategorized": "Sin categoría"
       }
     },
-  
+    
     "topSellingItems": {
-      "title": "Artículos Más Vendidos",
+      "title": "Top Productos",
       "subtitle": "Productos más populares",
-      "description": "Artículos populares",
+      "description": "Productos más vendidos",
       "orderCount": "{{count, number}} pedidos",
-      "quantity": "Ventas Totales: {{value}}",
-      "noData": "No se encontraron productos destacados",
-      "noItems": "No hay artículos para mostrar"
+      "quantity": "Cantidad: {{value}}"
     },
-  
+    
     "recentOrders": {
-      "title": "Pedidos Recientes",
+      "title": "Pedidos recientes",
       "orderNumber": "Pedido #{{number}}",
       "table": "Mesa"
     },
-  
+    
     "additionalInsights": {
-      "title": "Información Adicional",
-      "comingSoon": "Más información próximamente!",
-      "placeholder": "Las perspectivas estarán disponibles en futuras actualizaciones"
+      "title": "Insights adicionales",
+      "placeholder": "No hay insights adicionales disponibles"
     },
-  
-    "salesList": {
-      "title": "Historial de Ventas",
-      "noSales": "No se registraron ventas",
-      "columns": {
-        "date": "Fecha",
-        "orderId": "ID de Pedido",
-        "total": "Total",
-        "paymentMethod": "Método de Pago"
-      }
-    },
+    
     "inventory": {
-      "title": "Resumen de Inventario",
+      "title": "Resumen de inventario",
       "totals": "Totales",
-      "byCategory": "Por Categoría",
-      "byItem": "Por Artículo",
-      "total": "Total de Artículos",
-      "inStock": "En Stock",
-      "lowStock": "Bajo Stock",
-      "itemName": "Nombre del Artículo",
+      "byCategory": "Por categoría",
+      "byItem": "Por item",
+      "total": "Total de items",
+      "inStock": "En stock",
+      "lowStock": "Bajo stock",
+      "itemName": "Nombre del item",
       "category": "Categoría",
       "status": {
         "label": "Estado",
-        "critical": "Stock Crítico",
-        "warning": "Stock Bajo",
-        "healthy": "Stock Saludable"
+        "critical": "Stock crítico",
+        "warning": "Bajo stock",
+        "healthy": "Stock saludable"
       }
     },
-  
+    "report": {
+      "title": "Reporte",
+      "description": "Descargar un informe completo de todas las métricas de la empresa en Excel o PDF.",
+      "excel": "Excel",
+      "pdf": "PDF",
+      "fileDescription": "El archivo incluirá ventas por día, productos más vendidos, inventario y más, según los datos actualmente visibles en el dashboard.",
+    },
+    
     "errors": {
-      "fetchFailed": "Error al cargar los datos del panel. Intente nuevamente más tarde."
+      "fetchFailed": "Error al cargar los datos del dashboard. Por favor, intenta de nuevo más tarde."
+    },
+    "salesList": {
+      "title": "Historial de ventas",
+      "noSales": "No se han registrado ventas",
+      "columns": {
+        "date": "Fecha",
+        "orderId": "ID de la orden",
+        "total": "Total",
+        "paymentMethod": "Método de pago"
+      }
     }
   },
 
   "orders": {
     "categories": {
-      "main_courses": "Platos Principales",
+      "main_courses": "Platos principales",
       "drinks": "Bebidas", 
       "desserts": "Postres",
       "appetizers": "Entradas",
       "salads": "Ensaladas",
-      "sides": "Guarniciones",
-      "uncategorized": "Sin Categoría"
+      "sides": "Acompañamientos",
+      "uncategorized": "Sin categoría"
     },
     "title": "Pedidos",
-    "newOrder": "Nuevo Pedido",
-    "createOrder": "Crear Pedido",
-    "tableNumberPlaceholder": "Ingrese el número de la mesa",
+    "newOrder": "Nuevo pedido",
+    "createOrder": "Crear pedido",
+    "tableNumberPlaceholder": "Introduce el número de la mesa",
     "noOrdersFound": "No se encontraron pedidos",
+    "subtotal": "Subtotal",
+    "total": "Total",
     "table": "Mesa",
-    "counter": "Mostrador",
+    "counter": "Contador",
     "waiter": "Mesero",
     "takeaway": "Delivery",
     "details":{
-      "title": "Detalles del Pedido",
-      "description": "Detalles del Pedido",
-      "id": "ID del Pedido",
-      "tableNumber": "Número de la Mesa",
+      "title": "Detalles del pedido",
+      "description": "Detalles del pedido",
+      "id": "ID de la orden",
+      "tableNumber": "Número de la mesa",
       "waiter": "Mesero",
-      "counter": "Mostrador",
-      "items": "Artículos",
+      "counter": "Contador",
+      "items": "Items",
       "total": "Total",
-      "status": "Status",
+      "status": "Estado",
       "actions": "Acciones"
     },
     "search": {
       "placeholder": "Buscar pedidos por ID, mesa o mesero"
     },
     "filter": {
-      "allStatuses": "Todos los Status"
+      "allStatuses": "Todos los estados"
     },
     
     "actions": {
       "view": "Ver",
-      "updateStatus": "Actualizar Status",
+      "updateStatus": "Actualizar estado",
       "delete": "Eliminar"
     },
     "action": {
-      "updated": "actualizado",
-      "deleted": "excluído"
+      "updated": "Actualizado",
+      "deleted": "Eliminado"
     },
     "success": {
-      "statusUpdated": "Status Actualizado",
-      "orderDeleted": "Pedido Eliminado"
+      "statusUpdated": "Estado actualizado",
+      "orderDeleted": "Pedido eliminado"
     },
     "error": {
-      "fetchFailed": "Error al buscar pedidos",
-      "updateStatusFailed": "Error al actualizar status del pedido",
-      "deleteOrderFailed": "Error al eliminar pedido"
+      "fetchFailed": "Error al cargar los pedidos",
+      "updateStatusFailed": "Error al actualizar el estado del pedido",
+      "deleteOrderFailed": "Error al eliminar el pedido"
     },
-    "orderType": "Tipo de Pedido",
+    "orderType": "Tipo de pedido",
     
-    "tableNumber": "Número de la Mesa",
-    "selectCategory": "Seleccionar Categoria",
-    "selectItem": "Seleccionar Item",
-    "noItemsInCategory": "Sin items en esta categoria",
+    "tableNumber": "Número de la mesa",
+    "selectCategory": "Seleccionar categoría",
+    "selectItem": "Seleccionar item",
+    "noItemsInCategory": "No hay items en esta categoría",
     "quantity": "Cantidad",
-    "itemNotes": "Notas del Item",
-    "itemNotesPlaceholder": "¿Alguna instrucción especial?",
-    "itemDietaryRestrictions": "Restricciones Dietéticas",
-    "addToOrder": "Agregar al Pedido",
-    "orderSummary": "Resumen del Pedido",
-    "showMenuQr": "Mostrar QR del Menu",
-    "noItemsInOrder": "Sin items en el pedido",
-    "specialRequests": "Solicitações Especiais",
+    "itemNotes": "Notas del item",
+    "itemNotesPlaceholder": "¿Alguna nota especial?",
+    "itemDietaryRestrictions": "Restricciones dietéticas",
+    "addToOrder": "Agregar al pedido",
+    "orderSummary": "Resumen del pedido",
+    "showMenuQr": "Mostrar QR del menú",
+    "noItemsInOrder": "No hay items en el pedido",
+    "specialRequests": "Solicitudes especiales",
     "specialRequestsPlaceholder": "¿Alguna solicitud especial para la cocina?",
-    "menuUrl": "URL del Menu",
+    "menuUrl": "URL del menú",
     "discount": "Descuento",
     "percentage": "Porcentaje",
     "errors": {
-      "noItemsInOrder": "Por favor, agregue items al pedido",
-      "noTableSelected": "Por favor, seleccione una mesa",
+      "noItemsInOrder": "Por favor, agrega items al pedido",
+      "noTableSelected": "Por favor, selecciona una mesa",
       "headers": {
-        "id": "ID del Pedido",
-        "tableNumber": "Mesa",
+        "id": "ID de la orden",
+        "tableNumber": "Número de la mesa",
         "waiter": "Mesero", 
-        "items": "Artículos",
-        "status": "Status",
+        "items": "Items",
+        "status": "Estado",
         "total": "Total",
         "actions": "Acciones"
       },
       "paymentMethods": {
-        "cash": "Dinero",
-        "credit": "Tarjeta de Crédito",
-        "debit": "Tarjeta de Débito",
-        "transfer": "Transferencia Bancaria",
+        "cash": "Efectivo",
+        "credit": "Tarjeta de crédito",
+        "debit": "Tarjeta de débito",
+        "transfer": "Transferencia bancaria",
         "other": "Otro"
       }
     },
-    "confirmPayment": "Confirmar Pago"
+    "confirmPayment": "Confirmar pago",
+    "itemUnavailable": "(Indisponible)",
+    "stockAvailable": "- R$ {{price}} ({{stock}} disponible)",
+    "changeStatusTitle": "Cambiar estado",
+    "changeStatusDescription": "Cambiar estado del pedido",
+    "changeStatusButton": "Cambiar estado",
+    "types": {
+      "table": "Mesa",
+      "delivery": "Entrega",
+      "counter": "Mostrador",
+      "takeaway": "Para llevar",
+      "food": "Comida",
+      "drinks": "Bebidas"
+    },
+    "emptyState": {
+      "noFood": "No hay items de comida en este pedido",
+      "noDrinks": "No hay items de bebidas en este pedido"
+    },
   },
 
   "ordersPage": {
     "pageTitle": "Pedidos",
-    "newOrder": "Nuevo Pedido",
+    "newOrder": "Nuevo pedido",
     "searchPlaceholder": "Buscar pedidos...",
     "noOrdersFound": "No se encontraron pedidos",
     "orderStatus": {
       "01": "Pendiente",
-      "02": "En Preparación",
-      "03": "Pronto para Servir",
+      "02": "En preparación",
+      "03": "Listo para servir",
       "04": "Entregado",
       "05": "Cancelado",
-      "06": "Pago",
+      "06": "Pagado",
       "07": "Enviado",
-      "08": "En Tránsito",
-      "09": "Concluído",
+      "08": "En tránsito",
+      "09": "Completado",
       "10": "Reembolsado",
-      "11": "Aguardando",
-      "12": "Agendado",
-      "13": "Parcialmente Pago",
-      "14": "Error de Pagamento",
+      "11": "Pendiente",
+      "12": "Programado",
+      "13": "Pagado parcialmente",
+      "14": "Error de pago",
       "15": "Rechazado",
       "16": "Procesando",
       "17": "Confirmado",
-      "18": "Preparación Iniciada",
-      "19": "Pronto para Servir",
-      "20": "Aguardando Cliente",
-      "21": "Servicio de Mesa",
-      "22": "Para Viaje",
+      "18": "Preparación iniciada",
+      "19": "Casi listo",
+      "20": "Esperando a cliente",
+      "21": "Servicio de mesa",
+      "22": "Para viaje",
       "23": "Entrega",
       "24": "Reserva",
       "25": "Urgente",
-      "70": "Status Final"
+      "70": "Estado final"
     },
     "table": {
       "id": "ID", 
       "table": "Mesa",
       "waiter": "Mesero",
-      "items": "Artículos",
-      "status": "Status",
+      "items": "Items",
+      "status": "Estado",
       "total": "Total",
       "actions": "Acciones"
     },
     "actions": {
-      "updateStatus": "Actualizar Status",
-      "updateStatusDescription": "Actualizar status del pedido {{orderId}}",
-      "selectStatus": "Seleccionar nuevo status",
-      "delete": "Eliminar Pedido",
-      "view": "Ver Pedido",
-      "deleteOrderConfirmation": "¿Estás seguro de que deseas eliminar el pedido {{orderId}}?"
+      "updateStatus": "Actualizar estado",
+      "updateStatusDescription": "Actualizar estado del pedido {{orderId}}",
+      "selectStatus": "Seleccionar nuevo estado",
+      "delete": "Eliminar pedido",
+      "view": "Ver pedido",
+      "deleteOrderConfirmation": "¿Estás seguro de que quieres eliminar el pedido {{orderId}}?"
     },
     "error": {
-      "fetchFailed": "Error al cargar pedidos",
-      "updateStatusFailed": "Error al actualizar el status del pedido",
+      "fetchFailed": "Error al cargar los pedidos",
+      "updateStatusFailed": "Error al actualizar el estado del pedido",
       "deleteFailed": "Error al eliminar el pedido"
     },
     "success": {
-      "statusUpdated": "Status del pedido actualizado",
-      "orderDeleted": "Pedido excluído"
-    }
+      "statusUpdated": "Estado del pedido actualizado",
+      "orderDeleted": "Pedido eliminado"
+    },
+    
   },
 
   "newOrder": {
-    "title": "Nuevo Pedido",
-    "orderDetails": "Detalles del Pedido",
-    "tableNumber": "Número de la Mesa",
+    "title": "Nuevo pedido",
+    "orderDetails": "Detalles del pedido",
+    "currentOrder": "Pedido actual",
+    "tableNumber": "Número de la mesa",
     "tableNumberPlaceholder": "Introduce el número de la mesa",
-    "selectItem": "Seleccionar Item",
+    "selectItem": "Seleccionar item",
     "selectItemPlaceholder": "Selecciona un item para agregar",
     "quantity": "Cantidad",
     "notes": "Notas",
     "notesPlaceholder": "Instrucciones especiales",
-    "addToOrder": "Agregar al Pedido",
-    "noItemsInOrder": "No hay items en el pedido",
+    "addToOrder": "Agregar al pedido",
+    "noItemsInOrder": "No se han agregado items al pedido",
     "total": "Total",
-    "createOrder": "Enviar Pedido",
+    "createOrder": "Crear pedido",
     "table": {
       "item": "Item",
       "quantity": "Cantidad",
@@ -465,127 +518,150 @@ export const esTranslations = {
     },
     "error": {
       "title": "Error",
-      "noItem": "Por favor, seleccione un item",
-      "noTable": "Por favor, seleccione el número de la mesa",
-      "noItems": "Por favor, adicione al menos un item al pedido",
-      "orderCreationFailed": "No se pudo crear el pedido"
+      "noItem": "Por favor, selecciona un item",
+      "noTable": "Por favor, introduce el número de la mesa",
+      "noItems": "Por favor, agrega al menos un item al pedido",
+      "orderCreationFailed": "Error al crear el pedido"
     },
+    
     "success": {
-      "orderCreated": "Pedido Creado",
-      "orderCreatedDescription": "El pedido para la Mesa {{tableNumber}} fue creado con éxito"
+      "orderCreated": "Pedido creado",
+      "orderCreatedDescription": "El pedido para la mesa {{tableNumber}} se creó exitosamente"
     }
   },
 
   "newOrderPage": {
-    "title": "Nuevo Pedido",
+    "title": "Nuevo pedido",
     "errors": {
       "unauthorized": "No tienes autorización para crear este pedido",
       "menuItemNotFound": "El item del menú seleccionado no se encontró",
       "invalidQuantity": "Introduce una cantidad válida",
       "missingTableNumber": "Selecciona o introduce el número de la mesa",
-      "missingMenuItem": "Por favor, seleccione un item del menú",
-      "insufficientStock": "No hay stock suficiente para el item seleccionado",
-      "orderCreationFailed": "No se pudo crear el pedido. Inténtalo de nuevo.",
-      "fetchOrders": "Error al cargar pedidos",
-      "createOrder": "Error al crear pedido",
-      "updateOrder": "Error al actualizar pedido",
-      "deleteOrder": "Error al excluir pedido",
-      "updateStatus": "Error al actualizar status del pedido"
+      "missingMenuItem": "Selecciona un item del menú",
+      "insufficientStock": "Stock insuficiente para el item seleccionado",
+      "orderCreationFailed": "Error al crear el pedido. Por favor, intenta de nuevo.",
+      "fetchOrders": "Error al cargar los pedidos",
+      "createOrder": "Error al crear el pedido",
+      "updateOrder": "Error al actualizar el pedido",
+      "deleteOrder": "Error al eliminar el pedido",
+      "updateStatus": "Error al actualizar el estado del pedido"
     },
     "success": {
-      "orderCreated": "Pedido creado con éxito",
-      "orderUpdated": "Pedido actualizado con éxito",
-      "orderDeleted": "Pedido excluído con éxito",
-      "statusUpdated": "Status del pedido actualizado con éxito",
-      "itemAdded": "Item adicionado al pedido"
+      "orderCreated": "Pedido creado exitosamente",
+      "orderUpdated": "Pedido actualizado exitosamente",
+      "orderDeleted": "Pedido eliminado exitosamente",
+      "statusUpdated": "Estado del pedido actualizado exitosamente",
+      "itemAdded": "Item agregado al pedido"
     },
   },
 
   "inventory": {
-    "title": "Inventario",
+    "title": "Overview de inventario",
     "subtitle": "Gestiona el inventario de tu restaurante",
-    "searchPlaceholder": "Buscar en el inventario...",
+    "searchPlaceholder": "Buscar en inventario...",
     "noItemsFound": "No se encontraron items",
     "name": "Nombre",
-    "category": "Categoria", 
+    "category": "Categoría", 
     "quantity": "Cantidad",
     "unit": "Unidad",
-    "minQuantity": "Cantidad Mínima",
+    "minQuantity": "Stock mínimo",
     "price": "Precio",
     "actions": "Acciones",
     "status": {
       "label": "Estado",
-      "critical": "Stock Crítico",
-      "warning": "Stock Bajo",
-      "healthy": "Stock Saludable"
+      "lowStock": "Stock bajo",
+      "inStock": "En stock"
     },
-    "addItem": "Agregar Item",
+    "addItem": "Agregar item",
+    "addItemTitle": "Agregar item",
+    "addItemDescription": "Agregar un nuevo item al inventario",
+    "description": "Descripción del item",
+    "supplier": "Proveedor",
+    "selectCategory": "Seleccionar categoría",
+    "add": "Agregar",
+    "cancel": "Cancelar",
+    "update": "Actualizar",
+    "save": "Guardar",
+    "editItemTitle": "Editar item",
+    "editItemDescription": "Editar detalles del item",
     "addItemDetails": {
-      "title": "Agregar Item",
+      "title": "Agregar item",
       "description": "Agregar un nuevo item al inventario",
       "namePlaceholder": "Introduce el nombre del item",
-      "categoryPlaceholder": "Selecciona la categoria del item",
+      "categoryPlaceholder": "Selecciona la categoría del item",
       "quantityPlaceholder": "Introduce la cantidad",
-      "unitPlaceholder": "Introduce la unidad (ex. kg, pçs)",
-      "minQuantityPlaceholder": "Introduce la cantidad mínima de estoque",
+      "unitPlaceholder": "Introduce la unidad (ex. kg, piezas)",
+      "minQuantityPlaceholder": "Introduce la cantidad mínima de stock",
       "pricePlaceholder": "Introduce el precio del item",
       "successToast": "{{itemName}} fue agregado al inventario",
-      "errorToast": "Error al agregar item al inventario"
+      "errorToast": "Error al agregar el item al inventario"
     },
     "editItemDetails": {
-      "title": "Editar Item",
-      "description": "Editar detalles del item de inventario",
+      "title": "Editar item",
+      "description": "Editar detalles del item",
       "successToast": "{{itemName}} fue actualizado",
-      "errorToast": "Error al actualizar item de inventario"
+      "errorToast": "Error al actualizar el item"
     },
     "deleteItemDetails": {
-      "title": "Eliminar Item",
-      "description": "¿Estás seguro de que deseas excluir {{itemName}}? Esta acción no puede ser deshecha.",
-      "successToast": "Item de inventario excluído",
-      "errorToast": "Error al excluir item de inventario"
+      "title": "Eliminar item",
+      "description": "¿Estás seguro de que quieres eliminar {{itemName}}? Esta acción no se puede deshacer.",
+      "successToast": "Item eliminado del inventario",
+      "errorToast": "Error al eliminar el item del inventario"
     },
     "stockStatus": {
-      "lowStock": "Bajo Stock",
-      "inStock": "En Stock"
+      "lowStock": "Stock bajo",
+      "inStock": "En stock"
     },
     "buttons": {
-      "add": "Agregar Item",
-      "edit": "Editar Item",
+      "add": "Agregar item",
+      "edit": "Editar item",
       "cancel": "Cancelar",
-      "delete": "Eliminar Item"
+      "delete": "Eliminar item"
     },
     "categories": {
-      "main_courses": "Platos Principales",
+      "main_courses": "Platos principales",
       "drinks": "Bebidas", 
       "desserts": "Postres",
       "appetizers": "Entradas",
       "salads": "Ensaladas",
-      "sides": "Guarniciones"
-    }
+      "sides": "Acompañamientos",
+      "uncategorized": "Sin categoría"
+    },
+    "lowStockAlert": "Alerta de stock bajo",
+    "lowStockAlertDescription": "Recibe una alerta cuando el stock de un item es bajo",
+    "lowStockAlertSuccess": "Alerta de stock bajo habilitada para {{itemName}}",
+    "lowStockAlertError": "Error al habilitar la alerta de stock bajo para {{itemName}}",
+    "lowStockAlertDisabled": "Alerta de stock bajo deshabilitada para {{itemName}}",
+    "lowStockAlertDisabledDescription": "Recibe una alerta cuando el stock de un item es bajo",
+    "lowStockAlertDisabledSuccess": "Alerta de stock bajo deshabilitada para {{itemName}}",
+    "lowStockAlertDisabledError": "Error al deshabilitar la alerta de stock bajo para {{itemName}}",
+    "lowStockAlertDisabledToast": "Alerta de stock bajo deshabilitada para {{itemName}}",
+    "lowStockAlertDisabledToastError": "Error al deshabilitar la alerta de stock bajo para {{itemName}}"
   },
 
   "users": {
     "pageTitle": "Usuarios",
-    "addUser": "Agregar Usuario",
+    "actions": "Acciones",
+    "addUser": "Agregar usuario",
     "searchPlaceholder": "Buscar usuarios...",
-    "userList": "Lista de Usuarios",
-    "username": "Nombre de Usuario",
-    "email": "Correo Electronico",
+    "userList": "Lista de usuarios",
+    "username": "Nombre de usuario",
+    "email": "Email",
     "role": "Rol",
-    "status": "Status",
-    "deleteSuccess": "Usuario Excluído",
-    "hasBeenDeleted": "excluído",
+    "status": "Estado",
+    "deleteSuccess": "Usuario eliminado",
+    "hasBeenDeleted": "ha sido eliminado",
     "errors": {
-      "deleteUser": "Error al excluir usuario"
+      "deleteUser": "Error al eliminar usuario"
     },
     "noUsers": "No se encontraron usuarios",
     "roles": {
       "owner": "Propietario",
-      "admin": "Administrador", 
+      "admin": "Admin", 
       "manager": "Gerente",
-      "staff": "Funcionario",
-      "waiter": "Garcom",
-      "barman": "Barman",
+      "staff": "Personal",
+      "waiter": "Mesero",
+      "barman": "Barmán",
       "default": "Usuario"
     },
     "userStatus": {
@@ -593,252 +669,313 @@ export const esTranslations = {
       "inactive": "Inactivo",
       "suspended": "Suspendido"
     },
-    "openMenu": "Abrir menu",
+    "openMenu": "Abrir menú",
     "copyId": "Copiar ID",
-    "editUser": "Editar Usuario",
+    "editUser": "Editar usuario",
     "delete": "Eliminar",
-    "confirmDelete": "Confirmar Eliminación",
-    "confirmDeleteDescription": "¿Estás seguro de que deseas excluir el usuario '{{username}}'?",
-    "deleteUser": "Eliminar Usuario"
+    "confirmDelete": "Confirmar eliminación",
+    "confirmDeleteDescription": "¿Estás seguro de que quieres eliminar el usuario '{{username}}'?",
+    "deleteUser": "Eliminar usuario",
+    "deleted": "Usuario eliminado"
   },
 
   "login": {
-    "title": "Entrar",
+    "title": "Inicio de sesión",
     "subtitle": "Introduce tus credenciales para acceder a tu cuenta",
-    "emailLabel": "E-mail",
-    "emailPlaceholder": "Introduce tu e-mail",
-    "passwordLabel": "Password",
-    "passwordPlaceholder": "Introduce tu password",
-    "login": "Entrar",
+    "emailLabel": "Email",
+    "emailPlaceholder": "Introduce tu email",
+    "passwordLabel": "Contraseña",
+    "passwordPlaceholder": "Introduce tu contraseña",
+    "login": "Iniciar sesión",
     "forgotPassword": "¿Olvidaste tu contraseña?",
-    "sendPasswordReset": "Enviar Restablecimiento de Senha",
-    "passwordResetSuccess": "Restablecimiento de contraseña correo electrónico enviado con éxito",
-    "passwordResetError": "No se pudo enviar correo electrónico de restablecimiento de contraseña",
-    "passwordResetTitle": "Restablecimiento de Senha",
-    "passwordResetDescription": "Introduce tu e-mail para recibir instrucciones de restablecimiento de contraseña",
+    "sendPasswordReset": "Enviar restablecimiento de contraseña",
+    "passwordResetSuccess": "Correo electrónico de restablecimiento de contraseña enviado correctamente",
+    "passwordResetError": "Error al enviar correo electrónico de restablecimiento de contraseña",
+    "passwordResetTitle": "Restablecimiento de contraseña",
+    "passwordResetDescription": "Introduce tu email para recibir instrucciones de restablecimiento de contraseña",
     "registerLink": "¿No tienes una cuenta? Regístrate aquí",
     "submit": "Enviar",
     "send": "Enviar",
     "loading": "Cargando...",
     "error": {
-      "invalidCredentials": "Correo electrónico o contraseña inválidos",
-      "tooManyAttempts": "Demasiados intentos de login. Inténtalo de nuevo más tarde.",
-      "emailRequired": "El correo electrónico es obligatorio",
-      "passwordRequired": "La contraseña es obligatoria",
-      "serviceUnavailable": "Servicio de autenticación indisponible. Inténtalo de nuevo más tarde"
+      "invalidCredentials": "Email o contraseña inválidos",
+      "tooManyAttempts": "Demasiados intentos de inicio de sesión. Inténtalo de nuevo más tarde.",
+      "emailRequired": "Email es requerido",
+      "passwordRequired": "Contraseña es requerida",
+      "serviceUnavailable": "Servicio de autenticación no disponible. Inténtalo de nuevo más tarde"
     }
   },
 
   "register": {
-    "title": "Registrarse",
+    "title": "Registro",
     "subtitle": "Crea una nueva cuenta para acceder al sistema de gestión de restaurantes",
     "username": "Nombre de usuario",
     "usernameLabel": "Nombre de usuario",
     "usernamePlaceholder": "Introduce tu nombre de usuario",
-    "email": "E-mail",
-    "emailLabel": "E-mail",
-    "emailPlaceholder": "Introduce tu e-mail",
-    "password": "Password",
-    "passwordLabel": "Password",
-    "passwordPlaceholder": "Introduce tu password",
-    "confirmPassword": "Confirmar password",
-    "confirmPasswordLabel": "Confirmar password",
-    "confirmPasswordPlaceholder": "Confirme su password",
+    "email": "Email",
+    "emailLabel": "Email",
+    "emailPlaceholder": "Introduce tu email",
+    "password": "Contraseña",
+    "passwordLabel": "Contraseña",
+    "passwordPlaceholder": "Introduce tu contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "confirmPasswordLabel": "Confirmar contraseña",
+    "confirmPasswordPlaceholder": "Confirma tu contraseña",
     "establishmentName": "Nombre del establecimiento",
     "establishmentNameLabel": "Nombre del establecimiento",
-    "establishmentNamePlaceholder": "Introduce el nombre de tu establecimiento",
-    "submit": "Registrarse",
-    "acceptTerms": "Aceptar Términos",
+    "establishmentNamePlaceholder": "Introduce el nombre del establecimiento",
+    "submit": "Registrar",
+    "acceptTerms": "Aceptar términos",
     "termsLink": "Términos de Uso",
-    "loginLink": "¿Tienes una cuenta? Inicia sesión aquí",
+    "loginLink": "¿Ya tienes una cuenta? Inicia sesión aquí",
     "error": {
       "passwordsDoNotMatch": "Las contraseñas no coinciden",
-      "emailInUse": "Este correo electrónico ya está en uso",
-      "weakPassword": "La contraseña es muy débil",
-      "establishmentNameRequired": "El nombre del establecimiento es obligatorio",
-      "establishmentNameMinLength": "El nombre del establecimiento debe tener al menos 3 caracteres",
-      "establishmentNameTaken": "Este nombre de establecimiento ya está en uso",
-      "suggestedAlternatives": "Nombres de establecimiento sugeridos:",
-      "selectAlternative": "Por favor, seleccione un nombre alternativo o modifique el actual"
+      "emailInUse": "Este email ya está en uso",
+      "weakPassword": "Contraseña es demasiado débil",
+      "establishmentNameRequired": "Nombre del establecimiento es requerido",
+      "establishmentNameMinLength": "Nombre del establecimiento debe tener al menos 3 caracteres",
+      "establishmentNameTaken": "Este nombre del establecimiento ya está en uso",
+      "suggestedAlternatives": "Nombre del establecimiento sugerido:",
+      "selectAlternative": "Por favor, selecciona un nombre alternativo o modifica el actual"
     },
     "suggestedNames": {
-      "title": "Nombres de Establecimiento Sugeridos",
-      "description": "El nombre que introdujiste ya está en uso. Por favor, elige una alternativa:",
+      "title": "Nombre del establecimiento sugerido",
+      "description": "El nombre que introdujiste ya está en uso. Por favor, selecciona un nombre alternativo:",
       "selectButton": "Seleccionar",
-      "modifyButton": "Modificar Nombre"
+      "modifyButton": "Modificar nombre"
     }
   },
 
   "forgotPassword": {
-    "title": "Recuperar Contraseña",
-    "description": "Introduce tu e-mail para recibir instrucciones de redefinición de contraseña",
-    "email": "E-mail",
-    "sendInstructions": "Enviar Instrucciones",
+    "title": "Olvidaste tu contraseña",
+    "description": "Introduce tu email para recibir instrucciones de restablecimiento de contraseña",
+    "email": "Email",
+    "sendInstructions": "Enviar instrucciones",
     "error": {
-      "emailRequired": "El correo electrónico es obligatorio",
-      "userNotFound": "No se encontró ninguna cuenta con este dirección de correo electrónico",
-      "generic": "Error al enviar correo electrónico de redefinición de contraseña"
+      "emailRequired": "Email es requerido",
+      "userNotFound": "No account found with this email address",
+      "generic": "Failed to send password reset email"
     },
     "success": {
-      "emailSent": "Instrucciones de redefinición de contraseña enviadas"
+      "emailSent": "Password reset instructions sent"
     }
   },
 
   "settings": {
-    "title": "Configuraciones",
+    "title": "Configuración",
     "system": {
       "title": "Sistema",
-      "description": "Gestiona las configuraciones y ajustes avanzados del sistema"
+      "description": "Gestiona los ajustes del sistema y las configuraciones avanzadas del sistema"
     },
     "profile": {
       "title": "Perfil",
-      "description": "Gestiona tus datos personales y configuraciones de cuenta",
+      "description": "Gestiona tu información personal y configuraciones de la cuenta",
       "actions": {
-        "uploadPhoto": "Subir Foto",
-        "submit": "Guardar Alteraciones",
+        "uploadPhoto": "Subir foto",
+        "submit": "Guardar cambios",
         "submitting": "Guardando...",
-        "profileUpdated": "Perfil Actualizado",
-        "profileUpdateSuccess": "Perfil actualizado con éxito.",
-        "profileUpdateFailed": "Error al actualizar el perfil",
-        "profileUpdateError": "Ocurrió un error al actualizar el perfil"
+        "profileUpdated": "Perfil actualizado",
+        "profileUpdateSuccess": "Tu perfil se actualizó correctamente.",
+        "profileUpdateFailed": "Error al actualizar perfil",
+        "profileUpdateError": "An error occurred while updating your profile."
       },
       "fields": {
-        "username": "Nombre de Usuario",
+        "username": "Nombre de usuario",
         "email": {
-          "label": "E-mail",
-          "cannotBeChanged": "Este correo electrónico no puede ser modificado"
+          "label": "Email",
+          "cannotBeChanged": "This email cannot be changed"
         },
-        "phoneNumber": "Número de Telefono",
+        "phoneNumber": "Número de teléfono",
         "position": {
-          "label": "Cargo",
-          "placeholder": "Introduce tu cargo"
+          "label": "Posición",
+          "placeholder": "Introduce tu posición"
         },
         "role": {
-          "label": "Función",
-          "placeholder": "Selecciona tu función",
+          "label": "Rol",
+          "placeholder": "Selecciona tu rol",
           "options": {
-            "admin": "Administrador",
-            "manager": "Gerente", 
+            "admin": "Admin",
+            "manager": "Manager", 
             "chef": "Chef",
-            "waiter": "Mesero"
+            "waiter": "Waiter",
+            "barman": "Bartender"
           }
         }
-      }
+      },
+      "selectRole": "Select Role",
+      "saving": "Guardando...",
+      "saveChanges": "Guardar cambios"
     },
     "appearance": {
       "title": "Apariencia",
-      "description": "Personaliza la apariencia de la aplicación",
+      "description": "Personaliza la apariencia de la app",
       "modes": {
         "light": {
-          "label": "Modo Claro"
+          "label": "Light Mode"
         },
         "dark": {
-          "label": "Modo Oscuro"
+          "label": "Dark Mode"
         },
         "system": {
-          "label": "Modo del Sistema"
+          "label": "System Default"
         }
       },
       "actions": {
-        "save": "Guardar Alteraciones",
+        "save": "Guardar cambios",
         "saving": "Guardando...",
         "saved": {
-          "title": "Apariencia Actualizada",
-          "description": "Sus preferencias de apariencia fueron actualizadas con exito."
+          "title": "Apariencia actualizada",
+          "description": "Tu preferencia de apariencia se actualizó correctamente."
         },
         "failed": {
-          "title": "Actualización Fallida",
-          "description": "Ocurrió un error al actualizar sus preferencias de apariencia."
+          "title": "Actualización fallida",
+          "description": "Error al actualizar la apariencia"
         }
       }
     },
     "language": {
       "title": "Idioma",
-      "description": "Selecciona tu idioma preferido para la aplicación",
+      "description": "Selecciona tu idioma preferido para la app",
       "languages": {
         "en": "Inglés",
         "es": "Español",
-        "pt": "Portugues"
+        "pt": "Portugués"
       },
       "actions": {
-        "submit": "Guardar Alteraciones",
+        "submit": "Guardar cambios",
         "saving": "Guardando...",
-        "profileUpdated": "Preferencia de Idioma Actualizada",
-        "profileUpdateSuccess": "Su preferencia de idioma fue actualizada con exito.",
-        "profileUpdateFailed": "Actualización Fallida",
-        "profileUpdateError": "Ocurrió un error al actualizar su preferencia de idioma."
+        "profileUpdated": "Preferencia de idioma actualizada",
+        "profileUpdateSuccess": "Tu preferencia de idioma se actualizó correctamente.",
+        "profileUpdateFailed": "Actualización fallida",
+        "profileUpdateError": "Error al actualizar tu preferencia de idioma."
       }
     },
     "notifications": {
       "title": "Notificaciones",
-      "description": "Gerencie suas preferências de notificação y métodos de entrega",
+      "description": "Gestiona tus preferencias de notificaciones y métodos de entrega",
       "types": {
-        "title": "Tipos de Notificaciones",
+        "title": "Tipos de notificaciones",
         "newOrders": {
-          "label": "Nuevos Pedidos",
-          "description": "Receber notificaciones de nuevos pedidos recibidos"
+          "label": "Nuevos pedidos",
+          "description": "Recibe notificaciones por los nuevos pedidos"
         },
         "orderUpdates": {
-          "label": "Actualizaciones de Pedidos",
-          "description": "Obtener actualizaciones sobre el estado de los pedidos existentes"
+          "label": "Actualizaciones de pedidos",
+          "description": "Obtén actualizaciones sobre el estado de los pedidos existentes"
         },
         "inventoryAlerts": {
-          "label": "Alertas de Inventario",
-          "description": "Notificaciones sobre inventario bajo o cambios en el inventario"
+          "label": "Alertas de inventario",
+          "description": "Notificaciones sobre el stock bajo o cambios en el inventario"
         },
         "systemAnnouncements": {
-          "label": "Anuncios del Sistema",
+          "label": "Anuncios del sistema",
           "description": "Actualizaciones importantes y anuncios del sistema"
         },
         "dailyReports": {
-          "label": "Reportes Diarios",
-          "description": "Receber reportes de resumen diarios"
+          "label": "Informes diarios",
+          "description": "Recibe informes diarios"
         }
       },
       "deliveryMethods": {
-        "title": "Metodos de Entrega",
+        "title": "Métodos de entrega",
         "emailNotifications": {
-          "label": "Notificaciones por E-mail",
-          "description": "Receber notificaciones por e-mail"
+          "label": "Notificaciones por email",
+          "description": "Recibe notificaciones por email"
         },
         "pushNotifications": {
-          "label": "Notificaciones Push",
-          "description": "Receber alertas en tiempo real en su dispositivo"
+          "label": "Notificaciones push",
+          "description": "Recibe alertas en tiempo real en tu dispositivo"
         },
         "soundAlerts": {
-          "label": "Alertas de Sonido",
-          "description": "Reproducir notificaciones de sonido cuando ocurran nuevos eventos"
+          "label": "Alertas de sonido",
+          "description": "Reproduce sonidos de notificación cuando ocurren nuevos eventos"
         }
       },
       "actions": {
-        "submit": "Guardar Alteraciones",
+        "submit": "Guardar cambios",
         "submitting": "Guardando...",
-        "profileUpdated": "Preferencias de Notificaciones Actualizadas",
-        "profileUpdateSuccess": "Sus preferencias de notificación fueron actualizadas con exito.",
-        "profileUpdateFailed": "Actualización Fallida",
-        "profileUpdateError": "Ocurrió un error al actualizar sus preferencias de notificación."
+        "profileUpdated": "Preferencia de notificaciones actualizada",
+        "profileUpdateSuccess": "Tu preferencia de notificaciones se actualizó correctamente.",
+        "profileUpdateFailed": "Actualización fallida",
+        "profileUpdateError": "Error al actualizar tu preferencia de notificaciones."
       }
     },
     "userProfile": {
-      "title": "Perfil del Usuario",
-      "username": "Nombre de Usuario",
-      "email": "E-mail",
-      "role": "Función",
-      "phoneNumber": "Número de Telefono",
+      "title": "Perfil de usuario",
+      "username": "Nombre de usuario",
+      "email": "Email",
+      "role": "Rol",
+      "phoneNumber": "Número de teléfono",
       "position": "Posición"
+    },
+    "establishment": {
+      "title": "Establecimiento",
+      "description": "Gestiona tus configuraciones y información del establecimiento",
+      "name": "Nombre del establecimiento",
+      "address": "Dirección",
+      "phone": "Número de teléfono",
+      "email": "Email",
+      "logo": "Logo",
+      "favicon": "Favicon",
+      "timezone": "Zona horaria",
+      "currency": "Moneda",
+      "language": "Idioma",
+      "businessInfo": "Información del negocio",
+      "actions": {
+        "submit": "Guardar cambios",
+        "submitting": "Guardando...",
+        "establishmentUpdated": "Configuración del establecimiento actualizada",
+        "establishmentUpdateSuccess": "Tus configuraciones del establecimiento se actualizaron correctamente.",
+        "establishmentUpdateFailed": "Actualización fallida",
+        "establishmentUpdateError": "Error al actualizar tus configuraciones del establecimiento."
+      }
+    },
+    "security": {
+      "title": "Seguridad",
+      "description": "Gestiona tus configuraciones y preferencias de seguridad",
+      "password": "Contraseña",
+      "confirmPassword": "Confirmar contraseña",
+      "twoFactor": "Autenticación de dos factores",
+      "actions": {
+        "submit": "Guardar cambios",
+        "submitting": "Guardando...",
+        "securityUpdated": "Configuración de seguridad actualizada",
+        "securityUpdateSuccess": "Tus configuraciones de seguridad se actualizaron correctamente.",
+        "securityUpdateFailed": "Actualización fallida",
+        "securityUpdateError": "Error al actualizar tus configuraciones de seguridad."
+      }
+    },
+    "billing": {
+      "title": "Facturación",
+
+      "description": "Gestiona tus configuraciones y preferencias de facturación",
+      "businessInfo": "Información del negocio",
+      "paymentMethod": "Método de pago",
+      "billingHistory": "Historial de facturación",
+      "cardNumber": "Número de tarjeta",
+      "expirationDate": "Fecha de expiración",
+      "cvv": "CVV",
+      "actions": {
+        "submit": "Guardar cambios",
+        "submitting": "Guardando...",
+        "billingUpdated": "Configuración de facturación actualizada",
+        "billingUpdateSuccess": "Tus configuraciones de facturación se actualizaron correctamente.",
+        "billingUpdateFailed": "Actualización fallida",
+        "billingUpdateError": "Error al actualizar tus configuraciones de facturación."
+      }
     }
   },
 
   "orderForm": {
     "title": "Crear Pedido",
-    "selectTable": "Selecciona la Mesa",
-    "noTableSelected": "Ninguna mesa seleccionada",
+    "selectTable": "Seleccionar Mesa",
+    "noTableSelected": "No mesa seleccionada",
     "menuCategories": {
       "title": "Categorias del Menu"
     },
     "menuItems": {
-      "search": "Buscar itens",
-      "noResults": "Ningun item encontrado"
+      "search": "Buscar items",
+      "noResults": "No items encontrados"
     },
     "orderDetails": {
       "title": "Detalles del Pedido",
@@ -847,21 +984,21 @@ export const esTranslations = {
       "subtotal": "Subtotal",
       "discount": "Descuento",
       "tax": "Impuesto",
-      "noItems": "Ningun item agregado"
+      "noItems": "No items agregados"
     },
-    "selectCategory": "Selecciona la Categoria",
-    "selectItem": "Selecciona el Item",
+    "selectCategory": "Seleccionar Categoria",
+    "selectItem": "Seleccionar Item",
     "quantity": "Cantidad",
-    "notes": "Observaciones",
+    "notes": "Notas",
     "addItem": "Agregar Item",
     "orderItems": "Items del Pedido",
-    "noItemsAdded": "Ningun item agregado",
+    "noItemsAdded": "No items agregados",
     "dietaryRestrictions": {
       "title": "Restricciones Dietéticas",
       "vegetarian": "Vegetariano",
       "vegan": "Vegano",
-      "glutenFree": "Sin Gluten",
-      "lactoseFree": "Sin Lactosa"
+      "glutenFree": "Sin gluten",
+      "lactoseFree": "Sin lactosa"
     },
     "specialInstructions": {
       "label": "Instrucciones Especiales",
@@ -876,34 +1013,58 @@ export const esTranslations = {
       "reserved": "Reservada"
     },
     "status": {
-      "noActiveOrder": "Sin Pedido Activo"
+      "noActiveOrder": "No hay pedido activo"
     },
     "actions": {
       "createOrder": "Crear Pedido",
-      "changeStatus": "Cambiar Status",
+      "changeStatus": "Cambiar Estado",
       "viewOrder": "Ver Pedido",
-      "closeOrder": "Cerrar Pedido"
+      "closeOrder": "Cerrar Pedido",
+      "addItems": "Agregar Items"
     },
     "errors": {
-      "sync": "Error al sincronizar el status de la mesa",
+      "sync": "Error al sincronizar el estado de la mesa",
       "closeOrder": "Error al cerrar el pedido"
     }
   },
 
   "paymentMethods": {
     "cash": "Efectivo",
-    "credit": "Tarjeta de Crédito",
-    "debit": "Tarjeta de Débito",
+    "credit": "Tarjeta de Credito",
+    "debit": "Tarjeta de Debito",
     "transfer": "Transferencia Bancaria",
-    "other": "Otro"
+    "other": "Otros"
   },
   "table": {
     "emptyState": {
-      "title": "Ningun Pedido Encontrado",
-      "description": "Actualmente no hay pedidos en el sistema. Comienza a crear nuevos pedidos para verlos aqui."
+      "title": "No hay pedidos",
+      "description": "Actualmente no hay pedidos en el sistema. Comienza creando nuevos pedidos para verlos aqui."
     },
     "loading": "Cargando pedidos..."
-  }
+  },
+  "errors": {
+    "onlyOwnersCanCreate": "Solo los dueños pueden crear cuentas de dueño",
+    "noEstablishmentId": "No se encontro ID de establecimiento para el usuario"
+  },
+  "categories": {
+    "appetizers": "Entradas",
+    "desserts": "Postres",
+    "drinks": "Bebidas",
+    "main_courses": "Platos principales",
+    "salads": "Ensaladas",
+    "sides": "Guarniciones"
+  },
+  "roles": {
+      "owner": "Dueño",
+      "admin": "Admin", 
+      "manager": "Gerente",
+      "staff": "Personal",
+      "waiter": "Mesero",
+      "barman": "Bartender",
+      "default": "Usuario"
+    },
 };
+
+
 
 export default esTranslations;

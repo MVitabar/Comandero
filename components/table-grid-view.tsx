@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useI18n } from "@/components/i18n-provider"
+import { useTranslation } from 'react-i18next';
 import { TableCard } from "@/components/table-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,6 +23,7 @@ export function TableGridView({
   isEditing = false,
 }: TableGridViewProps) {
   const { t } = useI18n()
+  const { t: translate } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [sortBy, setSortBy] = useState("number")
@@ -50,7 +52,7 @@ export function TableGridView({
       // Apply search filter
       const matchesSearch =
         table.number.toString().includes(searchQuery) ||
-        t(`tables.statuses.${table.status}`).toLowerCase().includes(searchQuery.toLowerCase())
+        translate(`tables.statuses.${table.status}`).toLowerCase().includes(searchQuery.toLowerCase())
 
       // Apply status filter
       const matchesStatus = statusFilter === "all" || table.status === statusFilter
@@ -93,15 +95,15 @@ export function TableGridView({
               <SelectValue placeholder={t("tables.status")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{t("tables.allStatuses")}</SelectItem>
-              <SelectItem value="available">{t("tables.statuses.available")}</SelectItem>
-              <SelectItem value="occupied">{t("tables.statuses.occupied")}</SelectItem>
-              <SelectItem value="reserved">{t("tables.statuses.reserved")}</SelectItem>
-              <SelectItem value="maintenance">{t("tables.statuses.maintenance")}</SelectItem>
-              <SelectItem value="ordering">{t("tables.statuses.ordering")}</SelectItem>
-              <SelectItem value="preparing">{t("tables.statuses.preparing")}</SelectItem>
-              <SelectItem value="ready">{t("tables.statuses.ready")}</SelectItem>
-              <SelectItem value="served">{t("tables.statuses.served")}</SelectItem>
+              <SelectItem value="all">{translate("tables.allStatuses")}</SelectItem>
+              <SelectItem value="available">{translate("tables.statuses.available")}</SelectItem>
+              <SelectItem value="occupied">{translate("tables.statuses.occupied")}</SelectItem>
+              <SelectItem value="reserved">{translate("tables.statuses.reserved")}</SelectItem>
+              <SelectItem value="maintenance">{translate("tables.statuses.maintenance")}</SelectItem>
+              <SelectItem value="ordering">{translate("tables.statuses.ordering")}</SelectItem>
+              <SelectItem value="preparing">{translate("tables.statuses.preparing")}</SelectItem>
+              <SelectItem value="ready">{translate("tables.statuses.ready")}</SelectItem>
+              <SelectItem value="served">{translate("tables.statuses.served")}</SelectItem>
             </SelectContent>
           </Select>
 
