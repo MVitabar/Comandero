@@ -53,9 +53,16 @@ export default function RootLayout({
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   const pathname = usePathname()
+  const [isInitialized, setIsInitialized] = useState(false)
 
-  // Render loading state
-  if (loading) {
+  useEffect(() => {
+    if (!loading) {
+      setIsInitialized(true)
+    }
+  }, [loading])
+
+  // Esperar a que Firebase se inicialice
+  if (!isInitialized || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-blue-500"></div>
@@ -63,20 +70,32 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     )
   }
 
-  // Allow access to login and register pages when not authenticated
-  if (!user && (pathname === "/login" || pathname === "/register")) {
-    return pathname === "/login" ? <LoginPage /> : <RegisterPage />
+  // Verificar si es una ruta de invitación
+  const isInvitationRoute = pathname.includes('/invitation/register')
+  
+  // Si es una ruta de invitación, permitir acceso sin autenticación
+  if (isInvitationRoute) {
+    return <div className="min-h-screen">{children}</div>
   }
 
-  // Redirect to login if no user and not on login/register pages
-  return !user ? (
-    <LoginPage />
-  ) : (
+  // Para otras rutas públicas
+  const publicPages = ["/login", "/register"]
+  const isPublicPage = publicPages.some(page => pathname === page)
+
+  // Si no está autenticado y no es una página pública, redirigir al login
+  if (!user && !isPublicPage) {
+    return <LoginPage />
+  }
+
+  // Si está autenticado o es una página pública
+  return user ? (
     <div className="flex min-h-screen">
+      <CollapsibleSidebar />
       <main className="flex-1 overflow-x-hidden pl-0 md:pl-[250px] transition-all duration-300 pt-16 md:pt-0 pb-20 md:pb-0">
         {children}
       </main>
-      <CollapsibleSidebar />
     </div>
+  ) : (
+    <div className="min-h-screen">{children}</div>
   )
 }

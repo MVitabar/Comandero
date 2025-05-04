@@ -39,7 +39,7 @@ import { nanoid } from 'nanoid';
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
-  login: function (email: string, password: string): Promise<{ success: boolean, error?: string }> {
+  login: function (email: string, password: string): Promise<{ success: boolean, error?: string, needsPasswordChange: boolean }> {
     throw new Error("Function not implemented.")
   },
   logout: function (): Promise<{ success: boolean, error?: string }> {
@@ -533,7 +533,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Enhanced login method with detailed error handling and activity tracking
-  const login = async (email: string, password: string): Promise<{ success: boolean, error?: string }> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean, error?: string, needsPasswordChange: boolean }> => {
     const activityContext = getUserActivityContext();
     
     try {
@@ -541,7 +541,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!email || !email.includes('@')) {
         return {
           success: false,
-          error: 'Invalid email format'
+          error: 'Invalid email format',
+          needsPasswordChange: false
         };
       }
 
@@ -613,7 +614,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       toast.success(t("auth.login.success", { username: customUser.username }))
 
       return {
-        success: true
+        success: true,
+        needsPasswordChange: false // Ahora es una propiedad requerida
       };
     } catch (error) {
       let errorMessage = "An unexpected error occurred";
@@ -664,7 +666,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       return {
         success: false,
-        error: errorMessage
+        error: errorMessage,
+        needsPasswordChange: false // Ahora es una propiedad requerida
       };
     }
   };

@@ -1,6 +1,8 @@
 import { 
   createUserWithEmailAndPassword, 
-  getAuth 
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut 
 } from "firebase/auth";
 import { 
   doc, 
@@ -44,10 +46,15 @@ export async function createTeamMember(
     establishmentName?: string;
     establishmentId?: string;
     additionalData?: any;
+    skipAutoLogin?: boolean;
   }
 ) {
   const auth = getAuth();
   const db = getFirestore();
+
+  // Guardar las credenciales del admin actual
+  const adminEmail = auth.currentUser?.email;
+  const adminUid = auth.currentUser?.uid;
 
   // Validate owner role creation
   if (userData.role === UserRole.OWNER && 
@@ -102,11 +109,27 @@ export async function createTeamMember(
   }
 
   // Proceed with user creation using the retrieved establishment ID
+  // Crear el usuario y obtener sus credenciales
   const userCredential = await createUserWithEmailAndPassword(
     auth, 
     userData.email, 
     userData.password
   );
+  
+  // Si skipAutoLogin es true, cerrar la sesión del usuario recién creado y restaurar la del admin
+  if (userData.skipAutoLogin && adminEmail) {
+    try {
+      // Obtener la sesión actual antes de cerrarla
+      const currentSession = auth.currentUser;
+      
+      // Solo cerrar sesión si el usuario actual no es el admin
+      if (currentSession?.uid !== adminUid) {
+        await signOut(auth);
+      }
+    } catch (error) {
+      console.error('Error managing session:', error);
+    }
+  }
 
   // Create user document in Firestore
   const newUserDocRef = doc(db, 'users', userCredential.user.uid);

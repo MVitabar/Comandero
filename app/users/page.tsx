@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { Search, MoreHorizontal, UserPlus, Edit, Trash2 } from "lucide-react"
+import { Search, MoreHorizontal, UserPlus, Edit, Trash2, Copy } from "lucide-react"
 import Link from "next/link"
 import { User } from "@/types"
 import { usePermissions } from "@/components/permissions-provider"
@@ -202,49 +202,37 @@ export default function UsersPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">{t("users.openMenu")}</span>
-                              <MoreHorizontal className="h-4 w-4" />
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => navigator.clipboard.writeText(user.id || user.uid)}
+                            title={t("users.copyId")}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                          
+                          {canUpdate('users-management') && (
+                            <Button variant="ghost" size="icon" asChild>
+                              <Link href={`/users/edit/${user.id}`}>
+                                <Edit className="h-4 w-4" />
+                              </Link>
                             </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem 
-                              onClick={() => navigator.clipboard.writeText(user.id || user.uid)}
+                          )}
+                          
+                          {canDelete('users-management') && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setUserToDelete({
+                                ...user,
+                                id: user.id || user.uid || ''
+                              })}
                             >
-                              {t("users.copyId")}
-                            </DropdownMenuItem>
-                            
-                            {canUpdate('users-management') && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem 
-                                  onSelect={() => {/* Navegar a edición de usuario */}}
-                                >
-                                  <Edit className="mr-2 h-4 w-4" />
-                                  {t("users.editUser")}
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                            
-                            {canDelete('users-management') && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem 
-                                  className="text-destructive focus:text-destructive/90"
-                                  onSelect={() => setUserToDelete({
-                                    ...user,
-                                    id: user.id || user.uid
-                                  })}
-                                >
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  {t("users.delete")}
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -271,47 +259,37 @@ export default function UsersPage() {
                   <CardTitle className="text-base">
                     {user.username}
                   </CardTitle>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <span className="sr-only">{t("users.openMenu")}</span>
-                        <MoreHorizontal className="h-4 w-4" />
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => navigator.clipboard.writeText(user.id || user.uid)}
+                      title={t("users.copyId")}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    
+                    {canUpdate('users-management') && (
+                      <Button variant="ghost" size="icon" asChild>
+                        <Link href={`/users/edit/${user.id}`}>
+                          <Edit className="h-4 w-4" />
+                        </Link>
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem 
-                        onClick={() => navigator.clipboard.writeText(user.id || user.uid)}
+                    )}
+                    
+                    {canDelete('users-management') && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setUserToDelete({
+                          ...user,
+                          id: user.id || user.uid || ''
+                        })}
                       >
-                        {t("users.copyId")}
-                      </DropdownMenuItem>
-                      
-                      {canUpdate('users-management') && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem>
-                            <Edit className="mr-2 h-4 w-4" />
-                            {t("users.editUser")}
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                      
-                      {canDelete('users-management') && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem 
-                            className="text-destructive focus:text-destructive/90"
-                            onSelect={() => setUserToDelete({
-                              ...user,
-                              id: user.id || user.uid
-                            })}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            {t("users.delete")}
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="grid gap-2.5">
@@ -335,9 +313,11 @@ export default function UsersPage() {
       {/* Diálogo de confirmación de eliminación */}
       <Dialog 
         open={!!userToDelete} 
-        onOpenChange={() => setUserToDelete(null)}
+        onOpenChange={(open) => {
+          if (!open) setUserToDelete(null);
+        }}
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>{t("users.confirmDelete")}</DialogTitle>
             <DialogDescription>
@@ -346,11 +326,16 @@ export default function UsersPage() {
               })}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">{t("commons.cancel")}</Button>
-            </DialogClose>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setUserToDelete(null)}
+            >
+              {t("commons.cancel")}
+            </Button>
             <Button 
+              type="button"
               variant="destructive" 
               onClick={handleDeleteUser}
             >

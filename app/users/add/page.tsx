@@ -8,21 +8,23 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { UserRole } from "@/types/permissions"
-import { createTeamMember, CurrentUser } from "@/lib/user-management"
 import { useNotifications } from "@/hooks/useNotifications"
+import { useEffect } from "react"
+import { collection, addDoc } from 'firebase/firestore';
+import { useFirebase } from "@/components/firebase-provider";
 
 export default function AddTeamMemberPage() {
   const [formData, setFormData] = useState({
     username: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    role: UserRole.WAITER // Default role
-  })
-  const [loading, setLoading] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
+    role: UserRole.WAITER
+  });
+  const [generatedEmail, setGeneratedEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [invitationLink, setInvitationLink] = useState<string>('');
 
   const { user } = useAuth()
+  const { db } = useFirebase(); // Agregamos esta línea
   const { sendNotification } = useNotifications();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,23 +45,14 @@ export default function AddTeamMemberPage() {
     const newErrors: Record<string, string> = {}
 
     if (!formData.username.trim()) {
-      newErrors.username = "Username is required"
+      newErrors.username = "El nombre de usuario es requerido"
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required"
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Invalid email format"
-    }
+    // Ya no necesitamos validar password y confirmPassword
+    // porque ahora usamos sistema de invitación
 
-    if (!formData.password.trim()) {
-      newErrors.password = "Password is required"
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters"
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match"
+    if (!user?.currentEstablishmentName) {
+      newErrors.form = "No se encontró el establecimiento asociado"
     }
 
     setErrors(newErrors)
@@ -69,80 +62,78 @@ export default function AddTeamMemberPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Validate form
     if (!validateForm()) return
 
-    // Ensure we have a logged-in user
-    if (!user) {
-      toast.error("You must be logged in to add a team member")
-      return
+    if (!user || !db) { // Agregamos la verificación de db
+      toast.error("Debes estar conectado para agregar un miembro al equipo");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
-      // Validate user object before passing
-      if (!user) {
-        console.error('No user object available');
-        throw new Error('No authenticated user found');
-      }
-
-      // Ensure all required properties are present
-      const userToPass = {
-        uid: user.uid,
-        role: user.role,
-        establishmentId: user.establishmentId,
-        currentEstablishmentName: user.currentEstablishmentName,
-        // Add any other properties you know should be present
-      };
-
-      await createTeamMember(user as unknown as CurrentUser, {
-        email: formData.email,
-        password: formData.password,
+      // Crear un nuevo documento de invitación en Firestore
+      const invitationData = {
+        email: generatedEmail,
         username: formData.username,
         role: formData.role,
         establishmentName: user?.currentEstablishmentName || '',
-        establishmentId: user?.establishmentId
-      });
+        establishmentId: user?.establishmentId,
+        createdBy: user.uid,
+        createdAt: new Date(),
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 horas desde ahora
+        status: 'pending'
+      };
 
-      toast.success("Team member added successfully")
+      const invitationRef = await addDoc(collection(db, 'invitations'), invitationData);
+      
+      // Generar el enlace de invitación con el ID del documento
+      const invitationLink = `${window.location.origin}/invitation/register?id=${invitationRef.id}`;
+      setInvitationLink(invitationLink);
+
+      toast.success("Invitación generada exitosamente");
       await sendNotification({
-        title: "Nuevo miembro agregado",
-        message: `Se agregó a ${formData.username} al equipo`,
+        title: "Nueva invitación creada",
+        message: `Se generó una invitación para ${formData.username}`,
         url: window.location.href,
       });
+      
+      // Limpiar el formulario
       setFormData({
         username: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
         role: UserRole.WAITER
-      })
+      });
+      setGeneratedEmail('');
+      
     } catch (error: any) {
-      console.error("Error adding team member:", error)
-
-      const errorMessage = 
-        error.code === 'auth/email-already-in-use' 
-          ? "This email is already in use" 
-          : error.message || "Failed to add team member"
-
-      toast.error(errorMessage)
-      setErrors((prev) => ({ ...prev, email: errorMessage }))
+      console.error("Error al generar invitación:", error);
+      toast.error("Error al generar la invitación");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+}
+
+  useEffect(() => {
+    const establishmentName = user?.currentEstablishmentName?.replace(/\s+/g, '-').toLowerCase() || '';
+    const sanitizedUsername = formData.username.trim().replace(/\s+/g, '.').toLowerCase();
+    setGeneratedEmail(`${sanitizedUsername}@${establishmentName}.com`);
+  }, [formData.username, user]);
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(generatedEmail);
+    toast.success('Email copiado al portapapeles');
+  };
 
   return (
     <div className="max-w-md mx-auto mt-10">
       <Card>
         <CardHeader>
-          <CardTitle>Add Team Member</CardTitle>
+          <CardTitle>Agregar Miembro del Equipo</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">Nombre de Usuario</Label>
               <Input
                 id="username"
                 name="username"
@@ -155,49 +146,7 @@ export default function AddTeamMemberPage() {
             </div>
 
             <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                disabled={loading}
-                className={errors.email ? "border-red-500" : ""}
-              />
-              {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
-            </div>
-
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                disabled={loading}
-                className={errors.password ? "border-red-500" : ""}
-              />
-              {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
-            </div>
-
-            <div>
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                disabled={loading}
-                className={errors.confirmPassword ? "border-red-500" : ""}
-              />
-              {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword}</p>}
-            </div>
-
-            <div>
-              <Label htmlFor="role">Role</Label>
+              <Label htmlFor="role">Rol</Label>
               <select
                 id="role"
                 name="role"
@@ -213,10 +162,71 @@ export default function AddTeamMemberPage() {
             </div>
 
             <Button type="submit" disabled={loading}>
-              {loading ? "Adding..." : "Add Team Member"}
+              {loading ? "Generando..." : "Generar Invitación"}
+              
             </Button>
           </form>
+
+          {/* Mostrar el enlace de invitación si existe */}
+          {invitationLink && (
+            <div className="mt-4 p-4 bg-gray-100 rounded-md">
+              <div className="flex flex-col gap-2">
+                <span className="font-medium">Enlace de invitación:</span>
+                <div className="flex items-center justify-between">
+                  <input
+                    type="text"
+                    value={invitationLink}
+                    readOnly
+                    className="flex-1 p-2 border rounded mr-2"
+                  />
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(invitationLink);
+                      toast.success('Enlace copiado al portapapeles');
+                    }}
+                  >
+                    Copiar
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Este enlace expirará en 24 horas
+                </p>
+              </div>
+            </div>
+          )}
         </CardContent>
+        
+        {/* Email preview block */}
+        {formData.username && (
+          <div className="mt-4 p-4 bg-gray-100 rounded-md">
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Email generado: {generatedEmail}</span>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={copyToClipboard}
+              >
+                <span className="mr-2">Copiar</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   )
