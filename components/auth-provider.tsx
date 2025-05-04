@@ -40,21 +40,15 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   currentUser: null,
   loading: true,
-  login: function (email: string, password: string): Promise<{ success: boolean, error?: string, needsPasswordChange: boolean }> {
-    throw new Error("Function not implemented.")
-  },
-  logout: function (): Promise<{ success: boolean, error?: string }> {
-    throw new Error("Function not implemented.")
-  },
-  signUp: function (
-    email: string, 
-    password: string, 
-    options?: { 
-      establishmentName?: string; 
-      role?: UserRole 
-    }
-  ): Promise<{ success: boolean, error?: string, userId?: string }> {
-    throw new Error("Function not implemented.")
+  login: async () => ({ success: false, needsPasswordChange: false }),
+  logout: async () => ({ success: false }),
+  signUp: async (email, password, options) => {
+    console.warn('Default signUp method called');
+    return { 
+      success: false, 
+      error: 'Sign up method not implemented', 
+      needsPasswordChange: false 
+    };
   }
 })
 
