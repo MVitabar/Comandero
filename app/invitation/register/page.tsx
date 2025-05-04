@@ -105,8 +105,8 @@ export default function InvitationRegisterPage() {
       setLoading(true)
   
       try {
-        // Almacenamos el establishmentId en una variable separada
-        const establishmentId = invitationData.establishmentId;
+        // Log detailed invitation data for debugging
+        console.log('Invitation Data:', invitationData)
         
         const result = await signUp(
           formData.email,
@@ -114,20 +114,42 @@ export default function InvitationRegisterPage() {
           {
             username: formData.username,
             role: invitationData.role,
-            // Use the full restaurant path for establishment name
             establishmentName: invitationData.establishmentName
           }
         )
 
         if (result.success) {
           toast.success(t("register.success"))
-          router.push("/dashboard")
+          
+          // Explicitly check and navigate
+          try {
+            // Attempt to push to dashboard
+            router.push("/dashboard")
+          } catch (navigationError) {
+            console.error("Navigation Error:", navigationError)
+            
+            // Fallback navigation method
+            window.location.href = "/dashboard"
+          }
         } else {
+          // Log the specific error for debugging
+          console.error('Sign Up Error:', result.error)
           setErrors({ form: result.error || t("register.unexpectedError") })
         }
       } catch (error) {
-        console.error("Error de registro:", error)
-        setErrors({ form: t("register.unexpectedError") })
+        // More detailed error logging
+        console.error("Complete Error Object:", error)
+        console.error("Error Name:", error instanceof Error ? error.name : 'Unknown Error')
+        console.error("Error Message:", error instanceof Error ? error.message : 'No error message')
+        console.error("Error Stack:", error instanceof Error ? error.stack : 'No stack trace')
+        
+        // Additional browser compatibility checks
+        if (typeof window !== 'undefined') {
+          console.log('Window object available:', !!window)
+          console.log('Router methods:', Object.keys(router))
+        }
+        
+        setErrors({ form: error instanceof Error ? error.message : t("register.unexpectedError") })
       } finally {
         setLoading(false)
       }

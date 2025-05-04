@@ -146,9 +146,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     options?: {
       establishmentName?: string;
       role?: UserRole;
+      username?: string;
     }
-  ): Promise<{ success: boolean, error?: string, userId?: string }> => {
+  ): Promise<{ success: boolean, error?: string, userId?: string, needsPasswordChange?: boolean }> => {
     try {
+      // Validate inputs
+      if (!email) {
+        return {
+          success: false,
+          error: 'Email is required',
+          needsPasswordChange: false
+        };
+      }
+
+      if (!password) {
+        return {
+          success: false,
+          error: 'Password is required',
+          needsPasswordChange: false
+        };
+      }
+
+      // Detailed logging for debugging
+      console.log('Sign Up Attempt:', {
+        email,
+        establishmentName: options?.establishmentName,
+        role: options?.role
+      });
+
       // Create user in Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
@@ -167,25 +192,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!newUser) {
         return {
           success: false,
-          error: 'Failed to create user profile'
+          error: 'Failed to create user profile',
+          needsPasswordChange: false
         };
       }
 
-      // Send email verification solo si no está verificado
+      // Send email verification only if not verified
       if (!firebaseUser.emailVerified) {
-        await sendEmailVerification(firebaseUser);
+        try {
+          await sendEmailVerification(firebaseUser);
+        } catch (verificationError) {
+          console.error('Email verification error:', verificationError);
+          // Non-critical error, so we'll continue
+        }
       }
+
+      // Log successful user creation
+      console.log('User created successfully:', {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email
+      });
 
       toast.success(t("auth.signUp.success", { username: newUser.username }))
       setUser(newUser);
 
       return {
         success: true,
-        userId: firebaseUser.uid
+        userId: firebaseUser.uid,
+        needsPasswordChange: false
       };
     } catch (error) {
+      // Comprehensive error logging
+      console.error('Complete Sign Up Error:', error);
+      
       let errorMessage = "An unexpected error occurred";
       if (error instanceof Error) {
+        console.error('Error Name:', error.name);
+        console.error('Error Message:', error.message);
+        console.error('Error Stack:', error.stack);
+
         switch (error.message) {
           case 'auth/email-already-in-use':
             errorMessage = "Email is already registered";
@@ -205,10 +250,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       return {
         success: false,
-        error: errorMessage
+        error: errorMessage,
+        needsPasswordChange: false
       };
     }
-  }
+  };
 
   // Función de obtención de detalles de usuario
   const fetchUserDetails = async (firebaseUser: FirebaseUser) => {
