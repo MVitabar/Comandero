@@ -114,8 +114,8 @@ export default function InvitationRegisterPage() {
           {
             username: formData.username,
             role: invitationData.role,
-            // Use only one establishmentName property with the combined value
-            establishmentName: `${invitationData.establishmentName}#${establishmentId}`
+            // Use the full restaurant path for establishment name
+            establishmentName: invitationData.establishmentName
           }
         )
 

@@ -351,8 +351,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Función de inicialización de perfil de usuario
   const generateEstablishmentId = (baseSlug: string): string => {
+    // If the baseSlug already looks like a full path, extract the last part
+    const extractedSlug = baseSlug.includes('/') 
+      ? baseSlug.split('/').pop() || baseSlug  // Fallback to original slug if pop() returns undefined
+      : baseSlug;
+
     // Sanitize the base slug to create a consistent identifier
-    const sanitizedSlug = baseSlug
+    const sanitizedSlug = extractedSlug
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '-')  // Replace non-alphanumeric chars with dash
       .replace(/-+/g, '-')         // Replace multiple dashes with single dash
