@@ -105,9 +105,45 @@ export default function InvitationRegisterPage() {
       setLoading(true)
   
       try {
-        // Log detailed invitation data for debugging
-        console.log('Invitation Data:', invitationData)
+        console.group('Registration Diagnostic Information')
+        console.log('Invitation Data:', JSON.stringify(invitationData, null, 2))
+        console.log('Form Data:', JSON.stringify(formData, null, 2))
         
+        console.log('Browser Capabilities:', {
+          windowAvailable: typeof window !== 'undefined',
+          navigatorUserAgent: navigator.userAgent,
+          browserLanguage: navigator.language,
+          platformInfo: navigator.platform
+        })
+
+        const browserAPIs = [
+          'fetch', 'Promise', 'localStorage', 
+          'sessionStorage', 'crypto', 'TextEncoder'
+        ] as const;
+
+        const missingAPIs = browserAPIs.filter(api => {
+          // Type-safe check for window object properties
+          switch (api) {
+            case 'fetch':
+              return typeof window.fetch === 'undefined';
+            case 'Promise':
+              return typeof window.Promise === 'undefined';
+            case 'localStorage':
+              return typeof window.localStorage === 'undefined';
+            case 'sessionStorage':
+              return typeof window.sessionStorage === 'undefined';
+            case 'crypto':
+              return typeof window.crypto === 'undefined';
+            case 'TextEncoder':
+              return typeof window.TextEncoder === 'undefined';
+            default:
+              return false;
+          }
+        });
+
+        console.log('Missing Browser APIs:', missingAPIs);
+        console.groupEnd()
+
         const result = await signUp(
           formData.email,
           formData.password,
@@ -121,35 +157,119 @@ export default function InvitationRegisterPage() {
         if (result.success) {
           toast.success(t("register.success"))
           
-          // Explicitly check and navigate
-          try {
-            // Attempt to push to dashboard
-            router.push("/dashboard")
-          } catch (navigationError) {
-            console.error("Navigation Error:", navigationError)
-            
-            // Fallback navigation method
-            window.location.href = "/dashboard"
+          const navigationMethods = [
+            // Method 1: Next.js router
+            async () => {
+              try {
+                console.group('Next.js Router Navigation')
+                console.log('Router object:', {
+                  methods: Object.keys(router),
+                  currentPath: window.location.pathname,
+                  routerMethods: {
+                    push: typeof router.push === 'function',
+                    replace: typeof router.replace === 'function',
+                    back: typeof router.back === 'function'
+                  }
+                })
+                
+                await router.push("/dashboard")
+                console.log('Next.js router navigation successful')
+                console.groupEnd()
+                return true
+              } catch (error) {
+                console.error("Next.js router navigation failed:", {
+                  errorType: typeof error,
+                  errorName: error instanceof Error ? error.name : 'Unknown',
+                  errorMessage: error instanceof Error ? error.message : 'No message',
+                  errorStack: error instanceof Error ? error.stack : 'No stack'
+                })
+                console.groupEnd()
+                return false
+              }
+            },
+            // Method 2: Window location
+            () => {
+              try {
+                console.group('Window Location Navigation')
+                console.log('Current location:', window.location.href)
+                console.log('Navigation target:', "/dashboard")
+                
+                // Check if dashboard route exists before navigation
+                const dashboardRoute = window.location.origin + "/dashboard"
+                const dashboardExists = fetch(dashboardRoute, { method: 'HEAD' })
+                  .then(response => response.ok)
+                  .catch(() => false)
+
+                if (!dashboardExists) {
+                  console.error('Dashboard route does not exist')
+                  return false
+                }
+                
+                window.location.href = "/dashboard"
+                console.log('Window location navigation initiated')
+                console.groupEnd()
+                return true
+              } catch (error) {
+                console.error("Window location navigation failed:", error)
+                console.groupEnd()
+                return false
+              }
+            },
+            // Method 3: History API
+            () => {
+              try {
+                console.group('History API Navigation')
+                window.history.pushState(null, '', '/dashboard')
+                window.dispatchEvent(new PopStateEvent('popstate'))
+                console.log('History API navigation successful')
+                console.groupEnd()
+                return true
+              } catch (error) {
+                console.error("History API navigation failed:", error)
+                console.groupEnd()
+                return false
+              }
+            }
+          ];
+
+          // Try navigation methods sequentially
+          for (const attempt of navigationMethods) {
+            const success = await attempt()
+            if (success) break
           }
         } else {
-          // Log the specific error for debugging
           console.error('Sign Up Error:', result.error)
           setErrors({ form: result.error || t("register.unexpectedError") })
         }
-      } catch (error) {
-        // More detailed error logging
-        console.error("Complete Error Object:", error)
-        console.error("Error Name:", error instanceof Error ? error.name : 'Unknown Error')
-        console.error("Error Message:", error instanceof Error ? error.message : 'No error message')
-        console.error("Error Stack:", error instanceof Error ? error.stack : 'No stack trace')
-        
-        // Additional browser compatibility checks
-        if (typeof window !== 'undefined') {
-          console.log('Window object available:', !!window)
-          console.log('Router methods:', Object.keys(router))
+      } catch (error: unknown) {
+        console.group('Registration Error Details')
+        console.error('Complete Error Object:', error)
+        console.error('Error Type:', typeof error)
+
+        // Type-safe error handling
+        const errorDetails = {
+          name: error instanceof Error ? error.name : 'Unknown Error',
+          message: error instanceof Error 
+            ? error.message 
+            : typeof error === 'string' 
+              ? error 
+              : 'An unexpected error occurred',
+          stack: error instanceof Error ? error.stack : undefined
         }
+
+        console.error('Error Name:', errorDetails.name)
+        console.error('Error Message:', errorDetails.message)
+        console.error('Error Stack:', errorDetails.stack)
         
-        setErrors({ form: error instanceof Error ? error.message : t("register.unexpectedError") })
+        try {
+          console.error('Serialized Error:', JSON.stringify(error, Object.getOwnPropertyNames(error)))
+        } catch {}
+        console.groupEnd()
+
+        const errorMessage = errorDetails.message
+
+        setErrors({ form: errorMessage })
+        toast.error(errorMessage)
       } finally {
         setLoading(false)
       }
