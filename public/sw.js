@@ -2,6 +2,11 @@
 const CACHE_NAME = 'comandero-v1';
 const urlsToCache = [
   '/',
+  '/login',
+  '/register',
+  '/dashboard',
+  '/invitation/register',
+  '/invitation/accept',
   '/index.html',
   '/manifest.webmanifest',
   '/icon.png',

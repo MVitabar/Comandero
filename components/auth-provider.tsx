@@ -550,7 +550,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!password) {
         return {
           success: false,
-          error: 'Password cannot be empty'
+          error: 'Password cannot be empty',
+          needsPasswordChange: false
         };
       }
 
@@ -574,7 +575,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!customUser) {
         return {
           success: false,
-          error: 'User profile not found. Please contact support.'
+          error: 'User profile not found. Please contact support.',
+          needsPasswordChange: false
         };
       }
 
@@ -582,7 +584,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (customUser.status === 'suspended') {
         return {
           success: false,
-          error: 'Your account has been suspended. Please contact support.'
+          error: 'Your account has been suspended. Please contact support.',
+          needsPasswordChange: false
         };
       }
 
@@ -615,7 +618,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       return {
         success: true,
-        needsPasswordChange: false // Ahora es una propiedad requerida
+        needsPasswordChange: false
       };
     } catch (error) {
       let errorMessage = "An unexpected error occurred";
@@ -667,7 +670,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return {
         success: false,
         error: errorMessage,
-        needsPasswordChange: false // Ahora es una propiedad requerida
+        needsPasswordChange: false
       };
     }
   };

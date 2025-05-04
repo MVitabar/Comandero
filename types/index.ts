@@ -587,7 +587,7 @@ export interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<{
-    needsPasswordChange: any;
+    needsPasswordChange: boolean;
     success: boolean
     error?: string
   }>
