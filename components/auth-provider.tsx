@@ -192,6 +192,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
+      // Automatically sign in the user
+      await signInWithEmailAndPassword(auth, email, password);
+
       // Send email verification only if not verified
       if (!firebaseUser.emailVerified) {
         try {
@@ -208,7 +211,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: firebaseUser.email
       });
 
-      toast.success(t("auth.signUp.success", { username: newUser.username }))
+      // Update the user state in the context
       setUser(newUser);
 
       return {
@@ -240,8 +243,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             errorMessage = error.message;
         }
       }
-
-      toast.error(t("auth.signUp.error", { username: errorMessage }))
 
       return {
         success: false,
@@ -811,6 +812,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return batch.commit();
   }
 
+  function t(key: string, params?: Record<string, string | number>): string {
+    console.warn(`Translation not implemented for key: ${key}`)
+    return key
+  }
+
   return <AuthContext.Provider value={{ 
     user, 
     currentUser: user, 
@@ -819,7 +825,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout, 
     signUp 
   }}>{children}</AuthContext.Provider>
-}
-function t(arg0: string, arg1: { username: string }): string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | (() => React.ReactNode) | null | undefined {
-  throw new Error("Function not implemented.")
 }
