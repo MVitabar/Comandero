@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "@/components/auth-provider"
+import { User as FirebaseUser } from "firebase/auth"
 import { useI18n } from "@/components/i18n-provider"
 import { useFirebase } from "@/components/firebase-provider"
 import { toast } from "sonner"
@@ -27,7 +28,10 @@ export default function InvitationRegisterPage() {
   const [invitationData, setInvitationData] = useState<any>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const { signUp } = useAuth()
+  const authContext = useAuth()
+  const { signUp } = authContext
+  const currentUser = authContext.currentUser
+
   const { db } = useFirebase()
   const { t } = useI18n()
   const router = useRouter()
@@ -42,6 +46,7 @@ export default function InvitationRegisterPage() {
       }
 
       try {
+        setLoading(true)
         const invitationRef = doc(db, 'invitations', invitationId)
         const invitationDoc = await getDoc(invitationRef)
 
@@ -94,185 +99,215 @@ export default function InvitationRegisterPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault()
-      
-      const validationErrors = validateForm()
-      if (Object.keys(validationErrors).length > 0) {
-        setErrors(validationErrors)
-        return
-      }
+    e.preventDefault()
+    
+    const validationErrors = validateForm()
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors)
+      return
+    }
 
-      setLoading(true)
+    setLoading(true)
   
-      try {
-        console.group('Registration Diagnostic Information')
-        console.log('Invitation Data:', JSON.stringify(invitationData, null, 2))
-        console.log('Form Data:', JSON.stringify(formData, null, 2))
+    try {
+      console.group('Registration Diagnostic Information')
+      console.log('Invitation Data:', JSON.stringify(invitationData, null, 2))
+      console.log('Form Data:', JSON.stringify(formData, null, 2))
+      
+      console.log('Browser Capabilities:', {
+        windowAvailable: typeof window !== 'undefined',
+        navigatorUserAgent: navigator.userAgent,
+        browserLanguage: navigator.language,
+        platformInfo: navigator.platform
+      })
+
+      const browserAPIs = [
+        'fetch', 'Promise', 'localStorage', 
+        'sessionStorage', 'crypto', 'TextEncoder'
+      ] as const;
+
+      const missingAPIs = browserAPIs.filter(api => {
+        // Type-safe check for window object properties
+        switch (api) {
+          case 'fetch':
+            return typeof window.fetch === 'undefined';
+          case 'Promise':
+            return typeof window.Promise === 'undefined';
+          case 'localStorage':
+            return typeof window.localStorage === 'undefined';
+          case 'sessionStorage':
+            return typeof window.sessionStorage === 'undefined';
+          case 'crypto':
+            return typeof window.crypto === 'undefined';
+          case 'TextEncoder':
+            return typeof window.TextEncoder === 'undefined';
+          default:
+            return false;
+        }
+      });
+
+      console.log('Missing Browser APIs:', missingAPIs);
+      console.groupEnd()
+
+      const result = await signUp(
+        formData.email,
+        formData.password,
+        {
+          username: formData.username,
+          role: invitationData.role,
+          establishmentName: invitationData.establishmentName
+        }
+      )
+
+      if (result.success) {
+        toast.success(t("register.success"))
         
-        console.log('Browser Capabilities:', {
-          windowAvailable: typeof window !== 'undefined',
-          navigatorUserAgent: navigator.userAgent,
-          browserLanguage: navigator.language,
-          platformInfo: navigator.platform
-        })
+        const navigationMethods = [
+          // Method 1: Next.js router with auth check
+          async () => {
+            try {
+              console.group('Next.js Router Navigation')
+              
+              // Get current user from Firebase/Auth context
+              const user = authContext.currentUser
+              console.log('Current User:', {
+                uid: user?.uid,
+                email: user?.email,
+                emailVerified: user?.emailVerified
+              })
 
-        const browserAPIs = [
-          'fetch', 'Promise', 'localStorage', 
-          'sessionStorage', 'crypto', 'TextEncoder'
-        ] as const;
-
-        const missingAPIs = browserAPIs.filter(api => {
-          // Type-safe check for window object properties
-          switch (api) {
-            case 'fetch':
-              return typeof window.fetch === 'undefined';
-            case 'Promise':
-              return typeof window.Promise === 'undefined';
-            case 'localStorage':
-              return typeof window.localStorage === 'undefined';
-            case 'sessionStorage':
-              return typeof window.sessionStorage === 'undefined';
-            case 'crypto':
-              return typeof window.crypto === 'undefined';
-            case 'TextEncoder':
-              return typeof window.TextEncoder === 'undefined';
-            default:
-              return false;
-          }
-        });
-
-        console.log('Missing Browser APIs:', missingAPIs);
-        console.groupEnd()
-
-        const result = await signUp(
-          formData.email,
-          formData.password,
-          {
-            username: formData.username,
-            role: invitationData.role,
-            establishmentName: invitationData.establishmentName
-          }
-        )
-
-        if (result.success) {
-          toast.success(t("register.success"))
-          
-          const navigationMethods = [
-            // Method 1: Next.js router
-            async () => {
-              try {
-                console.group('Next.js Router Navigation')
-                console.log('Router object:', {
-                  methods: Object.keys(router),
-                  currentPath: window.location.pathname,
-                  routerMethods: {
-                    push: typeof router.push === 'function',
-                    replace: typeof router.replace === 'function',
-                    back: typeof router.back === 'function'
-                  }
-                })
-                
-                await router.push("/dashboard")
-                console.log('Next.js router navigation successful')
-                console.groupEnd()
-                return true
-              } catch (error) {
-                console.error("Next.js router navigation failed:", {
-                  errorType: typeof error,
-                  errorName: error instanceof Error ? error.name : 'Unknown',
-                  errorMessage: error instanceof Error ? error.message : 'No message',
-                  errorStack: error instanceof Error ? error.stack : 'No stack'
-                })
-                console.groupEnd()
+              // Additional auth validation
+              if (!user) {
+                console.error('No authenticated user found')
+                toast.error(t("navigation.authRequired"))
                 return false
               }
-            },
-            // Method 2: Window location
-            () => {
-              try {
-                console.group('Window Location Navigation')
-                console.log('Current location:', window.location.href)
-                console.log('Navigation target:', "/dashboard")
-                
-                // Check if dashboard route exists before navigation
-                const dashboardRoute = window.location.origin + "/dashboard"
-                const dashboardExists = fetch(dashboardRoute, { method: 'HEAD' })
-                  .then(response => response.ok)
-                  .catch(() => false)
 
-                if (!dashboardExists) {
-                  console.error('Dashboard route does not exist')
+              // Fetch user's custom claims or role
+              let idTokenResult;
+              if ('getIdTokenResult' in user) {
+                idTokenResult = await (user as FirebaseUser).getIdTokenResult()
+              } else {
+                // Fallback for custom User type
+                idTokenResult = { claims: {} }
+              }
+              console.log('User Claims:', idTokenResult.claims)
+
+              // Log navigation details
+              console.log('Navigation Attempt:', {
+                target: "/dashboard",
+                timestamp: new Date().toISOString()
+              })
+              
+              await router.push("/dashboard")
+              console.log('Next.js router navigation successful')
+              console.groupEnd()
+              return true
+            } catch (error) {
+              console.error("Next.js router navigation failed:", {
+                errorType: typeof error,
+                errorName: error instanceof Error ? error.name : 'Unknown',
+                errorMessage: error instanceof Error ? error.message : 'No message',
+                errorStack: error instanceof Error ? error.stack : 'No stack'
+              })
+              console.groupEnd()
+              
+              // Show user-friendly error toast
+              toast.error(t("navigation.routeError"))
+              return false
+            }
+          },
+          // Method 2: Window location with auth validation
+          async () => {
+            try {
+              console.group('Window Location Navigation')
+              
+              // Get current user from Firebase/Auth context
+              const user = authContext.currentUser
+              if (!user) {
+                console.error('No authenticated user found')
+                toast.error(t("navigation.authRequired"))
+                return false
+              }
+
+              console.log('Current location:', window.location.href)
+              console.log('Navigation target:', "/dashboard")
+              
+              // Validate dashboard route
+              try {
+                const response = await fetch("/dashboard", { 
+                  method: 'GET',
+                  credentials: 'include' // Important for session validation
+                })
+                
+                if (!response.ok) {
+                  console.error('Dashboard route validation failed:', {
+                    status: response.status,
+                    statusText: response.statusText
+                  })
                   return false
                 }
-                
-                window.location.href = "/dashboard"
-                console.log('Window location navigation initiated')
-                console.groupEnd()
-                return true
-              } catch (error) {
-                console.error("Window location navigation failed:", error)
-                console.groupEnd()
+              } catch (routeError) {
+                console.error('Dashboard route check failed:', routeError)
                 return false
               }
-            },
-            // Method 3: History API
-            () => {
-              try {
-                console.group('History API Navigation')
-                window.history.pushState(null, '', '/dashboard')
-                window.dispatchEvent(new PopStateEvent('popstate'))
-                console.log('History API navigation successful')
-                console.groupEnd()
-                return true
-              } catch (error) {
-                console.error("History API navigation failed:", error)
-                console.groupEnd()
-                return false
-              }
+              
+              window.location.href = "/dashboard"
+              console.log('Window location navigation initiated')
+              console.groupEnd()
+              return true
+            } catch (error) {
+              console.error("Window location navigation failed:", error)
+              console.groupEnd()
+              
+              // Show user-friendly error toast
+              toast.error(t("navigation.routeError"))
+              return false
             }
-          ];
-
-          // Try navigation methods sequentially
-          for (const attempt of navigationMethods) {
-            const success = await attempt()
-            if (success) break
           }
-        } else {
-          console.error('Sign Up Error:', result.error)
-          setErrors({ form: result.error || t("register.unexpectedError") })
+        ];
+
+        // Try navigation methods sequentially
+        for (const attempt of navigationMethods) {
+          const success = await attempt()
+          if (success) break
         }
-      } catch (error: unknown) {
-        console.group('Registration Error Details')
-        console.error('Complete Error Object:', error)
-        console.error('Error Type:', typeof error)
-
-        // Type-safe error handling
-        const errorDetails = {
-          name: error instanceof Error ? error.name : 'Unknown Error',
-          message: error instanceof Error 
-            ? error.message 
-            : typeof error === 'string' 
-              ? error 
-              : 'An unexpected error occurred',
-          stack: error instanceof Error ? error.stack : undefined
-        }
-
-        console.error('Error Name:', errorDetails.name)
-        console.error('Error Message:', errorDetails.message)
-        console.error('Error Stack:', errorDetails.stack)
-        
-        try {
-          console.error('Serialized Error:', JSON.stringify(error, Object.getOwnPropertyNames(error)))
-        } catch {}
-        console.groupEnd()
-
-        const errorMessage = errorDetails.message
-
-        setErrors({ form: errorMessage })
-        toast.error(errorMessage)
-      } finally {
-        setLoading(false)
+      } else {
+        console.error('Sign Up Error:', result.error)
+        setErrors({ form: result.error || t("register.unexpectedError") })
       }
+    } catch (error: unknown) {
+      console.group('Registration Error Details')
+      console.error('Complete Error Object:', error)
+      console.error('Error Type:', typeof error)
+
+      // Type-safe error handling
+      const errorDetails = {
+        name: error instanceof Error ? error.name : 'Unknown Error',
+        message: error instanceof Error 
+          ? error.message 
+          : typeof error === 'string' 
+            ? error 
+            : 'An unexpected error occurred',
+        stack: error instanceof Error ? error.stack : undefined
+      }
+
+      console.error('Error Name:', errorDetails.name)
+      console.error('Error Message:', errorDetails.message)
+      console.error('Error Stack:', errorDetails.stack)
+      
+      try {
+        console.error('Serialized Error:', JSON.stringify(error, Object.getOwnPropertyNames(error)))
+      } catch {}
+      console.groupEnd()
+
+      const errorMessage = errorDetails.message
+
+      setErrors({ form: errorMessage })
+      toast.error(errorMessage)
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (loading) {

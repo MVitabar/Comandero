@@ -38,6 +38,7 @@ import { nanoid } from 'nanoid';
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  currentUser: null,
   loading: true,
   login: function (email: string, password: string): Promise<{ success: boolean, error?: string, needsPasswordChange: boolean }> {
     throw new Error("Function not implemented.")
@@ -818,6 +819,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return <AuthContext.Provider value={{ 
     user, 
+    currentUser: user, 
     loading, 
     login, 
     logout, 
