@@ -193,13 +193,36 @@ export default function InvitationRegisterPage() {
               }
               console.log('User Claims:', idTokenResult.claims)
 
+              // Determine route based on user role
+              let targetRoute = "/dashboard"
+              switch (invitationData.role) {
+                case 'owner':
+                case 'admin':
+                  targetRoute = "/dashboard"
+                  break
+                case 'manager':
+                case 'waiter':
+                  targetRoute = "/orders"
+                  break
+                case 'chef':
+                  targetRoute = "/orders"
+                  break
+                case 'barman':
+                  targetRoute = "/orders"
+                  break
+                default:
+                  // Fallback to dashboard for unexpected roles
+                  targetRoute = "/dashboard"
+              }
+
               // Log navigation details
               console.log('Navigation Attempt:', {
-                target: "/dashboard",
+                target: targetRoute,
+                role: invitationData.role,
                 timestamp: new Date().toISOString()
               })
               
-              await router.push("/dashboard")
+              await router.push(targetRoute)
               console.log('Next.js router navigation successful')
               console.groupEnd()
               return true
