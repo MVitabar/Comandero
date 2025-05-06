@@ -228,7 +228,8 @@ const AdvancedReportsPage = () => {
       // Calculate top selling items
       const itemSales: Record<string, { quantity: number, revenue: number }> = {}
       orders.forEach((order) => {
-        order.items.forEach((item) => {
+        const itemsArray = Array.isArray(order.items) ? order.items : Object.values(order.items);
+        itemsArray.forEach((item) => {
           if (!itemSales[item.name]) {
             itemSales[item.name] = { quantity: 0, revenue: 0 }
           }
