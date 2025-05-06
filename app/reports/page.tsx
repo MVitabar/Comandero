@@ -195,7 +195,8 @@ export default function ReportsPage() {
     // Top selling items
     const itemSales: Record<string, { name: string; quantity: number; revenue: number }> = {}
     filteredOrders.forEach((order) => {
-      order.items.forEach((item) => {
+      const itemsArray = Array.isArray(order.items) ? order.items : Object.values(order.items);
+      itemsArray.forEach((item: OrderItem) => {
         if (!itemSales[item.name]) {
           itemSales[item.name] = {
             name: item.name,
@@ -215,7 +216,8 @@ export default function ReportsPage() {
     // Sales by category
     const categorySales: Record<string, number> = {}
     filteredOrders.forEach((order) => {
-      order.items.forEach((item) => {
+      const itemsArray = Array.isArray(order.items) ? order.items : Object.values(order.items);
+      itemsArray.forEach((item: OrderItem) => {
         const category = item.category || "Uncategorized"
         if (!categorySales[category]) {
           categorySales[category] = 0
@@ -279,7 +281,8 @@ export default function ReportsPage() {
       const date = closedDate.toLocaleDateString()
       const time = closedDate.toLocaleTimeString()
 
-      const items = order.items.map((item) => `${item.quantity}x ${item.name}`).join("; ")
+      const itemsArray = Array.isArray(order.items) ? order.items : Object.values(order.items);
+      const items = itemsArray.map((item: OrderItem) => `${item.quantity}x ${item.name}`).join("; ")
 
       csvContent += [
         order.id,
@@ -469,7 +472,7 @@ export default function ReportsPage() {
                             <TableCell>
                               {order.createdAt.toLocaleString()}
                             </TableCell>
-                            <TableCell>{order.items.reduce((sum, item) => sum + item.quantity, 0)}</TableCell>
+                            <TableCell>{(Array.isArray(order.items) ? order.items : Object.values(order.items)).reduce((sum: number, item: OrderItem) => sum + item.quantity, 0)}</TableCell>
                             <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
                             <TableCell className="text-right">
                               <Badge variant="outline">{t(order.paymentInfo?.method || "unknown")}</Badge>
