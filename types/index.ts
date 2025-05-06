@@ -38,7 +38,8 @@ export interface User {
   uid: string
   id?: string
   email: string | null
-  username: string
+  username?: string
+  displayName?: string
   role: UserRole
   
   // Establishment-related properties
@@ -52,7 +53,6 @@ export interface User {
   emailVerified: boolean
   
   // Optional personal details
-  displayName?: string | null
   phoneNumber?: string | null
   position?: string
   
@@ -225,7 +225,7 @@ export interface Order {
   status: BaseOrderStatus;
   userId?: string;
   restaurantId: string;
-  items: OrderItem[];
+  items: Record<string, OrderItem> | OrderItem[];
   subtotal: number;
   total: number;
   discount?: number;
@@ -237,7 +237,8 @@ export interface Order {
   waiter?: string;
   specialRequests?: string;
   dietaryRestrictions?: string[];
-  paymentInfo: PaymentInfo;
+  paymentMethod?: PaymentMethod;
+  paymentInfo?: PaymentInfo;
   closedAt?: Date | null;
   uid?: string;
   docId?: string;
@@ -259,6 +260,7 @@ export interface Order {
   createdBy: {
     uid: string;
     displayName: string;
+    username?: string;
     email: string | null;
     role: UserRole;
   };
@@ -837,28 +839,33 @@ export interface InventoryItemDetail {
   status?: 'critical' | 'warning' | 'healthy' | 'default'
 }
 
-export type DashboardData = {
-  totalOrders: number
-  totalSales: number
-  lowStockItems: number
-  recentOrders: Order[]
-  monthlyGrowth: number
-  totalInventoryItems: number
+export interface DashboardData {
+  totalOrders: number;
+  totalSales: number;
+  lowStockItems: number;
+  recentOrders: Order[];
+  monthlyGrowth: number;
+  totalInventoryItems: number;
   inventoryItems: {
-    total: number
-    lowStock: number
-    inStock: number
-    details: InventoryItemDetail[]
-  }
-  salesByCategory: SalesByCategory[]
-  dailySalesData: DailySalesData[]
-  topSellingItems: TopSellingItem[]
+    total: number;
+    lowStock: number;
+    inStock: number;
+    details: InventoryItemDetail[];
+  };
+  salesByCategory: SalesByCategory[];
+  dailySalesData: DailySalesData[];
+  topSellingItems: TopSellingItem[];
   salesList: {
-    orderId: string
-    date: Date
-    total: number
-    paymentMethod: string
-  }[]
+    orderId: string;
+    date: string;
+    total: number;
+    paymentMethod: PaymentMethod;
+  }[];
+  paymentMethodsBreakdown?: {
+    method: PaymentMethod;
+    total: number;
+    percentage: number;
+  }[];
 }
 
 // --- Helpers de categorías para filtrado de órdenes por rol ---

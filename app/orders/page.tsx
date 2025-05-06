@@ -200,37 +200,7 @@ export default function OrdersPage() {
         const data = doc.data();
 
         // Normalización (puedes adaptar esto según tu helper)
-        const normalizedItems = Array.isArray(data.items) 
-          ? Object.values(data.items).map((item: any) => ({
-              id: item.id || `temp-${Date.now()}`,
-              itemId: item.itemId,
-              name: item.name,
-              category: item.category,
-              quantity: Number(item.quantity),
-              price: Number(item.price),
-              stock: Number(item.stock),
-              unit: item.unit,
-              notes: item.notes || '',
-              customDietaryRestrictions: Array.isArray(item.customDietaryRestrictions) 
-                ? item.customDietaryRestrictions 
-                : []
-            }))
-          : (data.items 
-              ? Object.values(data.items).map((item: any) => ({
-                  id: item.id || `temp-${Date.now()}`,
-                  itemId: item.itemId,
-                  name: item.name,
-                  category: item.category,
-                  quantity: Number(item.quantity),
-                  price: Number(item.price),
-                  stock: Number(item.stock),
-                  unit: item.unit,
-                  notes: item.notes || '',
-                  customDietaryRestrictions: Array.isArray(item.customDietaryRestrictions) 
-                    ? item.customDietaryRestrictions 
-                    : []
-                }))
-              : []);
+        const normalizedItems = normalizeOrderItems(data.items);
 
         return {
           id: doc.id,
@@ -250,7 +220,7 @@ export default function OrdersPage() {
           updatedAt: data.updatedAt?.toDate() || new Date(),
           tableId: data.tableId || data.debugContext?.orderContext?.tableId,
           mapId: data.mapId || data.debugContext?.orderContext?.mapId,
-          waiter: data.createdBy?.username || data.createdBy?.email || data.waiter || 'Unknown',
+          waiter: data.createdBy?.username || data.createdBy?.email || 'Unknown',
           specialRequests: data.specialRequests || '',
           paymentInfo: {
             method: data.paymentInfo?.method || 'other',
@@ -283,9 +253,9 @@ export default function OrdersPage() {
 
     // Validate establishmentId before proceeding
     if (!user.establishmentId) {
-      console.error('No establishment ID found for user')
-      toast.error(t("orders.error.establishmentIdNotFound"))
-      return
+      console.error('No establishment ID found for user');
+      toast.error(t("orders.error.establishmentIdNotFound"));
+      return;
     }
 
     try {
@@ -348,8 +318,9 @@ export default function OrdersPage() {
 
     // Validate establishmentId before proceeding
     if (!user.establishmentId) {
-      toast.error(t("orders.error.establishmentIdNotFound"))
-      return
+      console.error('No establishment ID found for user');
+      toast.error(t("orders.error.establishmentIdNotFound"));
+      return;
     }
 
     try {
@@ -373,8 +344,9 @@ export default function OrdersPage() {
 
     // Validate establishmentId before proceeding
     if (!user.establishmentId) {
-      toast.error(t("orders.error.establishmentIdNotFound"))
-      return
+      console.error('No establishment ID found for user');
+      toast.error(t("orders.error.establishmentIdNotFound"));
+      return;
     }
 
     try {
@@ -411,10 +383,21 @@ export default function OrdersPage() {
   // Definir un tipo que incluya 'all' junto con BaseOrderStatus
   type FilterStatus = BaseOrderStatus | 'all';
 
+  // Normalizar items a un array
+  const normalizeOrderItems = (items: Record<string, OrderItem> | OrderItem[] | undefined): OrderItem[] => {
+    if (!items) return [];
+    return Array.isArray(items) 
+      ? items 
+      : Object.values(items);
+  };
+
   // Aplicar filtro de roles y luego filtro de búsqueda y status
   const filteredOrders = user?.role
     ? filterOrdersByRole({ orders, role: user.role }).filter(
         (order) => {
+          // Normalizar items para búsqueda
+          const normalizedItems = normalizeOrderItems(order.items);
+
           // Verificar si coincide con el status seleccionado
           const statusMatch =
             statusFilter === 'all' ||
@@ -428,7 +411,7 @@ export default function OrdersPage() {
             (order.waiter || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
             (order.status || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
             // Buscar en los nombres de los items
-            order.items.some(item =>
+            normalizedItems.some(item =>
               item.name.toLowerCase().includes(searchQuery.toLowerCase())
             );
 
@@ -512,7 +495,10 @@ export default function OrdersPage() {
             {/* Vista de tarjetas para móviles y desktop: ocupar todo el ancho disponible */}
             <div className="grid gap-4 grid-cols-1 ">
               {filteredOrders.map((order) => {
-                const { comidas, bebidas } = splitOrderItemsByCategory(order.items || []);
+                // Normalizar items para splitOrderItemsByCategory
+                const normalizedItems = normalizeOrderItems(order.items);
+                const { comidas, bebidas } = splitOrderItemsByCategory(normalizedItems);
+                
                 return (
                   <Card key={order.id} className="w-full">
                     <CardHeader className="flex flex-row items-center justify-end space-y-0 pb-2">
@@ -530,44 +516,47 @@ export default function OrdersPage() {
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">{t("orders.errors.headers.waiter")}</p>
-                          <p>
-                            {order.createdBy?.displayName || order.createdBy?.email || t("orders.unknownUser")}
+                          <div>
+                            <p className="text-base font-semibold">
+                              {((order.createdBy?.username || 
+                               order.createdBy?.email?.split('@')[0] || 
+                               t("orders.genericUser")).charAt(0).toUpperCase() + 
+                               (order.createdBy?.username || 
+                               order.createdBy?.email?.split('@')[0] || 
+                               t("orders.genericUser")).slice(1))}
+                            </p>
                             {order.createdBy?.role && (
-                              <span className="text-xs text-muted-foreground ml-1">
-                                ({t(`roles.${order.createdBy.role.toLowerCase()}`)})</span>
+                              <p className="text-xs text-muted-foreground">
+                                ({t(`roles.${order.createdBy.role.toLowerCase()}`)})
+                              </p>
                             )}
-                          </p>
+                          </div>
                         </div>
                         <div className="col-span-2">
                           {/* Reemplazado: Detalle de ítems por secciones */}
-                          {/* Sección de comidas */}
                           {(canViewBothSections(user?.role) || canViewOnlyFood(user?.role)) && (
                             <>
                               <h4 className="font-semibold mb-1">{t("orders.types.food")}</h4>
-                              {comidas.length > 0 ? (
-                                <ul className="mb-2">
-                                  {comidas.map(item => (
-                                    <li key={item.id}>{item.name} x{item.quantity}</li>
-                                  ))}
-                                </ul>
-                              ) : (
-                                <p className="text-muted-foreground mb-2">{t("orders.emptyState.noFood")}</p>
-                              )}
+                              <div className="flex flex-wrap gap-2 items-center">
+                                {comidas.map((item) => (
+                                  <span key={item.id} className="text-sm bg-muted rounded-md px-2 py-1">
+                                    {item.name} x{item.quantity}
+                                  </span>
+                                ))}
+                              </div>
                             </>
                           )}
-                          {/* Sección de bebidas */}
+                          
                           {(canViewBothSections(user?.role) || canViewOnlyDrinks(user?.role)) && (
                             <>
-                              <h4 className="font-semibold mb-1">{t("orders.types.drinks")}</h4>
-                              {bebidas.length > 0 ? (
-                                <ul>
-                                  {bebidas.map(item => (
-                                    <li key={item.id}>{item.name} x{item.quantity}</li>
-                                  ))}
-                                </ul>
-                              ) : (
-                                <p className="text-muted-foreground">{t("orders.emptyState.noDrinks")}</p>
-                              )}
+                              <h4 className="font-semibold mb-1 mt-2">{t("orders.types.drinks")}</h4>
+                              <div className="flex flex-wrap gap-2 items-center">
+                                {bebidas.map((item) => (
+                                  <span key={item.id} className="text-sm bg-muted rounded-md px-2 py-1">
+                                    {item.name} x{item.quantity}
+                                  </span>
+                                ))}
+                              </div>
                             </>
                           )}
                         </div>

@@ -142,6 +142,13 @@ export function OrderForm({
       stock: menuItem.stock || 0,
       notes,
       status: 'pending',
+      // Add dietary restriction flags
+      isVegetarian: itemDietaryRestrictions.includes('vegetarian'),
+      isVegan: itemDietaryRestrictions.includes('vegan'),
+      isGlutenFree: itemDietaryRestrictions.includes('gluten-free'),
+      isLactoseFree: itemDietaryRestrictions.includes('lactose-free'),
+      // Preserve any existing dietary restrictions from the menu item
+      customDietaryRestrictions: itemDietaryRestrictions
     };
 
     const existingItemIndex = orderItems.findIndex((item) => item.itemId === menuItem.uid)
@@ -1108,7 +1115,7 @@ export function OrderForm({
             placeholder={t("orders.discountPlaceholder")}
             value={discount}
             onChange={handleDiscountChange}
-            className="flex-grow"
+            className="w-full"
             min="0"
             step="0.01"
             max="100"  // Assuming percentage or fixed amount
@@ -1119,7 +1126,7 @@ export function OrderForm({
               setDiscountType(value);
             }}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[100px]">
               <SelectValue placeholder={t("orders.discountType")} />
             </SelectTrigger>
             <SelectContent>
@@ -1141,9 +1148,9 @@ export function OrderForm({
   }
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl min-h-screen flex flex-col justify-center py-8">
-      <div className="bg-background border rounded-lg shadow-lg p-6 overflow-y-auto max-h-[90vh]">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="container px-4 sm:px-6 lg:px-8 max-w-4xl min-h-screen flex flex-col justify-center py-8 ">
+      <div className="bg-background border rounded-lg shadow-lg  p-2 overflow-y-auto max-h-[90vh] ">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 ">
           {/* Left Column: Item Selection */}
           <div className="space-y-4">
             {renderTableSelector()}
@@ -1211,30 +1218,21 @@ export function OrderForm({
           </div>
 
           {/* Right Column: Order Summary */}
-          <div className="space-y-4 bg-muted/50 p-4 rounded-lg">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-bold">{t("orders.orderSummary")}</h2>
-              <div className="flex items-center gap-2">
-                {orderItems.length > 0 && (
-                  <Button 
-                    variant="destructive" 
-                    size="sm" 
-                    onClick={() => setOrderItems([])}
-                    className="text-xs"
-                  >
-                    <Trash className="mr-2 h-4 w-4" />
-                    {t("orders.clearOrder")}
-                  </Button>
-                )}
+          <div className="space-y-4 bg-muted/50 p-4 rounded-lg w-full ">
+            <div className="flex flex-col gap-2 items-center">
+              <div className="flex justify-end items-center w-full">
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={toggleQRCode}
-                  className="text-xs flex items-center"
+                  className="text-xs flex items-center w-full"
                 >
                   <QrCode className="mr-2 h-4 w-4" />
                   {showQRCode ? t('orders.hideMenuQr') : t('orders.showMenuQr')}
                 </Button>
+              </div>
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold">{t("orders.orderSummary")}</h2>
               </div>
             </div>
 
@@ -1256,87 +1254,67 @@ export function OrderForm({
               </div>
             ) : (
               <div className="space-y-2">
-                <div className="max-h-[50vh] overflow-y-auto">
-                  <Table>
-                    <TableHeader className="sticky top-0 bg-background">
-                      <TableRow>
-                        <TableHead className="w-[40%]">{t("orders.item")}</TableHead>
-                        <TableHead className="w-[20%] text-center">{t("orders.quantity")}</TableHead>
-                        <TableHead className="w-[20%] text-right">{t("orders.price")}</TableHead>
-                        <TableHead className="w-[20%] text-right">{t("orders.total")}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {orderItems.map((item, index) => (
-                        <TableRow key={`${item.id}-${index}`}>
-                          <TableCell className="font-medium">
-                            <div className="flex flex-col">
-                              <span>{item.name}</span>
-                              {item.notes && (
-                                <span className="text-xs text-muted-foreground">
-                                  {item.notes}
-                                </span>
-                              )}
-                              {item.customDietaryRestrictions && item.customDietaryRestrictions.length > 0 && (
-                                <span className="text-xs text-muted-foreground">
-                                  {item.customDietaryRestrictions.map(restriction => 
-                                    t(restriction)
-                                  ).join(', ')}
-                                </span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <div className="flex items-center justify-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-6 w-6"
-                                onClick={() => {
-                                  const updatedItems = [...orderItems]
-                                  updatedItems[index].quantity = Math.max(1, item.quantity - 1)
-                                  setOrderItems(updatedItems)
-                                }}
-                              >
-                                <Minus className="h-4 w-4" />
-                              </Button>
-                              <span>{item.quantity}</span>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-6 w-6"
-                                onClick={() => {
-                                  const updatedItems = [...orderItems]
-                                  updatedItems[index].quantity += 1
-                                  setOrderItems(updatedItems)
-                                }}
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            R$ {item.price.toFixed(2)}
-                          </TableCell>
-                          <TableCell className="text-right font-semibold">
-                            R$ {(item.price * item.quantity).toFixed(2)}
-                          </TableCell>
-                          <TableCell className="text-right">
+                <div className="max-h-[50vh] overflow-y-auto space-y-2">
+                  {orderItems.map((item, index) => (
+                    <div 
+                      key={`${item.id}-${index}`} 
+                      className="border rounded-lg p-4 bg-background flex justify-between items-center"
+                    >
+                      <div className="flex-grow">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <span>{item.name}</span>
+                            {(item.isVegetarian || item.isVegan || item.isGlutenFree || item.isLactoseFree) && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {t("orders.dietaryRestrictions")}: {[
+                                  item.isVegetarian && t("vegetarian"),
+                                  item.isVegan && t("vegan"),
+                                  item.isGlutenFree && t("gluten-free"),
+                                  item.isLactoseFree && t("lactose-free")
+                                ].filter(Boolean).join(', ')}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-2">
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="icon"
+                              className="h-6 w-6"
                               onClick={() => {
-                                const updatedItems = orderItems.filter((_, i) => i !== index)
+                                const updatedItems = [...orderItems]
+                                updatedItems[index].quantity = Math.max(1, updatedItems[index].quantity - 1)
                                 setOrderItems(updatedItems)
                               }}
                             >
-                              <Trash className="h-4 w-4 text-destructive" />
+                              <Minus className="h-4 w-4" />
                             </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                            <span>{item.quantity}</span>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={() => {
+                                const updatedItems = [...orderItems]
+                                updatedItems[index].quantity += 1
+                                setOrderItems(updatedItems)
+                              }}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          
+                          <div className="text-right">
+                            <div className="text-sm">
+                              R$ {item.price.toFixed(2)} / un
+                            </div>
+                            <div className="font-semibold">
+                              R$ {(item.price * item.quantity).toFixed(2)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
                 <Separator className="my-4" />
@@ -1356,7 +1334,7 @@ export function OrderForm({
                         value={discountType} 
                         onValueChange={handleDiscountTypeChange}
                       >
-                        <SelectTrigger className="w-[100px]">
+                        <SelectTrigger className="w-[50px]">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>

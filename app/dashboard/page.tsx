@@ -29,7 +29,8 @@ import {
   InventoryItem,
   OrderItem,
   InventoryItemDetail,
-  InventoryItemSourceData
+  InventoryItemSourceData,
+  PaymentMethod
 } from "@/types"
 import { 
   AlertTriangle, 
@@ -47,6 +48,7 @@ import {
   Legend
 } from 'recharts'
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns'
+import { ptBR, enUS } from 'date-fns/locale'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@radix-ui/react-accordion"
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useNotifications } from "@/hooks/useNotifications"
@@ -76,10 +78,21 @@ export default function DashboardPage() {
     salesByCategory: [],
     dailySalesData: [],
     topSellingItems: [],
-    salesList: []
+    salesList: [],
+    paymentMethodsBreakdown: []
   })
 
   const [inventoryViewMode, setInventoryViewMode] = useState<'totals' | 'by_category' | 'by_item'>('totals')
+
+  // Define category colors
+  const categoryColors: Record<string, string> = {
+    appetizer: '#10B981', // emerald
+    main_course: '#3B82F6', // blue
+    dessert: '#F43F5E', // rose
+    drink: '#8B5CF6', // purple
+    sides: '#F97316', // orange
+    other: '#6B7280' // gray
+  }
 
   const fetchDashboardData = async () => {
     try {
@@ -262,25 +275,19 @@ export default function DashboardPage() {
       )
       const salesByCategorySnapshot = await getDocs(salesByCategoryQuery)
 
-      // Función para asignar colores a categorías
-      const getCategoryColor = (category: string): string => {
-        const categoryColors: Record<string, string> = {
-          'appetizers': '#0088FE',   // Azul claro
-          'main_courses': '#00C49F', // Verde menta
-          'salads': '#32CD32',       // Lima verde
-          'sides': '#9370DB',        // Púrpura medio
-          'desserts': '#FFBB28',     // Amarillo
-          'drinks': '#FF8042',       // Naranja
-          'uncategorized': '#8884D8' // Púrpura
-        }
-        return categoryColors[category] || '#FF6384'  // Color por defecto rosa
-      }
-
       // Mapa para agregar ventas por categoría
       const categorySalesMap = new Map<string, {
         totalSales: number, 
         totalQuantity: number
       }>()
+
+      // Expand payment methods
+      const paymentMethodsMap: Record<string, number> = {
+        cash: 0,
+        credit: 0,
+        debit: 0,
+        other: 0
+      }
 
       // Procesar órdenes
       salesByCategorySnapshot.docs.forEach(doc => {
@@ -300,77 +307,88 @@ export default function DashboardPage() {
             totalQuantity: existingCategoryData.totalQuantity + item.quantity
           })
         })
+
+        // Normalize payment method
+        const paymentMethod = orderData.paymentMethod?.toLowerCase() || 'other'
+        const normalizedMethod = 
+          paymentMethod === 'credito' ? 'credit' :
+          paymentMethod === 'debito' ? 'debit' :
+          paymentMethod === 'efectivo' ? 'cash' :
+          'other'
+
+        // Update payment method totals
+        if (paymentMethodsMap.hasOwnProperty(normalizedMethod)) {
+          paymentMethodsMap[normalizedMethod] += orderData.total || 0
+        } else {
+          paymentMethodsMap['other'] += orderData.total || 0
+        }
       })
 
+      // Convert map to array and calculate percentage
+      const paymentMethodsBreakdown = Object.entries(paymentMethodsMap)
+        .filter(([_, total]) => total > 0)
+        .map(([method, total]) => ({
+          method: (method === 'cash' || method === 'credit' || method === 'debit' || method === 'other' 
+            ? method 
+            : 'other') as PaymentMethod, 
+          total,
+          percentage: (total / currentMonthTotalSales) * 100
+        }))
+        .sort((a, b) => b.total - a.total)
+
       // Transformar datos para visualización
-      const translatedCategorySales = Array.from(categorySalesMap.entries()).map(([category, data]) => {
-        // Map full category names to translation keys
-        const categoryKeyMap: Record<string, string> = {
-          'Main Courses': 'main_courses',
-          'Drinks': 'drinks',
-          'Desserts': 'desserts',
-          'Appetizers': 'appetizers',
-          'Salads': 'salads',
-          'Sides': 'sides',
-          'Uncategorized': 'uncategorized'
-        }
-        
-        const translationKey = categoryKeyMap[category] || category.toLowerCase()
-        
-        return {
-          category: t(`${translationKey}`),
-          originalCategory: category,
-          totalSales: data.totalSales,
-          totalQuantity: data.totalQuantity,
-          color: getCategoryColor(category.toLowerCase())
-        }
-      }).sort((a, b) => b.totalSales - a.totalSales)
+      const translatedCategorySales = Array.from(categorySalesMap.entries()).map(([category, data]) => ({
+        category,
+        totalQuantity: data.totalQuantity,
+        totalSales: data.totalSales,
+        color: categoryColors[category] || categoryColors['other']
+      })).sort((a, b) => b.totalSales - a.totalSales)
 
       // Calculate Top Selling Items from Orders
       const topSellingItemsMap = new Map<string, {
-        name: string,
-        category: string,
-        totalQuantity: number,
-        totalSales: number
+        id: string;
+        name: string;
+        quantity: number;
+        totalSales: number;
+        category?: string;
       }>()
 
-      // Combine items from all orders
-      const allOrderItems: OrderItem[] = []
       salesByCategorySnapshot.docs.forEach(doc => {
         const orderData = doc.data() as Order
-        if (orderData.items && orderData.items.length > 0) {
-          allOrderItems.push(...orderData.items)
-        }
+        const items = Array.isArray(orderData.items) 
+          ? orderData.items 
+          : Object.values(orderData.items)
+
+        items.forEach(item => {
+          const existingItem = topSellingItemsMap.get(item.id)
+          if (existingItem) {
+            existingItem.quantity += item.quantity
+            existingItem.totalSales += item.price * item.quantity
+          } else {
+            topSellingItemsMap.set(item.id, {
+              id: item.id,
+              name: item.name,
+              quantity: item.quantity,
+              totalSales: item.price * item.quantity,
+              category: item.category
+            })
+          }
+        })
       })
 
-      // Process all items
-      allOrderItems.forEach((item: OrderItem) => {
-        const existingItem = topSellingItemsMap.get(item.itemId)
-        if (existingItem) {
-          existingItem.totalQuantity += item.quantity
-          existingItem.totalSales += item.price * item.quantity
-        } else {
-          topSellingItemsMap.set(item.itemId, {
-            name: item.name,
-            category: item.category,
-            totalQuantity: item.quantity,
-            totalSales: item.price * item.quantity
-          })
-        }
-      })
-
-      // Convert map to sorted array and take top 5
+      // Prepare top selling items
       const topSellingItems: TopSellingItem[] = Array.from(topSellingItemsMap.values())
-        .sort((a, b) => b.totalQuantity - a.totalQuantity)
+        .sort((a, b) => b.quantity - a.quantity)
         .slice(0, 5)
-        .map((item, index) => ({
-          id: `top-item-${index}`,
+        .map(item => ({
+          id: item.id,
           name: item.name,
-          quantity: item.totalQuantity,
+          quantity: item.quantity,
           totalSales: item.totalSales,
-          category: item.category
+          category: item.category || 'uncategorized'
         }))
 
+      // Update dashboard data
       setDashboardData({
         totalOrders: currentMonthOrdersSnapshot.size,
         totalSales: currentMonthTotalSales,
@@ -390,7 +408,8 @@ export default function DashboardPage() {
         salesByCategory: translatedCategorySales,
         dailySalesData: [],
         topSellingItems,
-        salesList: []
+        salesList: [],
+        paymentMethodsBreakdown
       })
     } catch (error) {
       console.error("Dashboard data fetch error:", error)
@@ -399,50 +418,175 @@ export default function DashboardPage() {
 
   const fetchComprehensiveDashboardData = async () => {
     try {
-      // Hardcoded establishment ID for debugging
-      const hardcodedEstablishmentId = 'restaurante-milenio-f7a872'
-      
-      // Use hardcoded ID if user's establishmentId is undefined or empty
-      const establishmentId = user?.establishmentId || hardcodedEstablishmentId
-      
-      const ordersRef = collection(db, `restaurants/${establishmentId}/orders`)
-      
-      // Fetch sales list (last 50 completed orders)
-      const salesQuery = query(
-        ordersRef, 
-        where('status', '==', 'finished'),
-        orderBy('createdAt', 'desc'),
-        limit(50)
-      )
-      
-      const salesSnapshot = await getDocs(salesQuery)
-      
-      const salesList = salesSnapshot.docs.map(doc => {
-        const orderData = doc.data() as Order
-        // Check if createdAt is a Timestamp and convert if necessary
-        const createdAt = orderData.createdAt instanceof Timestamp 
-          ? orderData.createdAt.toDate() 
-          : orderData.createdAt
+      // Fetch sales data for the current month
+      const currentDate = new Date()
+      const startOfCurrentMonth = startOfMonth(currentDate)
+      const endOfCurrentMonth = endOfMonth(currentDate)
 
+      const salesQuery = query(
+        collection(db, `restaurants/${user?.establishmentId}/orders`),
+        where('createdAt', '>=', startOfCurrentMonth),
+        where('createdAt', '<=', endOfCurrentMonth),
+        where('status', '==', 'finished'),
+        orderBy('createdAt', 'desc')
+      )
+
+      const salesSnapshot = await getDocs(salesQuery)
+
+      // Initialize payment methods map
+      const paymentMethodsMap: Record<string, number> = {
+        cash: 0,
+        credit: 0,
+        debit: 0,
+        other: 0
+      }
+
+      // Calculate total sales and process payment methods
+      const currentMonthTotalSales = salesSnapshot.docs.reduce((total, doc) => {
+        const orderData = doc.data() as Order
+        const orderTotal = orderData.total || 0
+        
+        // Update payment methods total
+        const paymentMethod = 
+          orderData.paymentMethod || 
+          orderData.paymentInfo?.method || 
+          'other'
+        
+        paymentMethodsMap[paymentMethod] = 
+          (paymentMethodsMap[paymentMethod] || 0) + orderTotal
+
+        return total + orderTotal
+      }, 0)
+
+      // Process category sales
+      const categorySalesMap = new Map<string, { totalQuantity: number; totalSales: number }>()
+      
+      salesSnapshot.docs.forEach(doc => {
+        const orderData = doc.data() as Order
+        const items = Array.isArray(orderData.items) 
+          ? orderData.items 
+          : Object.values(orderData.items)
+
+        items.forEach(item => {
+          const category = item.category || 'uncategorized'
+          const existingCategoryData = categorySalesMap.get(category) || { totalQuantity: 0, totalSales: 0 }
+          
+          categorySalesMap.set(category, {
+            totalQuantity: existingCategoryData.totalQuantity + item.quantity,
+            totalSales: existingCategoryData.totalSales + (item.price * item.quantity)
+          })
+        })
+      })
+
+      // Transform category sales for visualization
+      const translatedCategorySales = Array.from(categorySalesMap.entries()).map(([category, data]) => ({
+        category,
+        totalQuantity: data.totalQuantity,
+        totalSales: data.totalSales
+      }))
+
+      // Prepare sales by category with colors
+      const salesByCategory: SalesByCategory[] = translatedCategorySales.map(category => {
+        // Normalize category name for color matching
+        const normalizedCategory = category.category.toLowerCase().replace(/\s+/g, '_')
         return {
-          orderId: doc.id,
-          date: createdAt,
-          total: orderData.total,
-          paymentMethod: orderData.paymentInfo?.method || 'Unknown'
+          ...category,
+          color: categoryColors[normalizedCategory] || 
+                 categoryColors[category.category] || 
+                 categoryColors['other']
         }
       })
 
-      // Modify state update to preserve existing data
-      setDashboardData(prevData => {
-        const newData = {
-          ...prevData,
-          salesByCategory: prevData.salesByCategory,
-          dailySalesData: prevData.dailySalesData,
-          topSellingItems: prevData.topSellingItems,
-          salesList: salesList
-        }
+      // Calculate top selling items
+      const topSellingItemsMap = new Map<string, {
+        id: string;
+        name: string;
+        quantity: number;
+        totalSales: number;
+        category?: string;
+      }>()
 
-        return newData
+      salesSnapshot.docs.forEach(doc => {
+        const orderData = doc.data() as Order
+        const items = Array.isArray(orderData.items) 
+          ? orderData.items 
+          : Object.values(orderData.items)
+
+        items.forEach(item => {
+          const existingItem = topSellingItemsMap.get(item.id)
+          if (existingItem) {
+            existingItem.quantity += item.quantity
+            existingItem.totalSales += item.price * item.quantity
+          } else {
+            topSellingItemsMap.set(item.id, {
+              id: item.id,
+              name: item.name,
+              quantity: item.quantity,
+              totalSales: item.price * item.quantity,
+              category: item.category
+            })
+          }
+        })
+      })
+
+      // Prepare top selling items
+      const topSellingItems: TopSellingItem[] = Array.from(topSellingItemsMap.values())
+        .sort((a, b) => b.quantity - a.quantity)
+        .slice(0, 5)
+        .map(item => ({
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          totalSales: item.totalSales,
+          category: item.category || 'uncategorized'
+        }))
+
+      // Prepare sales list with more comprehensive filtering
+      const salesList = salesSnapshot.docs.map(doc => {
+        const orderData = doc.data() as Order
+        
+        return {
+          date: orderData.createdAt ? format(orderData.createdAt, 'PP', { locale: i18n.language === 'pt-BR' ? ptBR : enUS }) : '',
+          orderId: doc.id,
+          total: orderData.total || 0,
+          paymentMethod: 
+            orderData.paymentMethod || 
+            orderData.paymentInfo?.method || 
+            'other',
+          status: orderData.status || 'unknown'
+        }
+      })
+      .filter(sale => sale.total > 0) // Ensure only sales with value are shown
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 50) // Limit to most recent 50 sales
+
+      // Update state with complete dashboard data
+      setDashboardData((prevData: DashboardData) => {
+        // Ensure all properties of DashboardData are included
+        return {
+          ...prevData,
+          totalOrders: salesSnapshot.docs.length,
+          totalSales: currentMonthTotalSales,
+          salesByCategory,
+          dailySalesData: [],
+          topSellingItems,
+          salesList,
+          paymentMethodsBreakdown: Object.entries(paymentMethodsMap)
+            .filter(([_, total]) => total > 0)
+            .map(([method, total]) => ({
+              method: (method === 'cash' || method === 'credit' || method === 'debit' || method === 'other' 
+                ? method 
+                : 'other') as PaymentMethod, 
+              total: Number(total),
+              percentage: (Number(total) / currentMonthTotalSales) * 100
+            }))
+            .sort((a, b) => b.total - a.total),
+          lowStockItems: prevData.lowStockItems || 0,
+          recentOrders: prevData.recentOrders || [],
+          monthlyGrowth: prevData.monthlyGrowth || 0,
+          totalInventoryItems: prevData.totalInventoryItems || 0,
+          inventoryItems: prevData.inventoryItems || { total: 0, lowStock: 0 }
+        }
       })
     } catch (error: unknown) {
       // Type guard to check if error is an Error object
@@ -450,26 +594,12 @@ export default function DashboardPage() {
         ? error.message 
         : typeof error === 'string' 
           ? error 
-          : 'An unknown error occurred'
+          : 'Unknown error'
       
-      const errorStack = error instanceof Error 
-        ? error.stack 
-        : undefined
-
-      console.error("Comprehensive dashboard data fetch error:", errorMessage)
-      
-      // Log detailed error information
-      console.error("🚨 Detailed Error:", {
-        message: errorMessage,
-        stack: errorStack,
-        establishmentId: user?.establishmentId
-      })
-      
-      setDashboardData(prevData => {
-        return {
-          ...prevData,
-          salesList: []
-        }
+      console.error("Dashboard data fetch error:", errorMessage)
+      sendNotification({
+        title: t('notifications.dashboardFetchError'),
+        message: errorMessage
       })
     }
   }
@@ -1112,7 +1242,19 @@ export default function DashboardPage() {
                           <th className="px-1 sm:px-4 py-2 text-left text-xs sm:text-sm">{t('dashboard.salesList.columns.date')}</th>
                           <th className="px-1 sm:px-4 py-2 text-left text-xs sm:text-sm hidden sm:table-cell">{t('dashboard.salesList.columns.orderId')}</th>
                           <th className="px-1 sm:px-4 py-2 text-right text-xs sm:text-sm">{t('dashboard.salesList.columns.total')}</th>
-                          <th className="px-1 sm:px-4 py-2 text-left text-xs sm:text-sm hidden md:table-cell">{t('dashboard.salesList.columns.paymentMethod')}</th>
+                          <th className="px-1 sm:px-4 py-2 text-left text-xs sm:text-sm hidden md:table-cell">
+                            <Badge 
+                              variant={
+                                'cash' === 'cash' ? 'default' :
+                                'credit' === 'credit' ? 'secondary' :
+                                'debit' === 'debit' ? 'outline' :
+                                'destructive'
+                              }
+                              className="capitalize"
+                            >
+                              {t(`dashboard.paymentMethods.${'cash'}`)}
+                            </Badge>
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1132,7 +1274,20 @@ export default function DashboardPage() {
                                 currency: user?.currency || 'USD' 
                               })}
                             </td>
-                            <td className="px-1 sm:px-4 py-2 text-xs sm:text-sm hidden md:table-cell">{sale.paymentMethod}</td>
+                            <td className="px-1 sm:px-4 py-2 text-xs sm:text-sm hidden md:table-cell">
+                              <Badge 
+                                variant={
+                                  sale.paymentMethod === 'cash' ? 'default' :
+                                  sale.paymentMethod === 'credit' ? 'secondary' :
+                                  sale.paymentMethod === 'debit' ? 'outline' :
+                                  sale.paymentMethod === 'other' ? 'destructive' :
+                                  'default'
+                                }
+                                className="capitalize"
+                              >
+                                {t(`dashboard.paymentMethods.${sale.paymentMethod}`)}
+                              </Badge>
+                            </td>
                           </tr>
                         ))}
                       </tbody>

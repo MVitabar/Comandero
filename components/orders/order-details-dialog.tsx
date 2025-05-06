@@ -70,16 +70,12 @@ export function OrderDetailsDialog({
   }
 
   const handleUpdateItemStatus = async (item: OrderItem, newStatus: string) => {
-    // DEPURACIÓN INICIO
-    console.log("=== DEPURACIÓN handleUpdateItemStatus ===");
-    console.log("Items ANTES de actualizar:", liveOrder.items);
-    console.log("Item a actualizar:", item);
-    console.log("Nuevo status:", newStatus);
-
     // Normaliza items a array y tipa correctamente
-    const itemsArray: OrderItem[] = Array.isArray(liveOrder.items)
-      ? liveOrder.items
-      : (liveOrder.items ? Object.values(liveOrder.items) as OrderItem[] : []);
+    const itemsArray: OrderItem[] = liveOrder.items 
+      ? Object.keys(liveOrder.items).map(key => 
+          (liveOrder.items as Record<string, OrderItem>)[key]
+        )
+      : [];
 
     // Aplica el cambio de status
     const updatedItems = itemsArray.map(i =>
@@ -88,9 +84,6 @@ export function OrderDetailsDialog({
 
     // Utiliza el helper para calcular el status global
     let newOrderStatus = calculateOrderStatusFromItems(updatedItems, liveOrder.status);
-
-    console.log("Items DESPUÉS de actualizar:", updatedItems);
-    console.log("Nuevo status global de la orden:", newOrderStatus);
 
     // Referencia al documento de la orden (asegura que liveOrder.id esté presente y válido)
     if (!liveOrder.id || !liveOrder.restaurantId) {
@@ -109,21 +102,20 @@ export function OrderDetailsDialog({
     try {
       await updateDoc(orderRef, { items: deleteField() });
       await updateDoc(orderRef, { items: updatedItems, status: newOrderStatus });
-      console.log("Actualización en Firestore EXITOSA (como array + status)");
     } catch (error) {
       console.error("Error al actualizar en Firestore:", error);
     }
   };
-  // DEPURACIÓN FIN
 
   // Convierte los ítems a array de forma segura antes de dividir por categoría
-  const itemsArray = Array.isArray(liveOrder.items)
-    ? liveOrder.items
-    : liveOrder.items
-      ? Object.values(liveOrder.items) as OrderItem[]
-      : [];
+  const itemsArray = liveOrder.items 
+    ? Object.keys(liveOrder.items).map(key => 
+        (liveOrder.items as Record<string, OrderItem>)[key]
+      )
+    : [];
+  
   const { comidas, bebidas } = splitOrderItemsByCategory(itemsArray);
-
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]" aria-describedby="order-details-description">
@@ -175,30 +167,40 @@ export function OrderDetailsDialog({
             <div className="col-span-3">
               {(canViewBothSections(user?.role) || canViewOnlyFood(user?.role)) && (
                 <>
-                  <h4 className="font-semibold mb-1">Comidas</h4>
-                  {comidas.length > 0 ? (
-                    <ul className="mb-2">
-                      {comidas.map(item => (
-                        <li key={item.id}>{item.name} x{item.quantity}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-muted-foreground mb-2">Sin comidas</p>
-                  )}
+                  <h4 className="font-semibold mb-1">{t("orders.types.food")}</h4>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    {comidas.map((item) => (
+                      <span key={item.id} className="text-sm bg-muted rounded-md px-2 py-1">
+                        {item.name} x{item.quantity}
+                        {item.customDietaryRestrictions && item.customDietaryRestrictions.length > 0 && (
+                          <span className="text-xs text-muted-foreground ml-1">
+                            ({item.customDietaryRestrictions.map(restriction => 
+                              t(restriction)
+                            ).join(', ')})
+                          </span>
+                        )}
+                      </span>
+                    ))}
+                  </div>
                 </>
               )}
               {(canViewBothSections(user?.role) || canViewOnlyDrinks(user?.role)) && (
                 <>
-                  <h4 className="font-semibold mb-1">Bebidas</h4>
-                  {bebidas.length > 0 ? (
-                    <ul>
-                      {bebidas.map(item => (
-                        <li key={item.id}>{item.name} x{item.quantity}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-muted-foreground">Sin bebidas</p>
-                  )}
+                  <h4 className="font-semibold mb-1 mt-2">{t("orders.types.drinks")}</h4>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    {bebidas.map((item) => (
+                      <span key={item.id} className="text-sm bg-muted rounded-md px-2 py-1">
+                        {item.name} x{item.quantity}
+                        {item.customDietaryRestrictions && item.customDietaryRestrictions.length > 0 && (
+                          <span className="text-xs text-muted-foreground ml-1">
+                            ({item.customDietaryRestrictions.map(restriction => 
+                              t(restriction)
+                            ).join(', ')})
+                          </span>
+                        )}
+                      </span>
+                    ))}
+                  </div>
                 </>
               )}
             </div>

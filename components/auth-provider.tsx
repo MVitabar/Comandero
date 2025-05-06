@@ -54,7 +54,7 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext)
 
-const publicRoutes = ["/login", "/register", "/forgot-password"]
+const publicRoutes = ["/", "/login", "/register", "/forgot-password"]
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -661,7 +661,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Update user state
       setUser(customUser);
       
-      toast.success(t("auth.login.success", { username: customUser.username }))
+      toast.success(t("auth.login.success", { username: customUser.username || '' }))
 
       return {
         success: true,
