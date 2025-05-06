@@ -168,7 +168,7 @@ export default function ReportsPage() {
         order =>
           (order.waiter || '').toLowerCase().includes(query) ||
           (order.tableNumber?.toString() || '').includes(query) ||
-          order.items.some((item) => item.name.toLowerCase().includes(query)),
+          (Array.isArray(order.items) ? order.items : Object.values(order.items)).some((item) => item.name.toLowerCase().includes(query)),
       )
     }
 
