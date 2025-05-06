@@ -173,6 +173,12 @@ export default function TableMapViewDialog({
       }
 
       // Sanitize and validate order data
+      const itemsToProcess = order.items
+        ? Array.isArray(order.items)
+          ? order.items
+          : Object.values(order.items)
+        : [];
+
       const sanitizedOrderData: Order = {
         ...order,
         uid: user?.uid || order.uid || '',
@@ -180,7 +186,7 @@ export default function TableMapViewDialog({
         status: order.status || 'pending',
         
         // Normalize items to match OrderItem interface
-        items: (order.items || []).map(item => {
+        items: itemsToProcess.map((item: OrderItem) => {
           // Convert itemId to string, fallback to empty string
           const itemId = item.itemId
             ? String(item.itemId)

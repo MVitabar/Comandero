@@ -8,7 +8,8 @@ import { Edit } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { 
   Order, 
-  OrderDetailsDialogProps 
+  OrderDetailsDialogProps, 
+  OrderItem 
 } from "@/types"
 
 export function OrderDetailsDialog({ 
@@ -99,7 +100,12 @@ export function OrderDetailsDialog({
                   </tr>
                 </thead>
                 <tbody>
-                  {order?.items?.map((item, index) => (
+                  {(order?.items
+                    ? Array.isArray(order.items)
+                      ? order.items
+                      : Object.values(order.items)
+                    : []
+                  ).map((item: OrderItem, index) => (
                     <tr key={index} className="border-b last:border-b-0">
                       <td className="p-2">{item.name}</td>
                       <td className="p-2 text-right">{item.quantity}</td>
@@ -110,7 +116,7 @@ export function OrderDetailsDialog({
                         }).format(item.price * item.quantity)}
                       </td>
                     </tr>
-                  )) || null}
+                  ))}
                 </tbody>
                 <tfoot>
                   <tr>
