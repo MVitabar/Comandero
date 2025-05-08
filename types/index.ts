@@ -126,8 +126,9 @@ export interface InventoryItem {
   name: string
   category: string
   categoryName?: string
+  controlsStock: boolean
   quantity: number
-  unit: string
+  unit?: string
   price: number
   minQuantity: number
   description?: string

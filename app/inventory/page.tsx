@@ -17,6 +17,7 @@ import {
   addDoc, 
   deleteDoc, 
   serverTimestamp,
+  increment
 } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
@@ -54,89 +55,14 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select"
-import { Plus, Search, AlertTriangle, Edit, Trash2 } from "lucide-react"
+import { Plus, Search, AlertTriangle, Edit, Trash2, PlusCircle } from "lucide-react"
 import { usePermissions } from "@/components/permissions-provider"
 import { UnauthorizedAccess } from "@/components/unauthorized-access"
 import { useNotifications } from "@/hooks/useNotifications"
 import { toast } from "sonner"
+import { Switch } from "@/components/ui/switch"
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 
-const entradas = [
-  {
-    name: "Coxinha",
-    description: "Coxinha de frango",
-    price: 10.0,
-  },
-  {
-    name: "Pão de Queijo",
-    description: "Pão de queijo fresco",
-    price: 8.0,
-  }
-];
-
-const pratosPrincipais = [
-  {
-    name: "Feijoada",
-    description: "Feijoada com arroz e farofa",
-    price: 25.0,
-  },
-  {
-    name: "Churrasco",
-    description: "Churrasco de carne com arroz e feijão",
-    price: 30.0,
-  }
-];
-
-const saladas = [
-  {
-    name: "Salada de Frutas",
-    description: "Salada de frutas frescas",
-    price: 15.0,
-  },
-  {
-    name: "Salada de Folhas",
-    description: "Salada de folhas verdes com frutas secas",
-    price: 12.0,
-  }
-];
-
-const bebidas = [
-  {
-    name: "Água",
-    description: "Água mineral",
-    price: 5.0,
-  },
-  {
-    name: "Refrigerante",
-    description: "Refrigerante de cola",
-    price: 8.0,
-  }
-];
-
-const sobremesas = [
-  {
-    name: "Torta de Chocolate",
-    description: "Torta de chocolate com cobertura de chocolate",
-    price: 18.0,
-  },
-  {
-    name: "Mousse de Maracujá",
-    description: "Mousse de maracujá com calda de maracujá",
-    price: 15.0,
-  }
-];
-
-const porcoesExtras = [
-  {
-    name: "Arroz",
-    description: "Arroz branco",
-    price: 5.0,
-  },
-  {
-    name: "Feijão",
-    description: "Feijão preto",
-    price: 5.0,
-  }
-];
 
 export default function InventoryPage() {
   const { user } = useAuth()
@@ -162,7 +88,18 @@ export default function InventoryPage() {
     minQuantity: 0,
     description: '',
     supplier: '',
+    controlsStock: false,
+    lowStockThreshold: 0,
   })
+
+  // Estados para el diálogo de añadir stock
+  const [isAddStockDialogOpen, setIsAddStockDialogOpen] = useState(false);
+  const [selectedItemForStockAdd, setSelectedItemForStockAdd] = useState<InventoryItem | null>(null);
+  const [quantityToAdd, setQuantityToAdd] = useState<number>(0);
+  const [isSavingStock, setIsSavingStock] = useState(false);
+
+  // Estado para la búsqueda
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Verificar si el usuario puede ver el inventario
   if (!canView('inventory')) {
@@ -220,6 +157,8 @@ export default function InventoryPage() {
               minQuantity: itemData.minQuantity || 0,
               description: itemData.description || '',
               supplier: itemData.supplier || '',
+              controlsStock: itemData.controlsStock || false,
+              lowStockThreshold: itemData.lowStockThreshold || 0,
               createdAt: itemData.createdAt || new Date(),
               updatedAt: itemData.updatedAt || new Date(),
             } as InventoryItem
@@ -371,6 +310,8 @@ export default function InventoryPage() {
         minQuantity: 0,
         description: '',
         supplier: '',
+        controlsStock: false,
+        lowStockThreshold: 0,
       })
       setIsDialogOpen(false)
       setSelectedItem(null)
@@ -424,7 +365,9 @@ export default function InventoryPage() {
   // Low Stock Items
   const lowStockItems = useMemo(() => {
     return inventoryItems.filter(item => 
-      item.quantity <= (item.minQuantity || 0)
+      item.controlsStock && // Solo considerar si controla stock
+      item.quantity <= (item.lowStockThreshold !== undefined ? item.lowStockThreshold : item.minQuantity) && 
+      (item.lowStockThreshold !== undefined ? item.lowStockThreshold : item.minQuantity) > 0
     )
   }, [inventoryItems])
 
@@ -447,6 +390,127 @@ export default function InventoryPage() {
       }
     }
   }, [lowStockItems])
+
+  const handleSave = async () => {
+    if (!user || !user.establishmentId) {
+      toast.error(t("inventory.noEstablishmentErrorMsg"));
+      return;
+    }
+
+    // Basic validation (example)
+    if (!formData.name || !formData.category) {
+      toast.error(t("inventory.fillRequiredFieldsMsg"));
+      return;
+    }
+
+    // Prepare data for saving
+    let dataToSave: Partial<InventoryItem> = {
+      ...formData,
+      name: formData.name!,
+      category: formData.category!,
+      price: Number(formData.price) || 0, // Ensure price is a number, default to 0
+    };
+
+    if (formData.controlsStock) {
+      dataToSave.quantity = Number(formData.quantity) || 0;
+      dataToSave.minQuantity = Number(formData.minQuantity) || 0;
+      dataToSave.unit = formData.unit || undefined; // Keep as is or set to undefined if empty
+      dataToSave.lowStockThreshold = Number(formData.lowStockThreshold) || 0;
+    } else {
+      dataToSave.quantity = 0;
+      dataToSave.minQuantity = 0;
+      dataToSave.unit = undefined; // Explicitly set to undefined if not controlling stock
+      dataToSave.lowStockThreshold = 0; // Or undefined
+    }
+
+    // Remove id if it exists to avoid issues with addDoc, or ensure it's used for updateDoc correctly
+    if (dialogMode === 'add') {
+      delete dataToSave.id; // Firestore generates ID on addDoc
+      delete dataToSave.uid; // uid should also be managed carefully, often same as id or set by backend
+    }
+
+    setLoading(true);
+    try {
+      if (dialogMode === 'edit' && selectedItem && selectedItem.id) {
+        const itemRef = doc(db, "restaurants", user.establishmentId, "inventory", selectedItem.category, "items", selectedItem.id);
+        await updateDoc(itemRef, {
+          ...dataToSave,
+          updatedAt: serverTimestamp(),
+        });
+        toast.success(t("inventory.itemUpdatedMsg"));
+      } else {
+        // For adding, ensure category is part of the path
+        if (!dataToSave.category) {
+          toast.error(t("inventory.categoryRequiredMsg"));
+          setLoading(false);
+          return;
+        }
+        const itemsCollectionRef = collection(db, "restaurants", user.establishmentId, "inventory", dataToSave.category, "items");
+        await addDoc(itemsCollectionRef, {
+          ...dataToSave,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          // restaurantId: user.establishmentId, // Already part of path, but can be good for denormalization/rules
+        });
+        toast.success(t("inventory.itemAddedMsg"));
+      }
+      fetchInventoryItems(); // Refresh list
+      setIsDialogOpen(false); // Close dialog
+    } catch (error) {
+      console.error("Error saving item: ", error);
+      toast.error(t("inventory.errorSavingItemMsg"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmAddStock = async () => {
+    if (!selectedItemForStockAdd || !selectedItemForStockAdd.uid || !selectedItemForStockAdd.category) { 
+      toast.error(t("inventory.errorNoItemSelectedToAddStock"));
+      return;
+    }
+    if (!user || !user.establishmentId) {
+      toast.error(t("inventory.noEstablishmentErrorMsg"));
+      return;
+    }
+    if (quantityToAdd <= 0) {
+      toast.error(t("inventory.errorQuantityToAddPositive"));
+      return;
+    }
+
+    setIsSavingStock(true);
+    try {
+      const itemRef = doc(db, "restaurants", user.establishmentId, "inventory", selectedItemForStockAdd.category, "items", selectedItemForStockAdd.uid); 
+
+      await updateDoc(itemRef, {
+        quantity: increment(quantityToAdd),
+        updatedAt: serverTimestamp()
+      });
+
+      toast.success(t("inventory.stockAddedSuccessfullyMsg"));
+      fetchInventoryItems(); // Refresh list
+      setIsAddStockDialogOpen(false); // Close dialog
+      setSelectedItemForStockAdd(null); // Clear selected item
+      setQuantityToAdd(0); // Reset quantity to add
+    } catch (error) {
+      console.error("Error adding stock: ", error);
+      toast.error(t("inventory.errorAddingStockMsg"));
+    } finally {
+      setIsSavingStock(false);
+    }
+  };
+
+  // Filtrar inventario basado en searchQuery en múltiples campos
+  const filteredInventoryItems = inventoryItems.filter(item => {
+    const query = searchQuery.toLowerCase();
+    return (
+      item.name.toLowerCase().includes(query) ||
+      item.category.toLowerCase().includes(query) ||
+      (item.description || '').toLowerCase().includes(query) ||
+      (item.supplier || '').toLowerCase().includes(query) ||
+      (item.unit || '').toLowerCase().includes(query)
+    );
+  });
 
   return (
     <div className="container mx-auto p-4">
@@ -523,58 +587,95 @@ export default function InventoryPage() {
                       </Select>
                     </div>
                   </div>
-                  {/* More form fields... */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>{t("inventory.quantity")}</Label>
-                      <Input
-                        value={formData.quantity || 0}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev, 
-                          quantity: Number(e.target.value)
-                        }))}
-                        type="number"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>{t("inventory.unit")}</Label>
-                      <Input 
-                        value={formData.unit || ''}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev, 
-                          unit: e.target.value
-                        }))}
-                        required
-                      />
-                    </div>
+                  <div className="flex items-center space-x-2 py-2">
+                    <Switch
+                      id="controlsStock"
+                      checked={!!formData.controlsStock} // Asegura que sea booleano
+                      onCheckedChange={(checked) => // Switch pasa un booleano directamente
+                        setFormData(prev => {
+                          if (!checked) { // Si el control de stock se desactiva
+                            return {
+                              ...prev,
+                              controlsStock: false,
+                              quantity: 0,
+                              minQuantity: 0,
+                              unit: undefined,
+                              lowStockThreshold: 0,
+                            };
+                          }                     // Si se activa
+                          return { ...prev, controlsStock: true };
+                        })
+                      }
+                    />
+                    <Label htmlFor="controlsStock">{t("inventory.controlsStockLabel")}</Label>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>{t("inventory.minQuantity")}</Label>
-                      <Input
-                        value={formData.minQuantity || 0}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev, 
-                          minQuantity: Number(e.target.value)
-                        }))}
-                        type="number"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>{t("inventory.price")}</Label>
-                      <Input
-                        value={formData.price || 0}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev, 
-                          price: Number(e.target.value)
-                        }))}
-                        type="number"
-                        step="0.01"
-                        required
-                      />
-                    </div>
+                  {formData.controlsStock && (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>{t("inventory.quantity")}</Label>
+                          <Input
+                            value={formData.quantity || 0}
+                            onChange={(e) => setFormData(prev => ({
+                              ...prev, 
+                              quantity: Number(e.target.value)
+                            }))}
+                            type="number"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>{t("inventory.unit")}</Label>
+                          <Input 
+                            value={formData.unit || ''}
+                            onChange={(e) => setFormData(prev => ({
+                              ...prev, 
+                              unit: e.target.value
+                            }))}
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>{t("inventory.minQuantity")}</Label>
+                          <Input
+                            value={formData.minQuantity || 0}
+                            onChange={(e) => setFormData(prev => ({
+                              ...prev, 
+                              minQuantity: Number(e.target.value)
+                            }))}
+                            type="number"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>{t("inventory.lowStockThreshold")}</Label>
+                          <Input
+                            value={formData.lowStockThreshold || 0}
+                            onChange={(e) => setFormData(prev => ({
+                              ...prev, 
+                              lowStockThreshold: Number(e.target.value)
+                            }))}
+                            type="number"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  <div className="space-y-2">
+                    <Label>{t("inventory.price")}</Label>
+                    <Input
+                      value={formData.price || 0}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev, 
+                        price: Number(e.target.value)
+                      }))}
+                      type="number"
+                      step="0.01"
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>{t("inventory.description")}</Label>
@@ -610,6 +711,18 @@ export default function InventoryPage() {
           </div>
         </CardHeader>
         <CardContent>
+          {/* Sección de Búsqueda */}
+          <div className="relative w-full max-w-md mb-6 mt-2">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder={t('inventory.searchPlaceholder')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-full"
+            />
+          </div>
+
           {/* Low Stock Alert */}
           {lowStockItems.length > 0 && (
             <div className="mb-4 bg-yellow-50 border-l-4 border-yellow-400 p-4">
@@ -629,7 +742,7 @@ export default function InventoryPage() {
                 <TableHead>{t("inventory.name")}</TableHead>
                 <TableHead>{t("inventory.category")}</TableHead>
                 <TableHead>{t("inventory.quantity")}</TableHead>
-                <TableHead>{t("inventory.unit")}</TableHead>
+                <TableHead className="py-3 px-1 w-12 sm:w-16 md:w-auto md:px-2 lg:px-3">{t("inventory.unit")}</TableHead>
                 {/* Only show actions column if user has permissions */}
                 {canPerformActions && (
                   <TableHead>{t("inventory.actions")}</TableHead>
@@ -637,58 +750,131 @@ export default function InventoryPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredInventory.map((item) => (
-                <TableRow key={item.uid}>
-                  <TableCell>{item.name}</TableCell>
-                  <TableCell>{t(`inventory.categories.${item.category}`)}</TableCell>
-                  <TableCell>
-                    <Badge 
-                      variant={
-                        item.quantity <= (item.minQuantity || 0) 
-                          ? "destructive" 
-                          : "default"
-                      }
-                    >
-                      {item.quantity} {item.unit}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{item.unit}</TableCell>
-                  {/* Only show actions cell if user has permissions */}
-                  {canPerformActions && (
+              {filteredInventoryItems.length > 0 ? (
+                filteredInventoryItems.map((item) => (
+                  <TableRow key={item.uid} className={item.controlsStock && typeof item.lowStockThreshold === "number" && item.quantity < item.lowStockThreshold ? 'bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800' : 'hover:bg-muted/50'}>
+                    <TableCell>{item.name}</TableCell>
+                    <TableCell>{t(`inventory.categories.${item.category}`)}</TableCell>
                     <TableCell>
-                      <div className="flex space-x-2">
-                        {canUpdate('inventory') && (
-                          <Button 
-                            size="icon" 
-                            variant="outline"
-                            onClick={() => {
-                              setSelectedItem(item)
-                              setFormData(item)
-                              setDialogMode('edit')
-                              setIsDialogOpen(true)
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {canDelete('inventory') && (
-                          <Button 
-                            size="icon" 
-                            variant="destructive"
-                            onClick={() => handleDelete(item.uid)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
+                      <Badge 
+                        variant={
+                          item.controlsStock && // Solo considerar si controla stock
+                          item.quantity <= (item.lowStockThreshold !== undefined ? item.lowStockThreshold : item.minQuantity) && 
+                          (item.lowStockThreshold !== undefined ? item.lowStockThreshold : item.minQuantity) > 0
+                            ? "destructive" 
+                            : "default"
+                        }
+                      >
+                        {item.quantity} {item.unit}
+                      </Badge>
                     </TableCell>
-                  )}
+                    <TableCell className="py-3 px-1 w-12 sm:w-16 md:w-auto md:px-2 lg:px-3">{item.unit}</TableCell>
+                    {/* Only show actions cell if user has permissions */}
+                    {canPerformActions && (
+                      <TableCell className="py-3 px-1 md:px-2 lg:px-3 text-right">
+                        <div className="flex flex-col sm:flex-row sm:space-x-2 items-end space-y-1 sm:space-y-0">
+                          {canUpdate('inventory') && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    onClick={() => {
+                                      setSelectedItem(item)
+                                      setFormData(item)
+                                      setDialogMode('edit')
+                                      setIsDialogOpen(true)
+                                    }}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{t('inventory.editBtn')}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                          {item.controlsStock && canUpdate('inventory') && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    onClick={() => {
+                                      setSelectedItemForStockAdd(item);
+                                      setQuantityToAdd(0); // Resetear cantidad a añadir
+                                      setIsAddStockDialogOpen(true);
+                                    }}
+                                  >
+                                    <PlusCircle className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{t('inventory.addStockBtn')}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                          {canDelete('inventory') && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleDelete(item.uid)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={canPerformActions ? 5 : 4} className="text-center py-4">
+                    {t("inventory.noItemsFound")}
+                  </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      {/* Dialogo para añadir stock */}
+      <Dialog open={isAddStockDialogOpen} onOpenChange={setIsAddStockDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {t('inventory.addStockTo')} {selectedItemForStockAdd?.name}
+            </DialogTitle>
+            <DialogDescription>
+              {t('inventory.currentQuantity')}: {selectedItemForStockAdd?.quantity} {selectedItemForStockAdd?.unit}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="quantityToAdd">{t('inventory.quantityToAddLabel')}</Label>
+            <Input 
+              id="quantityToAdd" 
+              type="number" 
+              value={quantityToAdd}
+              onChange={(e) => setQuantityToAdd(Number(e.target.value))}
+              placeholder={t('inventory.enterQuantityPlaceholder')}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddStockDialogOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button onClick={handleConfirmAddStock} disabled={isSavingStock}>
+              {isSavingStock ? t('common.saving') : t('inventory.addStockConfirmBtn')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
