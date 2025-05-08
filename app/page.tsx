@@ -78,7 +78,7 @@ export default function LandingPage() {
               </Button>
             </Link>
             <Link href="/login">
-              <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10">
+              <Button variant="outline" size="lg" className="border-white text-black hover:bg-white/10">
                 Entrar
               </Button>
             </Link>
@@ -828,7 +828,7 @@ export default function LandingPage() {
               </Button>
             </Link>
             <Link href="#features">
-              <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10">
+              <Button variant="outline" size="lg" className="border-white text-black hover:bg-white/10">
                 Saiba mais
               </Button>
             </Link>
