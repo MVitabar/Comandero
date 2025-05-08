@@ -18,6 +18,7 @@ import { NotificationProvider } from '@/components/providers/NotificationProvide
 import "./globals.css"
 import { PermissionsProvider } from "@/components/permissions-provider"
 import { Metadata } from "next"
+import { InstallPromptProvider } from "@/contexts/InstallPromptContext";
 const inter = Inter({ subsets: ["latin"] })
 
 export default function RootLayout({
@@ -36,8 +37,10 @@ export default function RootLayout({
                 <UserProvider>
                   <PermissionsProvider>
                     <NotificationProvider>
-                      <LayoutContent>{children}</LayoutContent>
-                      <Toaster />
+                      <InstallPromptProvider>
+                        <LayoutContent>{children}</LayoutContent>
+                        <Toaster />
+                      </InstallPromptProvider>
                     </NotificationProvider>
                   </PermissionsProvider>
                 </UserProvider>
