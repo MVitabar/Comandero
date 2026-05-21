@@ -521,8 +521,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } as User;
       });
 
-      // Initialize default inventory categories
-      await initializeInventoryCategories(db, establishmentId);
+      // Initialize default inventory categories (disabled - categories are now managed by owners)
+      // await initializeInventoryCategories(db, establishmentId);
 
       return userCreationResult;
     } catch (error) {

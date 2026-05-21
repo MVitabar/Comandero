@@ -809,6 +809,7 @@ export interface TableMapViewerProps {
 // Dashboard-related types
 export type SalesByCategory = {
   category: string;
+  name?: string;
   totalSales: number;
   totalQuantity: number;
   color: string;

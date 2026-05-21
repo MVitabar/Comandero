@@ -84,47 +84,47 @@ export default function DashboardPage() {
 
   const [inventoryViewMode, setInventoryViewMode] = useState<'totals' | 'by_category' | 'by_item'>('totals')
 
-  // Define category colors
+  // Define category colors palette (cycles for dynamic categories)
+  const categoryColorPalette = [
+    '#10B981', '#3B82F6', '#F43F5E', '#8B5CF6',
+    '#F97316', '#F59E0B', '#6B7280', '#14B8A6'
+  ]
+
   const categoryColors: Record<string, string> = {
-    appetizer: '#10B981', // emerald
-    main_course: '#3B82F6', // blue
-    dessert: '#F43F5E', // rose
-    drink: '#8B5CF6', // purple
-    sides: '#F97316', // orange
-    other: '#6B7280' // gray
+    appetizer: '#10B981',
+    main_course: '#3B82F6',
+    dessert: '#F43F5E',
+    drink: '#8B5CF6',
+    sides: '#F97316',
+    other: '#6B7280'
+  }
+
+  // Helper: resolve category display name (translate legacy IDs, use raw name for custom)
+  const getCategoryName = (categoryId: string, customName?: string): string => {
+    const defaultKeys: Record<string, string> = {
+      drinks: t('categories.drinks'),
+      appetizers: t('categories.appetizers'),
+      main_courses: t('categories.mainCourses'),
+      desserts: t('categories.desserts'),
+      salads: t('categories.salads'),
+      sides: t('categories.sides'),
+    }
+    return defaultKeys[categoryId] ?? customName ?? categoryId
   }
 
   const fetchDashboardData = async () => {
     try {
       const ordersRef = collection(db, `restaurants/${user?.establishmentId}/orders`)
       
-      // Predefined list of valid categories with translations
-      const validCategories = [
-        { 
-          id: 'appetizers', 
-          name: t('categories.appetizers') 
-        },
-        { 
-          id: 'desserts', 
-          name: t('categories.desserts') 
-        },
-        { 
-          id: 'drinks', 
-          name: t('categories.drinks') 
-        },
-        { 
-          id: 'main_courses', 
-          name: t('categories.mainCourses') 
-        },
-        { 
-          id: 'salads', 
-          name: t('categories.salads') 
-        },
-        { 
-          id: 'sides', 
-          name: t('categories.sides') 
-        }
-      ]
+      // Fetch categories dynamically from database
+      const inventoryCategoriesSnapshot = await getDocs(
+        collection(db, `restaurants/${user?.establishmentId}/inventory`)
+      )
+      const validCategories = inventoryCategoriesSnapshot.docs.map((doc, index) => ({
+        id: doc.id,
+        name: doc.data().name || doc.id,
+        color: doc.data().color || categoryColorPalette[index % categoryColorPalette.length]
+      }))
 
       // Fetch items from all categories
       const inventoryPromises = validCategories.map(category => 
@@ -139,7 +139,7 @@ export default function DashboardPage() {
           ...(doc.data() as InventoryItem),
           id: doc.id,
           category: validCategories[index].id,
-          categoryName: validCategories[index].name
+          categoryName: getCategoryName(validCategories[index].id, validCategories[index].name)
         }))
       )
 
@@ -336,12 +336,22 @@ export default function DashboardPage() {
         }))
         .sort((a, b) => b.total - a.total)
 
+      // Build a lookup from fetched categories for colors and names
+      const categoryMeta: Record<string, { name: string; color: string }> = {}
+      validCategories.forEach((cat, index) => {
+        categoryMeta[cat.id] = {
+          name: getCategoryName(cat.id, cat.name),
+          color: cat.color || categoryColorPalette[index % categoryColorPalette.length]
+        }
+      })
+
       // Transformar datos para visualización
       const translatedCategorySales = Array.from(categorySalesMap.entries()).map(([category, data]) => ({
         category,
+        name: categoryMeta[category]?.name ?? getCategoryName(category, category),
         totalQuantity: data.totalQuantity,
         totalSales: data.totalSales,
-        color: categoryColors[category] || categoryColors['other']
+        color: categoryMeta[category]?.color ?? categoryColors[category] ?? categoryColors['other']
       })).sort((a, b) => b.totalSales - a.totalSales)
 
       // Calculate Top Selling Items from Orders
@@ -917,7 +927,7 @@ export default function DashboardPage() {
                               <div className="flex flex-col w-full">
                                 <div className="flex justify-between items-center mb-2">
                                   <span className="font-semibold text-sm sm:text-base text-gray-800">
-                                    {t(`categories.${category}`)}
+                                    {getCategoryName(category)}
                                   </span>
                                 </div>
                                 <div className="flex space-x-2">
@@ -1064,7 +1074,7 @@ export default function DashboardPage() {
                                   <TableBody>
                                     <TableRow className="hover:bg-gray-100 transition-colors">
                                       <TableCell className="text-xs sm:text-sm text-gray-700">
-                                        {t(`categories.${item.category}`)}
+                                        {getCategoryName(item.category, item.categoryName)}
                                       </TableCell>
                                       <TableCell className="text-xs sm:text-sm text-gray-700">
                                         {item.total}
@@ -1156,11 +1166,11 @@ export default function DashboardPage() {
                   <Tooltip 
                     formatter={(value, name) => [
                       `${new Intl.NumberFormat(i18n.language, { style: 'currency', currency: user?.currency || 'USD' }).format(value as number)}`, 
-                      t(`dashboard.salesByCategory.categories.${name}`)
+                      dashboardData.salesByCategory.find(s => s.category === name)?.name ?? getCategoryName(String(name))
                     ]}
                   />
                   <Legend 
-                    formatter={(value) => t(`dashboard.salesByCategory.categories.${value}`)}
+                    formatter={(value) => dashboardData.salesByCategory.find(s => s.category === value)?.name ?? getCategoryName(String(value))}
                     layout="horizontal" 
                     verticalAlign="bottom"
                     align="center"
@@ -1178,7 +1188,7 @@ export default function DashboardPage() {
                     className="block sm:hidden text-xs"
                   />
                   <Legend 
-                    formatter={(value) => t(`dashboard.salesByCategory.categories.${value}`)}
+                    formatter={(value) => dashboardData.salesByCategory.find(s => s.category === value)?.name ?? getCategoryName(String(value))}
                     layout="vertical" 
                     verticalAlign="middle" 
                     align="right"
