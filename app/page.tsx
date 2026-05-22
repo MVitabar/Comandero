@@ -501,9 +501,9 @@ export default function LandingPage() {
                 <CheckCircle className="h-6 w-6 text-emerald-600" />
               </div>
               <div>
-                <h3 className="text-xl font-bold mb-2 text-slate-800">Melhor controle de estoque</h3>
+                <h3 className="text-xl font-bold mb-2 text-slate-800">{t("landing.benefits.inventory.title")}</h3>
                 <p className="text-slate-600 leading-relaxed">
-                  Evite perdas e otimize suas compras com um acompanhamento preciso do seu estoque.
+                  {t("landing.benefits.inventory.description")}
                 </p>
               </div>
             </div>
@@ -513,9 +513,9 @@ export default function LandingPage() {
                 <CheckCircle className="h-6 w-6 text-emerald-600" />
               </div>
               <div>
-                <h3 className="text-xl font-bold mb-2 text-slate-800">Dados para decisões</h3>
+                <h3 className="text-xl font-bold mb-2 text-slate-800">{t("landing.benefits.data.title")}</h3>
                 <p className="text-slate-600 leading-relaxed">
-                  Tome decisões baseadas em dados reais sobre o desempenho do seu restaurante.
+                  {t("landing.benefits.data.description")}
                 </p>
               </div>
             </div>
