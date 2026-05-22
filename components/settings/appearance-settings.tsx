@@ -61,10 +61,8 @@ export function AppearanceSettings() {
         description: t("settings.appearance.actions.saved.description"),
       })
 
-      await sendNotification({
-        title: t("settings.push.appearanceSavedTitle"),
-        message: t("settings.push.appearanceSavedMessage", { theme }),
-        url: window.location.href,
+      await new Notification(t("settings.push.appearanceSavedTitle"), {
+        
       })
     } catch (error) {
       toast.error(t("settings.appearance.actions.save.error.title"), {

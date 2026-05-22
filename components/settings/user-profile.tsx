@@ -95,10 +95,8 @@ export function UserProfile() {
       })
 
       toast.success(t("settings.profile.actions.profileUpdated"))
-      await sendNotification({
-        title: t("profile.push.profileSavedTitle"),
-        message: t("profile.push.profileSavedMessage", { username: userData.username }),
-        url: window.location.href,
+      await new Notification(t("profile.push.profileSavedTitle"), {
+        
       });
     } catch (error) {
       toast.error(t("settings.profile.actions.errorUpdatingProfile"))
