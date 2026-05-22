@@ -16,7 +16,6 @@ import { Minus, Plus, Trash, ArrowLeft } from "lucide-react"
 import { InventoryItem, OrderItem } from "@/types"
 import { OrderForm } from "@/components/orders/order-form"
 import { Order } from "@/types"
-import { useNotifications } from "@/hooks/useNotifications"
 import { toast } from "sonner"
 
 export default function NewOrderPage() {
@@ -24,7 +23,6 @@ export default function NewOrderPage() {
   const { db } = useFirebase()
   const { user } = useAuth()
   const router = useRouter()
-  const { sendNotification } = useNotifications()
 
   // Utility function to remove undefined values from an object
   const removeUndefinedValues = (obj: Record<string, any>): Record<string, any> => {
@@ -78,13 +76,6 @@ export default function NewOrderPage() {
 
       // IMPORTANTE: Guarda el id generado por Firestore en el documento
       await updateDoc(newOrderRef, { id: newOrderRef.id });
-
-      // Notificación push con OneSignal
-      await sendNotification({
-        title: "Nuevo Pedido",
-        message: `Mesa ${order.tableNumber} - Total: $${order.total}`,
-        url: `/orders/${newOrderRef.id}`
-      })
 
       // Optional: Navigate back to orders page or show order details
       router.push('/orders')

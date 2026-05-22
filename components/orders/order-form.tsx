@@ -25,7 +25,7 @@ import {
 } from "firebase/firestore"
 import { Loader2, Plus, Minus, Trash, QrCode } from "lucide-react"
 import { toast } from "sonner"
-import QRCode from 'qrcode.react'
+import { QRCodeSVG } from 'qrcode.react'
 import { 
   OrderFormProps, 
   OrderItem, 
@@ -44,7 +44,6 @@ import {
   reduceInventoryStock,
   InventoryItem 
 } from '@/lib/inventory-utils'
-import { useNotifications } from "@/hooks/useNotifications"
 
 export function OrderForm({ 
   initialTableNumber, 
@@ -61,7 +60,6 @@ export function OrderForm({
   const { user: contextUser } = useAuth()
   const user = propUser || contextUser
   const { t } = useI18n()
-  const { sendNotification } = useNotifications();
 
   if (!user) {
     return (
@@ -244,8 +242,12 @@ export function OrderForm({
       setLoading(false)
     } catch (error) {
       setLoading(false)
+      let errorMessage = "Unknown error"
+      if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = String((error as { message: unknown }).message)
+      }
       toast.error(t("orders.errors.fetchMenuItems", {
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: errorMessage
       }))
     }
   }, [db, user, t])
@@ -297,8 +299,12 @@ export function OrderForm({
         setSelectedTable(availableTables[0])
       }
     } catch (error) {
+      let errorMessage = "Unknown error"
+      if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = String((error as { message: unknown }).message)
+      }
       toast.error(t("orders.errors.fetchTables", {
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: errorMessage
       }))
     }
   }
@@ -1239,7 +1245,7 @@ export function OrderForm({
             {showQRCode && (
               <div className="flex flex-col items-center space-y-4 mt-4">
                 
-                <QRCode 
+                <QRCodeSVG 
                   value={menuUrl} 
                   size={256} 
                   level={'H'} 

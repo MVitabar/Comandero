@@ -10,7 +10,6 @@ declare module 'qrcode.react' {
       fgColor?: string;
     }
   
-    const QRCode: React.ComponentType<QRCodeProps>;
-  
-    export default QRCode;
+    export const QRCodeSVG: React.ComponentType<QRCodeProps>;
+    export const QRCodeCanvas: React.ComponentType<QRCodeProps>;
   }

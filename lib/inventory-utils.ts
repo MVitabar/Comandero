@@ -84,9 +84,13 @@ export async function reduceInventoryStock({
 
   } catch (error) {
     console.error('Error updating inventory:', error);
+    let errorMessage = 'Unknown error';
+    if (error && typeof error === 'object' && 'message' in error) {
+      errorMessage = String((error as { message: unknown }).message);
+    }
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: errorMessage
     };
   }
 }

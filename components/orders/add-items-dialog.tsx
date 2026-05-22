@@ -90,7 +90,11 @@ export function AddItemsDialog({ order, open, onClose, onItemsAdded }: AddItemsD
       onClose();
     } catch (error) {
       console.error("Error agregando item al pedido:", error);
-      toast.error("Error al agregar item: " + (error instanceof Error ? error.message : ""));
+      let errorMessage = "";
+      if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = String((error as { message: unknown }).message);
+      }
+      toast.error("Error al agregar item: " + errorMessage);
     }
   };
 

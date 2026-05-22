@@ -66,7 +66,6 @@ import {
 } from "lucide-react";
 import { usePermissions } from "@/components/permissions-provider";
 import { UnauthorizedAccess } from "@/components/unauthorized-access";
-import { useNotifications } from "@/hooks/useNotifications";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -80,7 +79,6 @@ export default function InventoryPage() {
   const { user } = useAuth();
   const { canView, canCreate, canUpdate, canDelete } = usePermissions();
   const { t } = useI18n();
-  const { sendNotification } = useNotifications();
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -519,12 +517,6 @@ export default function InventoryPage() {
         description: t("inventory.itemSaved"),
       });
 
-      await sendNotification({
-        title: t("inventory.push.itemSavedTitle"),
-        message: t("inventory.push.itemSavedMessage", { name: itemData.name }),
-        url: window.location.href,
-      });
-
       // Reset form and close dialog
       setFormData({
         name: "",
@@ -574,12 +566,6 @@ export default function InventoryPage() {
       toast.success(t("inventory.deleteSuccess"), {
         description: t("inventory.itemDeleted"),
       });
-
-      await sendNotification({
-        title: t("inventory.push.itemDeletedTitle"),
-        message: t("inventory.push.itemDeletedMessage"),
-        url: window.location.href,
-      });
     } catch (err) {
       console.error("Error deleting inventory item:", err);
       toast.error(t("commons.error"), {
@@ -621,11 +607,7 @@ export default function InventoryPage() {
         (item) => item.quantity <= (item.minQuantity || 0) / 2,
       );
       if (criticalItems.length > 0) {
-        sendNotification({
-          title: "¡Alerta de Inventario!",
-          message: `${criticalItems.length} productos requieren atención inmediata`,
-          url: "/inventory",
-        });
+        // OneSignal has been removed - no push notification
       }
     }
   }, [lowStockItems]);
@@ -779,15 +761,15 @@ export default function InventoryPage() {
   });
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 md:p-6">
       <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
+        <CardHeader className="p-4 md:p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
             <div>
-              <CardTitle>{t("inventory.title")}</CardTitle>
-              <CardDescription>{t("inventory.subtitle")}</CardDescription>
+              <CardTitle className="text-xl md:text-2xl">{t("inventory.title")}</CardTitle>
+              <CardDescription className="text-sm md:text-base">{t("inventory.subtitle")}</CardDescription>
             </div>
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               {canUpdate("inventory") && (
                 <Button
                   variant="outline"
@@ -801,6 +783,7 @@ export default function InventoryPage() {
                     });
                     setIsCategoryDialogOpen(true);
                   }}
+                  className="flex-1 sm:flex-none"
                 >
                   <PlusCircle className="mr-2 h-4 w-4" />{" "}
                   {t("inventory.manageCategories") || "Categorías"}
@@ -814,6 +797,7 @@ export default function InventoryPage() {
                         setDialogMode("add");
                         setFormData({});
                       }}
+                      className="flex-1 sm:flex-none"
                     >
                       <Plus className="mr-2 h-4 w-4" /> {t("inventory.addItem")}
                     </Button>
@@ -1023,9 +1007,9 @@ export default function InventoryPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 md:p-6">
           {/* Sección de Búsqueda */}
-          <div className="relative w-full max-w-md mb-6 mt-2">
+          <div className="relative w-full max-w-md mb-4 md:mb-6 mt-2">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="text"
@@ -1038,10 +1022,10 @@ export default function InventoryPage() {
 
           {/* Low Stock Alert */}
           {lowStockItems.length > 0 && (
-            <div className="mb-4 bg-yellow-50 border-l-4 border-yellow-400 p-4">
+            <div className="mb-4 bg-yellow-50 border-l-4 border-yellow-400 p-3 md:p-4">
               <div className="flex items-center">
-                <AlertTriangle className="mr-2 text-yellow-600" />
-                <p className="text-yellow-800">
+                <AlertTriangle className="mr-2 h-4 w-4 md:h-5 md:w-5 text-yellow-600" />
+                <p className="text-sm md:text-base text-yellow-800">
                   {t("inventory.lowStockAlert", {
                     count: lowStockItems.length,
                   })}
@@ -1050,25 +1034,26 @@ export default function InventoryPage() {
             </div>
           )}
 
-          {/* Inventory Table */}
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("inventory.name")}</TableHead>
-                <TableHead>{t("inventory.category")}</TableHead>
-                <TableHead>{t("inventory.quantity")}</TableHead>
-                <TableHead className="py-3 px-1 w-12 sm:w-16 md:w-auto md:px-2 lg:px-3">
-                  {t("inventory.unit")}
-                </TableHead>
-                {/* Only show actions column if user has permissions */}
-                {canPerformActions && (
-                  <TableHead>{t("inventory.actions")}</TableHead>
-                )}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredInventoryItems.length > 0 ? (
-                filteredInventoryItems.map((item) => (
+          {/* Inventory Table - Desktop */}
+          <div className="hidden md:block overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("inventory.name")}</TableHead>
+                  <TableHead>{t("inventory.category")}</TableHead>
+                  <TableHead>{t("inventory.quantity")}</TableHead>
+                  <TableHead className="py-3 px-1 w-12 sm:w-16 md:w-auto md:px-2 lg:px-3">
+                    {t("inventory.unit")}
+                  </TableHead>
+                  {/* Only show actions column if user has permissions */}
+                  {canPerformActions && (
+                    <TableHead>{t("inventory.actions")}</TableHead>
+                  )}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredInventoryItems.length > 0 ? (
+                  filteredInventoryItems.map((item) => (
                   <TableRow
                     key={item.uid}
                     className={
@@ -1184,6 +1169,107 @@ export default function InventoryPage() {
               )}
             </TableBody>
           </Table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden grid grid-cols-1 gap-3">
+            {filteredInventoryItems.length > 0 ? (
+              filteredInventoryItems.map((item) => (
+                <Card key={item.uid} className="w-full">
+                  <CardContent className="p-3">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-sm md:text-base">{item.name}</h3>
+                        <p className="text-xs text-muted-foreground">
+                          {getCategoryName(
+                            item.category,
+                            item.categoryName || item.category,
+                          )}
+                        </p>
+                      </div>
+                      <Badge
+                        variant={
+                          item.controlsStock &&
+                          item.quantity <=
+                            (item.lowStockThreshold !== undefined
+                              ? item.lowStockThreshold
+                              : item.minQuantity) &&
+                          (item.lowStockThreshold !== undefined
+                            ? item.lowStockThreshold
+                            : item.minQuantity) > 0
+                            ? "destructive"
+                            : item.controlsStock &&
+                              item.quantity <=
+                                (item.lowStockThreshold !== undefined
+                                  ? item.lowStockThreshold
+                                  : item.minQuantity) * 1.5
+                            ? "default"
+                            : "secondary"
+                        }
+                        className="text-xs"
+                      >
+                        {item.controlsStock
+                          ? `${item.quantity} ${item.unit || ""}`
+                          : "N/A"}
+                      </Badge>
+                    </div>
+                    {item.controlsStock && (
+                      <div className="text-xs text-muted-foreground mb-2">
+                        Min: {item.lowStockThreshold !== undefined ? item.lowStockThreshold : item.minQuantity} {item.unit || ""}
+                      </div>
+                    )}
+                    {canPerformActions && (
+                      <div className="flex gap-1 mt-2">
+                        {canUpdate("inventory") && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedItem(item);
+                              setFormData(item);
+                              setDialogMode("edit");
+                              setIsDialogOpen(true);
+                            }}
+                            className="flex-1"
+                          >
+                            <Edit className="h-4 w-4 mr-1" /> Edit
+                          </Button>
+                        )}
+                        {canUpdate("inventory") && item.controlsStock && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedItemForStockAdd(item);
+                              setQuantityToAdd(0);
+                              setIsAddStockDialogOpen(true);
+                            }}
+                            className="flex-1"
+                          >
+                            <PlusCircle className="h-4 w-4 mr-1" /> Stock
+                          </Button>
+                        )}
+                        {canDelete("inventory") && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(item.uid, item.category)}
+                            className="flex-1 text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <div className="text-center text-muted-foreground py-4">
+                {t("inventory.noItemsFound")}
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 

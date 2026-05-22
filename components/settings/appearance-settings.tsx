@@ -5,7 +5,6 @@ import { useAuth } from "@/components/auth-provider"
 import { useFirebase } from "@/components/firebase-provider"
 import { useI18n } from "@/components/i18n-provider"
 import { useTheme, Theme } from "@/components/theme-provider"
-import { useNotifications } from "@/hooks/useNotifications"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -18,7 +17,6 @@ export function AppearanceSettings() {
   const { db } = useFirebase()
   const { t } = useI18n()
   const { theme, setTheme } = useTheme()
-  const { sendNotification } = useNotifications()
 
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)

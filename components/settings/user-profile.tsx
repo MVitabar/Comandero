@@ -18,14 +18,12 @@ import { UserRole } from "@/types/permissions"
 import { usePermissions } from "@/components/permissions-provider"
 import { UnauthorizedAccess } from "../unauthorized-access"
 import type { CustomUser } from '@/types';
-import { useNotifications } from "@/hooks/useNotifications"
 
 export function UserProfile() {
   const { canView, canUpdate } = usePermissions();
   const { user } = useAuth() as { user: CustomUser | null }
   const { db, auth } = useFirebase()
   const { t } = useI18n()
-  const { sendNotification } = useNotifications();
 
   const [loading, setLoading] = useState(false)
   const [userData, setUserData] = useState({

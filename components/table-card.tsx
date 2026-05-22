@@ -344,8 +344,12 @@ export function TableCard({
       setSelectedPaymentMethod(null)
     } catch (error) {
       console.error('Error closing order:', error)
+      let description = "An unexpected error occurred"
+      if (error && typeof error === 'object' && 'message' in error) {
+        description = String((error as { message: unknown }).message)
+      }
       toast(t("orders.errors.closeOrderFailed"), {
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        description
       })
     }
   }

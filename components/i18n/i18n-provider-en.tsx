@@ -213,8 +213,13 @@ export const enTranslations = {
     "settings": "Settings",
     "advancedReports": "Advanced Reports",
     "logout": "Logout",
+    "logoutSuccess": "Successfully logged out",
+    "logoutCancelled": "Logout cancelled",
+    "logoutError": "Error logging out",
     "language": "Language",
     "installApp": "Download App",
+    "installSuccess": "App installed successfully",
+    "installError": "Error installing app",
     "languages": {
       "english": "English",
       "spanish": "Spanish", 
@@ -748,17 +753,31 @@ export const enTranslations = {
 
   "forgotPassword": {
     "title": "Forgot Password",
-    "description": "Enter your email to receive password reset instructions",
+    "description": {
+      "initial": "Enter your email to receive password reset instructions",
+      "emailSent": "Password reset instructions sent to your email"
+    },
     "email": "Email",
-    "sendInstructions": "Send Instructions",
+    "button": {
+      "sendInstructions": "Send Instructions",
+      "sending": "Sending...",
+      "tryAnotherEmail": "Try Another Email"
+    },
+    "emailSent": {
+      "checkSpam": "Check your spam folder if you don't see the email"
+    },
     "error": {
       "emailRequired": "Email is required",
+      "authNotInitialized": "Authentication not initialized",
+      "invalidEmail": "Invalid email address",
       "userNotFound": "No account found with this email address",
-      "generic": "Failed to send password reset email"
+      "genericError": "Failed to send password reset email"
     },
     "success": {
       "emailSent": "Password reset instructions sent"
-    }
+    },
+    "loginReminder": "Remember your password?",
+    "loginLink": "Login"
   },
 
   "settings": {

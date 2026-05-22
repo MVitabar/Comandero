@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { useI18n } from "@/components/i18n-provider"
 import { useFirebase } from "@/components/firebase-provider"
 import { useAuth } from "@/components/auth-provider"
-import { useNotifications } from "@/hooks/useNotifications"
 import { collection, query, orderBy, getDocs, doc, deleteDoc } from "firebase/firestore"
 import {toast} from "sonner"
 import { Button } from "@/components/ui/button"
@@ -34,7 +33,6 @@ export default function UsersPage() {
   const { db } = useFirebase()
   const { user: currentUser } = useAuth()
   const { canView, canCreate, canUpdate, canDelete } = usePermissions()
-  const { sendNotification } = useNotifications();
 
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -81,7 +79,10 @@ export default function UsersPage() {
         setLoading(false);
       } catch (error) {
         console.error('Error fetching users:', error);
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        let errorMessage = "Unknown error";
+        if (error && typeof error === 'object' && 'message' in error) {
+          errorMessage = String((error as { message: unknown }).message);
+        }
         toast.error(t("users.errors.fetchUsers", { error: errorMessage }));
         setLoading(false);
       }
@@ -108,16 +109,13 @@ export default function UsersPage() {
       setUsers(prevUsers => prevUsers.filter(u => u.id !== userToDelete.id));
       
       toast.success(t("users.userDeleted", { username: userToDelete.username }));
-      await sendNotification({
-        title: t("users.push.userDeletedTitle"),
-        message: t("users.push.userDeletedMessage", { username: userToDelete.username }),
-        url: window.location.href,
-      });
-      
       setUserToDelete(null);
     } catch (error) {
       console.error("Error deleting user:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      let errorMessage = "Unknown error";
+      if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = String((error as { message: unknown }).message);
+      }
       toast.error(t("users.errors.deleteUser", { error: errorMessage }));
     }
   };
@@ -133,10 +131,10 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header section */}
       <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold">{t("users.pageTitle")}</h1>
+        <h1 className="text-2xl md:text-3xl font-bold">{t("users.pageTitle")}</h1>
         {canCreate('users-management') && (
           <Button className="w-full sm:w-auto" asChild>
             <Link href="/users/add">
@@ -148,7 +146,7 @@ export default function UsersPage() {
       </div>
 
       {/* Search section */}
-      <div className="flex items-center py-4">
+      <div className="flex items-center py-2 md:py-4">
         <div className="relative w-full sm:max-w-sm">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -244,7 +242,7 @@ export default function UsersPage() {
       </div>
 
       {/* Mobile view - Cards */}
-      <div className="grid grid-cols-1 gap-4 md:hidden">
+      <div className="grid grid-cols-1 gap-3 md:hidden">
         {users.length === 0 ? (
           <Card>
             <CardContent className="text-center py-6">
@@ -254,12 +252,12 @@ export default function UsersPage() {
         ) : (
           users.map((user) => (
             <Card key={user.id} className="overflow-hidden">
-              <CardHeader className="space-y-1">
+              <CardHeader className="space-y-1 p-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">
                     {user.username}
                   </CardTitle>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -292,15 +290,15 @@ export default function UsersPage() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="grid gap-2.5">
+              <CardContent className="grid gap-2 p-3 pt-0">
                 <div className="text-sm text-muted-foreground">
                   {user.email}
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">
+                  <Badge variant="outline" className="text-xs">
                     {t(`users.roles.${(user.role || 'default').toLowerCase()}`)}
                   </Badge>
-                  <Badge className="bg-green-100 text-green-800">
+                  <Badge className="bg-green-100 text-green-800 text-xs">
                     {t("users.userStatus.active")}
                   </Badge>
                 </div>

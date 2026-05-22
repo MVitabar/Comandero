@@ -81,8 +81,13 @@ export default function TableMapViewDialog({
         setTables([])
         setIsLoading(false)
         
+        let description = undefined
+        if (error && typeof error === 'object' && 'message' in error) {
+          description = String((error as { message: unknown }).message)
+        }
+        
         toast.error(t('tables.tableMaps.fetchError'), {
-          description: error instanceof Error ? error.message : undefined
+          description
         })
       }
     }
@@ -320,8 +325,13 @@ export default function TableMapViewDialog({
     } catch (error) {
       console.error('❌ Order Creation Error:', error)
       
+      let description = undefined
+      if (error && typeof error === 'object' && 'message' in error) {
+        description = String((error as { message: unknown }).message)
+      }
+      
       toast.error(t('orders.orderCreationError'), {
-        description: error instanceof Error ? error.message : undefined
+        description
       })
 
       throw error

@@ -31,7 +31,7 @@ export function FirebaseError() {
         </Alert>
 
         <div className="text-center">
-          <p className="text-sm text-muted-foreground mb-4">Technical details: {error.message}</p>
+          <p className="text-sm text-muted-foreground mb-4">Technical details: {error && typeof error === 'object' && 'message' in error ? String((error as { message: unknown }).message) : String(error)}</p>
           <Button onClick={handleRefresh}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh Page

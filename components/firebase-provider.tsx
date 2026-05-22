@@ -68,9 +68,11 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('❌ Firebase Initialization Error:', error);
       
-      initializationError = error instanceof Error 
-        ? error 
-        : new Error('Unknown Firebase initialization error')
+      if (error instanceof Error) {
+        initializationError = error;
+      } else {
+        initializationError = new Error('Unknown Firebase initialization error');
+      }
     } finally {
       setFirebaseState(prev => ({
         ...prev,

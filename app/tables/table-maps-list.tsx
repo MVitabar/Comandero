@@ -140,13 +140,14 @@ export default function TableMapsList({ onCreateMap }: TableMapsListProps) {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">{t('tables.tableMaps.title')}</h1>
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
+        <h1 className="text-2xl md:text-2xl font-bold">{t('tables.tableMaps.title')}</h1>
         {onCreateMap && (
           <Button 
             variant="outline" 
             onClick={onCreateMap}
+            className="w-full sm:w-auto"
           >
             <Plus className="mr-2 h-4 w-4" /> {t('tables.tableMaps.createMap')}
           </Button>
@@ -194,23 +195,23 @@ export default function TableMapsList({ onCreateMap }: TableMapsListProps) {
       )}
 
       {/* Vista móvil */}
-      <div className="grid grid-cols-1 gap-4 md:hidden">
+      <div className="grid grid-cols-1 gap-3 md:hidden">
         {tableMaps.map((map) => (
-          <Card key={map.id}>
-            <CardHeader>
-              <CardTitle className="text-lg">{map.name}</CardTitle>
-              <CardDescription>
+          <Card key={map.id} className="w-full">
+            <CardHeader className="p-3 sm:p-6">
+              <CardTitle className="text-base sm:text-lg">{map.name}</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 {map.description || t('tables.tableMaps.noDescription')}
               </CardDescription>
             </CardHeader>
-            <CardFooter className="flex flex-wrap gap-2">
+            <CardFooter className="flex flex-wrap gap-2 p-3 sm:p-6 pt-0">
               <ActionButtons 
                 map={map}
                 onView={handleViewTableMap}
                 onAddTables={handleAddTables}
                 onEdit={handleEditMap}
                 onDelete={setTableToDelete}
-                onConfirmDelete={handleDeleteTableMap}  // Add this prop
+                onConfirmDelete={handleDeleteTableMap}
                 tableToDelete={tableToDelete}
               />
             </CardFooter>

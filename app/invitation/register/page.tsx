@@ -229,9 +229,9 @@ export default function InvitationRegisterPage() {
             } catch (error) {
               console.error("Next.js router navigation failed:", {
                 errorType: typeof error,
-                errorName: error instanceof Error ? error.name : 'Unknown',
-                errorMessage: error instanceof Error ? error.message : 'No message',
-                errorStack: error instanceof Error ? error.stack : 'No stack'
+                errorName: error && typeof error === 'object' && 'name' in error ? String((error as { name: unknown }).name) : 'Unknown',
+                errorMessage: error && typeof error === 'object' && 'message' in error ? String((error as { message: unknown }).message) : 'No message',
+                errorStack: error && typeof error === 'object' && 'stack' in error ? String((error as { stack: unknown }).stack) : 'No stack'
               })
               console.groupEnd()
               
@@ -305,14 +305,26 @@ export default function InvitationRegisterPage() {
       console.error('Error Type:', typeof error)
 
       // Type-safe error handling
+      let errorDetailsMessage = 'An unexpected error occurred'
+      let errorName = 'Unknown Error'
+      let errorStack = undefined
+      
+      if (error && typeof error === 'object' && 'message' in error) {
+        errorDetailsMessage = String((error as { message: unknown }).message)
+        if ('name' in error) {
+          errorName = String((error as { name: unknown }).name)
+        }
+        if ('stack' in error) {
+          errorStack = String((error as { stack: unknown }).stack)
+        }
+      } else if (typeof error === 'string') {
+        errorDetailsMessage = error
+      }
+      
       const errorDetails = {
-        name: error instanceof Error ? error.name : 'Unknown Error',
-        message: error instanceof Error 
-          ? error.message 
-          : typeof error === 'string' 
-            ? error 
-            : 'An unexpected error occurred',
-        stack: error instanceof Error ? error.stack : undefined
+        name: errorName,
+        message: errorDetailsMessage,
+        stack: errorStack
       }
 
       console.error('Error Name:', errorDetails.name)

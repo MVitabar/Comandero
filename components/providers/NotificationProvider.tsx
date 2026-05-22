@@ -1,14 +1,10 @@
-import { useEffect } from 'react';
-import { initializeOneSignal } from '@/lib/onesignal';
+import { ReactNode } from 'react';
 
 export const NotificationProvider = ({ 
   children 
 }: { 
-  children: React.ReactNode 
+  children: ReactNode 
 }) => {
-  useEffect(() => {
-    initializeOneSignal();
-  }, []);
-
+  // OneSignal has been removed - no longer needed
   return <>{children}</>;
 };

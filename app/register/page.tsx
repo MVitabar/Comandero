@@ -16,7 +16,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { PasswordStrengthIndicator } from "@/components/password-strength-indicator"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
-import { useNotifications } from "@/hooks/useNotifications"
 import { UserRole } from "@/types"
 
 export default function RegisterPage() {
@@ -36,7 +35,6 @@ export default function RegisterPage() {
   const { signUp } = useAuth()
   const { t } = useI18n()
   const router = useRouter()
-  const { sendNotification } = useNotifications()
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -107,12 +105,6 @@ export default function RegisterPage() {
       if (result.success) {
         // Notificación in-app con Sonner
         toast.success(t("register.success"))
-        
-        // Notificación push con OneSignal
-        await sendNotification({
-          title: "Nuevo Usuario Registrado",
-          message: `${formData.username} se ha registrado en ${formData.establishmentName}`,
-        })
         
         router.push("/dashboard")
       } else {

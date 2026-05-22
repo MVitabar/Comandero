@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/components/auth-provider"
 import { useFirebase } from "@/components/firebase-provider"
 import { useI18n } from "@/components/i18n-provider"
-import { useNotifications } from "@/hooks/useNotifications"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -19,7 +18,6 @@ export function LanguageSettings() {
   const { user } = useAuth()
   const { db } = useFirebase()
   const { language, setLanguage, t } = useI18n()
-  const { sendNotification } = useNotifications();
 
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -107,11 +105,6 @@ export function LanguageSettings() {
       toast.success(t("settings.language.actions.profileUpdateSuccess"), {
         description: t("settings.language.actions.profileUpdateSuccessDescription"),
       })
-      await sendNotification({
-        title: t("settings.push.languageSavedTitle"),
-        message: t("settings.push.languageSavedMessage", { language }),
-        url: window.location.href,
-      });
     } catch (error) {
       toast.error(t("settings.language.actions.profileUpdateError"), {
         description: t("settings.language.actions.profileUpdateErrorDescription"),

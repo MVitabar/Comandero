@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "^1.2.2",
     "@radix-ui/react-alert-dialog": "^1.1.4",
@@ -59,7 +60,6 @@
     "react-dom": "^19",
     "react-hook-form": "^7.54.1",
     "react-i18next": "^15.4.1",
-    "react-onesignal": "^3.2.2",
     "react-resizable-panels": "^2.1.7",
     "react-to-print": "latest",
     "recharts": "2.15.0",
@@ -73,7 +73,7 @@
   },
   "devDependencies": {
     "@types/i18next": "^13.0.0",
-    "@types/node": "^22",
+    "@types/node": "^20",
     "@types/qrcode.react": "^3.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",

@@ -40,7 +40,6 @@ import * as crypto from 'crypto';
 import { useRouter } from "next/navigation";
 import { OrderDetailsDialog } from "@/components/orders/order-details-dialog"
 import { UserRole } from "@/types/permissions";
-import { useNotifications } from "@/hooks/useNotifications";
 import { AddItemsDialog } from "@/components/orders/add-items-dialog";
 import { filterOrdersByRole } from '@/lib/orderFilters';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -166,7 +165,6 @@ export default function OrdersPage() {
   const { db } = useFirebase()
   const { user } = useAuth()
   const router = useRouter();
-  const { sendNotification } = useNotifications();
   const { canCreate, canUpdate, canDelete } = usePermissions();
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
@@ -301,11 +299,6 @@ export default function OrdersPage() {
           status: translateStatus(validStatus, i18n?.language as LanguageCode)
         })
       )
-      await sendNotification({
-        title: t("orders.push.statusUpdatedTitle"),
-        message: t("orders.push.statusUpdatedMessage", { orderId: selectedOrder.id, status: translateStatus(validStatus, i18n?.language as LanguageCode) }),
-        url: window.location.href,
-      });
     } catch (error) {
       console.error("Error updating order status:", error)
       toast.error(t("orders.error.updateStatusFailed"))
@@ -328,11 +321,6 @@ export default function OrdersPage() {
       setOrders(orders => orders.filter(order => order.id !== selectedOrder.id))
       setIsDeleteDialogOpen(false)
       toast.success(t("orders.success.orderDeleted", { orderId: selectedOrder.id }))
-      await sendNotification({
-        title: t("orders.push.orderDeletedTitle"),
-        message: t("orders.push.orderDeletedMessage", { orderId: selectedOrder.id }),
-        url: window.location.href,
-      });
     } catch (error) {
       toast.error(t("orders.error.deleteOrderFailed"))
       setIsDeleteDialogOpen(false)
@@ -355,11 +343,6 @@ export default function OrdersPage() {
       setOrders(orders => orders.map(order => order.id === selectedOrder.id ? { ...order, status: 'cancelled', updatedAt: new Date() } : order))
       setIsDeleteDialogOpen(false)
       toast.success(t("orders.success.orderCancelled", { orderId: selectedOrder.id }))
-      await sendNotification({
-        title: t("orders.push.orderCancelledTitle"),
-        message: t("orders.push.orderCancelledMessage", { orderId: selectedOrder.id }),
-        url: window.location.href,
-      });
     } catch (error) {
       toast.error(t("orders.error.cancelOrderFailed"))
       setIsDeleteDialogOpen(false)
@@ -446,9 +429,9 @@ export default function OrdersPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-200px)] overflow-hidden">
-      <div className="flex justify-between items-center mb-4 px-4">
-        <h1 className="text-3xl font-bold">{t("orders.title")}</h1>
-        <Button asChild>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 px-4 gap-2 sm:gap-0">
+        <h1 className="text-2xl sm:text-3xl font-bold">{t("orders.title")}</h1>
+        <Button asChild className="w-full sm:w-auto">
           <Link href="/orders/new">
             <Plus className="mr-2 h-4 w-4" />
             {t("orders.newOrder")}
@@ -456,8 +439,8 @@ export default function OrdersPage() {
         </Button>
       </div>
 
-      <div className="flex items-center space-x-2 mb-4 px-4">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-4 px-4">
+        <div className="relative flex-1 w-full max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
@@ -468,7 +451,7 @@ export default function OrdersPage() {
           />
         </div>
         <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as FilterStatus)}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder={t("orders.filter.allStatuses")} />
           </SelectTrigger>
           <SelectContent>
@@ -493,7 +476,7 @@ export default function OrdersPage() {
         ) : (
           <>
             {/* Vista de tarjetas para móviles y desktop: ocupar todo el ancho disponible */}
-            <div className="grid gap-4 grid-cols-1 ">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1">
               {filteredOrders.map((order) => {
                 // Normalizar items para splitOrderItemsByCategory
                 const normalizedItems = normalizeOrderItems(order.items);
@@ -501,23 +484,23 @@ export default function OrdersPage() {
                 
                 return (
                   <Card key={order.id} className="w-full">
-                    <CardHeader className="flex flex-row items-center justify-end space-y-0 pb-2">
+                    <CardHeader className="flex flex-row items-center justify-end space-y-0 pb-2 p-3 sm:p-6">
                       <Badge variant={getStatusBadgeVariant(order.status as BaseOrderStatus)}>
                         {translateStatus(order.status, i18n?.language as LanguageCode)}
                       </Badge>
                     </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 gap-2">
+                    <CardContent className="p-3 sm:p-6">
+                      <div className="grid grid-cols-2 gap-2 sm:gap-3">
                         <div>
                           <p className="text-xs text-muted-foreground">{t("commons.tableNumber")}</p>
-                          <p>{order.tableNumber 
+                          <p className="text-sm sm:text-base">{order.tableNumber 
                             ? `${getOrderTypeLabel(order.orderType)} ${order.tableNumber}` 
                             : getOrderTypeLabel(order.orderType)}</p>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">{t("orders.errors.headers.waiter")}</p>
                           <div>
-                            <p className="text-base font-semibold">
+                            <p className="text-sm sm:text-base font-semibold">
                               {((order.createdBy?.username || 
                                order.createdBy?.email?.split('@')[0] || 
                                t("orders.genericUser")).charAt(0).toUpperCase() + 
@@ -536,10 +519,10 @@ export default function OrdersPage() {
                           {/* Reemplazado: Detalle de ítems por secciones */}
                           {(canViewBothSections(user?.role) || canViewOnlyFood(user?.role)) && (
                             <>
-                              <h4 className="font-semibold mb-1">{t("orders.types.food")}</h4>
-                              <div className="flex flex-wrap gap-2 items-center">
+                              <h4 className="font-semibold mb-1 text-sm sm:text-base">{t("orders.types.food")}</h4>
+                              <div className="flex flex-wrap gap-1 sm:gap-2 items-center">
                                 {comidas.map((item) => (
-                                  <span key={item.id} className="text-sm bg-muted rounded-md px-2 py-1">
+                                  <span key={item.id} className="text-xs sm:text-sm bg-muted rounded-md px-2 py-1">
                                     {item.name} x{item.quantity}
                                   </span>
                                 ))}
@@ -549,10 +532,10 @@ export default function OrdersPage() {
                           
                           {(canViewBothSections(user?.role) || canViewOnlyDrinks(user?.role)) && (
                             <>
-                              <h4 className="font-semibold mb-1 mt-2">{t("orders.types.drinks")}</h4>
-                              <div className="flex flex-wrap gap-2 items-center">
+                              <h4 className="font-semibold mb-1 mt-2 text-sm sm:text-base">{t("orders.types.drinks")}</h4>
+                              <div className="flex flex-wrap gap-1 sm:gap-2 items-center">
                                 {bebidas.map((item) => (
-                                  <span key={item.id} className="text-sm bg-muted rounded-md px-2 py-1">
+                                  <span key={item.id} className="text-xs sm:text-sm bg-muted rounded-md px-2 py-1">
                                     {item.name} x{item.quantity}
                                   </span>
                                 ))}
@@ -562,24 +545,24 @@ export default function OrdersPage() {
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">{t("commons.table.headers.price")}</p>
-                          <p>R$ {order.total.toFixed(2)}</p>
+                          <p className="text-sm sm:text-base">R$ {order.total.toFixed(2)}</p>
                         </div>
                         <div className="flex items-center justify-end">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 sm:gap-2">
                             <Button variant="ghost" size="icon" onClick={() => handleViewOrder(order)} title="Ver pedido">
-                              <Eye className="h-5 w-5" />
+                              <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
                             </Button>
                             {canCreate('orders') && (
                               <Button variant="ghost" size="icon" onClick={() => {
                                 setSelectedOrder(order);
                                 setIsAddItemsDialogOpen(true);
                               }} title="Agregar ítems">
-                                <PlusSquare className="h-5 w-5" />
+                                <PlusSquare className="h-4 w-4 sm:h-5 sm:w-5" />
                               </Button>
                             )}
                             {canUpdate('orders') && (
                               <Button variant="ghost" size="icon" onClick={() => openStatusDialog(order)} title="Cambiar status">
-                                <Repeat className="h-5 w-5" />
+                                <Repeat className="h-4 w-4 sm:h-5 sm:w-5" />
                               </Button>
                             )}
                             {canDelete('orders') && (
@@ -587,7 +570,7 @@ export default function OrdersPage() {
                                 setSelectedOrder(order);
                                 setIsDeleteDialogOpen(true);
                               }} title="Eliminar">
-                                <Trash className="h-5 w-5" />
+                                <Trash className="h-4 w-4 sm:h-5 sm:w-5" />
                               </Button>
                             )}
                           </div>

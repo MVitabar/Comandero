@@ -71,7 +71,7 @@ export default function ForgotPasswordPage() {
             <Button variant="ghost" size="icon" onClick={() => router.push("/login")} className="h-8 w-8">
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <CardTitle>{t("forgotPassword")}</CardTitle>
+            <CardTitle>{t("forgotPassword.title")}</CardTitle>
           </div>
           <CardDescription>
             {emailSent

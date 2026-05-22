@@ -51,14 +51,12 @@ import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@radix-ui/react-accordion"
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { useNotifications } from "@/hooks/useNotifications"
 import { toast } from "sonner"
 import * as XLSX from "xlsx"
 import { Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export default function DashboardPage() {
-  const { sendNotification } = useNotifications()
   const { t, i18n } = useI18n()
   const { db } = useFirebase()
   const { user } = useAuth()
@@ -600,17 +598,14 @@ export default function DashboardPage() {
       })
     } catch (error: unknown) {
       // Type guard to check if error is an Error object
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : typeof error === 'string' 
-          ? error 
-          : 'Unknown error'
+      let errorMessage = 'Unknown error'
+      if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = String((error as { message: unknown }).message)
+      } else if (typeof error === 'string') {
+        errorMessage = error
+      }
       
       console.error("Dashboard data fetch error:", errorMessage)
-      sendNotification({
-        title: t('notifications.dashboardFetchError'),
-        message: errorMessage
-      })
     }
   }
 
@@ -659,24 +654,12 @@ export default function DashboardPage() {
     // Notificar cuando hay un crecimiento negativo
     if (dashboardData.monthlyGrowth < 0) {
       toast.warning("¡Alerta de ventas!")
-      
-      sendNotification({
-        title: "Alerta de Rendimiento",
-        message: `Las ventas han disminuido un ${Math.abs(dashboardData.monthlyGrowth)}% este mes`,
-        url: '/dashboard'
-      })
     }
 
     // Notificar metas alcanzadas
     const targetSales = 10000; // Define a target sales value
     if (dashboardData.totalSales > targetSales) {
       toast.success("¡Meta alcanzada!")
-      
-      sendNotification({
-        title: "¡Meta Alcanzada!",
-        message: "Has superado la meta de ventas mensual",
-        url: '/dashboard'
-      })
     }
   }, [dashboardData])
 
@@ -759,13 +742,13 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Personalized Welcome Section */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">
+      <div className="mb-4 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold">
           {getGreeting()}, {userName}!
         </h1>
-        <p className="text-muted-foreground mt-2">
+        <p className="text-sm md:text-base text-muted-foreground mt-2">
           {t("dashboard.welcomeMessage", { 
             restaurantName: user?.establishmentId || user?.restaurantName || t("dashboard.yourRestaurant") 
           })}
@@ -773,7 +756,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Dashboard Grid Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Sales Overview - Top Left */}
         <Card className="w-full">
           <CardHeader>
@@ -828,11 +811,11 @@ export default function DashboardPage() {
         </Card>
 
         {/* Inventory Overview - Spanning 2 Columns */}
-        <div className="w-full md:col-span-2">
+        <div className="w-full sm:col-span-2 lg:col-span-3">
           <Card className="w-full">
-            <CardHeader className="p-4 sm:p-6">
+            <CardHeader className="p-3 sm:p-4 md:p-6">
               <div className="flex flex-col justify-between items-center mb-4">
-                <CardTitle className="text-lg sm:text-xl font-semibold">
+                <CardTitle className="text-base sm:text-lg md:text-xl font-semibold">
                   {t("dashboard.inventory.title")}
                 </CardTitle>
                 <Tabs 
@@ -844,7 +827,7 @@ export default function DashboardPage() {
                   }}
                   className="w-full sm:w-auto"
                 >
-                  <TabsList className="grid grid-cols-3 h-10 sm:h-auto">
+                  <TabsList className="grid grid-cols-3 h-9 sm:h-10 md:h-auto">
                     {[
                       { value: 'totals', label: t("dashboard.inventory.totals") },
                       { value: 'by_category', label: t("dashboard.inventory.byCategory") },
@@ -860,20 +843,20 @@ export default function DashboardPage() {
                     ))}
                   </TabsList>
 
-                  <TabsContent value="totals" className="mt-4 sm:mt-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <TabsContent value="totals" className="mt-3 sm:mt-4 md:mt-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                       {inventoryStatCards.map((stat, index) => (
                         <Card 
                           key={index} 
                           className="shadow-sm hover:shadow-md transition-shadow w-full"
                         >
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">
+                          <CardHeader className="pb-2 p-3 sm:p-4">
+                            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
                               {stat.label}
                             </CardTitle>
                           </CardHeader>
-                          <CardContent>
-                            <div className={`text-xl sm:text-2xl font-bold ${stat.className}`}>
+                          <CardContent className="p-3 sm:p-4">
+                            <div className={`text-lg sm:text-xl md:text-2xl font-bold ${stat.className}`}>
                               {stat.value}
                             </div>
                           </CardContent>
@@ -882,8 +865,8 @@ export default function DashboardPage() {
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="by_category" className="mt-4 sm:mt-6">
-                    <div className="space-y-4">
+                  <TabsContent value="by_category" className="mt-3 sm:mt-4 md:mt-6">
+                    <div className="space-y-3 sm:space-y-4">
                       {Object.entries(dashboardData.inventoryItems.details.reduce((acc, item) => {
                         const category = item.category || 'uncategorized'
                         
@@ -914,8 +897,8 @@ export default function DashboardPage() {
                         criticalItems: number,
                         warningItems: number,
                         healthyItems: number
-                      }>)
-                      ).map(([category, data]) => (
+                      }>))
+                      .map(([category, data]) => (
                         <Accordion 
                           type="single" 
                           collapsible 
@@ -923,14 +906,14 @@ export default function DashboardPage() {
                           className="border rounded-lg bg-white shadow-sm w-full"
                         >
                           <AccordionItem value={category} className="border-b last:border-b-0">
-                            <AccordionTrigger className="px-4 py-3 hover:bg-muted/50 transition-colors">
+                            <AccordionTrigger className="px-3 sm:px-4 py-2 sm:py-3 hover:bg-muted/50 transition-colors">
                               <div className="flex flex-col w-full">
                                 <div className="flex justify-between items-center mb-2">
-                                  <span className="font-semibold text-sm sm:text-base text-gray-800">
+                                  <span className="font-semibold text-xs sm:text-sm md:text-base text-gray-800">
                                     {getCategoryName(category)}
                                   </span>
                                 </div>
-                                <div className="flex space-x-2">
+                                <div className="flex flex-wrap gap-1 sm:gap-2">
                                   <Badge variant="outline" className="text-xs">
                                     {t("dashboard.inventory.total")}: {data.total ?? 0}
                                   </Badge>
@@ -951,56 +934,58 @@ export default function DashboardPage() {
                               </div>
                             </AccordionTrigger>
                             <AccordionContent className="p-0">
-                              <Table>
-                                <TableHeader className="bg-gray-50">
-                                  <TableRow>
-                                    {[
-                                      "itemName", 
-                                      "total", 
-                                      "inStock", 
-                                      "status"
-                                    ].map(key => (
-                                      <TableHead 
-                                        key={key} 
-                                        className="text-xs sm:text-sm font-semibold text-gray-600 py-3"
-                                      >
-                                        {key === 'status' 
-                                          ? t('dashboard.inventory.status.label') 
-                                          : t(`dashboard.inventory.${key}`)}
-                                      </TableHead>
-                                    ))}
-                                  </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                  {dashboardData.inventoryItems.details.filter(item => item.category === category).map(item => (
-                                    <TableRow 
-                                      key={item.id} 
-                                      className="hover:bg-gray-100 transition-colors"
-                                    >
-                                      <TableCell className="text-xs sm:text-sm text-gray-800">
-                                        {item.name}
-                                      </TableCell>
-                                      <TableCell className="text-xs sm:text-sm text-gray-700">
-                                        {item.total}
-                                      </TableCell>
-                                      <TableCell className="text-xs sm:text-sm text-gray-700">
-                                        {item.inStock}
-                                      </TableCell>
-                                      <TableCell>
-                                        <Badge 
-                                          variant={
-                                            item?.status === 'critical' ? 'destructive' :
-                                            item?.status === 'warning' ? 'default' : 'secondary'
-                                          }
-                                          className="text-xs"
+                              <div className="overflow-x-auto">
+                                <Table>
+                                  <TableHeader className="bg-gray-50">
+                                    <TableRow>
+                                      {[
+                                        "itemName", 
+                                        "total", 
+                                        "inStock", 
+                                        "status"
+                                      ].map(key => (
+                                        <TableHead 
+                                          key={key} 
+                                          className="text-xs sm:text-sm font-semibold text-gray-600 py-2 sm:py-3 px-2 sm:px-4"
                                         >
-                                          {t(`dashboard.inventory.status.${item?.status || 'default'}`)}
-                                        </Badge>
-                                      </TableCell>
+                                          {key === 'status' 
+                                            ? t('dashboard.inventory.status.label') 
+                                            : t(`dashboard.inventory.${key}`)}
+                                        </TableHead>
+                                      ))}
                                     </TableRow>
-                                  ))}
-                                </TableBody>
-                              </Table>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {dashboardData.inventoryItems.details.filter(item => item.category === category).map(item => (
+                                      <TableRow 
+                                        key={item.id} 
+                                        className="hover:bg-gray-100 transition-colors"
+                                      >
+                                        <TableCell className="text-xs sm:text-sm text-gray-800 px-2 sm:px-4 py-2">
+                                          {item.name}
+                                        </TableCell>
+                                        <TableCell className="text-xs sm:text-sm text-gray-700 px-2 sm:px-4 py-2">
+                                          {item.total}
+                                        </TableCell>
+                                        <TableCell className="text-xs sm:text-sm text-gray-700 px-2 sm:px-4 py-2">
+                                          {item.inStock}
+                                        </TableCell>
+                                        <TableCell className="px-2 sm:px-4 py-2">
+                                          <Badge 
+                                            variant={
+                                              item?.status === 'critical' ? 'destructive' :
+                                              item?.status === 'warning' ? 'default' : 'secondary'
+                                            }
+                                            className="text-xs"
+                                          >
+                                            {t(`dashboard.inventory.status.${item?.status || 'default'}`)}
+                                          </Badge>
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </div>
                             </AccordionContent>
                           </AccordionItem>
                         </Accordion>
@@ -1008,9 +993,9 @@ export default function DashboardPage() {
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="by_item" className="w-full mt-4 sm:mt-6">
+                  <TabsContent value="by_item" className="w-full mt-3 sm:mt-4 md:mt-6">
                     {dashboardData.inventoryItems.details.length > 0 ? (
-                      <div className="space-y-4">
+                      <div className="space-y-3 sm:space-y-4">
                         {dashboardData.inventoryItems.details.map((item) => (
                           <Accordion 
                             type="single" 
@@ -1019,14 +1004,14 @@ export default function DashboardPage() {
                             className="border rounded-lg bg-white shadow-sm w-full"
                           >
                             <AccordionItem value={item.id || 'unknown-item'} className="border-b last:border-b-0">
-                              <AccordionTrigger className="px-4 py-3 hover:bg-muted/50 transition-colors">
+                              <AccordionTrigger className="px-3 sm:px-4 py-2 sm:py-3 hover:bg-muted/50 transition-colors">
                                 <div className="flex flex-col w-full">
                                   <div className="flex justify-between items-center mb-2">
-                                    <span className="font-semibold text-sm sm:text-base text-gray-800">
+                                    <span className="font-semibold text-xs sm:text-sm md:text-base text-gray-800">
                                       {item.name || 'Unknown Item'}
                                     </span>
                                   </div>
-                                  <div className="flex space-x-2">
+                                  <div className="flex flex-wrap gap-1 sm:gap-2">
                                     <Badge variant="outline" className="text-xs">
                                       {t("dashboard.inventory.total")}: {item.total ?? 0}
                                     </Badge>
@@ -1053,49 +1038,51 @@ export default function DashboardPage() {
                                 </div>
                               </AccordionTrigger>
                               <AccordionContent className="p-0">
-                                <Table>
-                                  <TableHeader className="bg-gray-50">
-                                    <TableRow>
-                                      {[
-                                        "category", 
-                                        "total", 
-                                        "inStock", 
-                                        "status"
-                                      ].map(key => (
-                                        <TableHead 
-                                          key={key} 
-                                          className="text-xs sm:text-sm font-semibold text-gray-600 py-3"
-                                        >
-                                          {t(`dashboard.inventory.${key}`)}
-                                        </TableHead>
-                                      ))}
-                                    </TableRow>
-                                  </TableHeader>
-                                  <TableBody>
-                                    <TableRow className="hover:bg-gray-100 transition-colors">
-                                      <TableCell className="text-xs sm:text-sm text-gray-700">
-                                        {getCategoryName(item.category, item.categoryName)}
-                                      </TableCell>
-                                      <TableCell className="text-xs sm:text-sm text-gray-700">
-                                        {item.total}
-                                      </TableCell>
-                                      <TableCell className="text-xs sm:text-sm text-gray-700">
-                                        {item.inStock}
-                                      </TableCell>
-                                      <TableCell>
-                                        <Badge 
-                                          variant={
-                                            item?.status === 'critical' ? 'destructive' :
-                                            item?.status === 'warning' ? 'default' : 'secondary'
-                                          }
-                                          className="text-xs"
-                                        >
-                                          {t(`dashboard.inventory.status.${item?.status || 'default'}`)}
-                                        </Badge>
-                                      </TableCell>
-                                    </TableRow>
-                                  </TableBody>
-                                </Table>
+                                <div className="overflow-x-auto">
+                                  <Table>
+                                    <TableHeader className="bg-gray-50">
+                                      <TableRow>
+                                        {[
+                                          "category", 
+                                          "total", 
+                                          "inStock", 
+                                          "status"
+                                        ].map(key => (
+                                          <TableHead 
+                                            key={key} 
+                                            className="text-xs sm:text-sm font-semibold text-gray-600 py-2 sm:py-3 px-2 sm:px-4"
+                                          >
+                                            {t(`dashboard.inventory.${key}`)}
+                                          </TableHead>
+                                        ))}
+                                      </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                      <TableRow className="hover:bg-gray-100 transition-colors">
+                                        <TableCell className="text-xs sm:text-sm text-gray-700 px-2 sm:px-4 py-2">
+                                          {getCategoryName(item.category, item.categoryName)}
+                                        </TableCell>
+                                        <TableCell className="text-xs sm:text-sm text-gray-700 px-2 sm:px-4 py-2">
+                                          {item.total}
+                                        </TableCell>
+                                        <TableCell className="text-xs sm:text-sm text-gray-700 px-2 sm:px-4 py-2">
+                                          {item.inStock}
+                                        </TableCell>
+                                        <TableCell className="px-2 sm:px-4 py-2">
+                                          <Badge 
+                                            variant={
+                                              item?.status === 'critical' ? 'destructive' :
+                                              item?.status === 'warning' ? 'default' : 'secondary'
+                                            }
+                                            className="text-xs"
+                                          >
+                                            {t(`dashboard.inventory.status.${item?.status || 'default'}`)}
+                                          </Badge>
+                                        </TableCell>
+                                      </TableRow>
+                                    </TableBody>
+                                  </Table>
+                                </div>
                               </AccordionContent>
                             </AccordionItem>
                           </Accordion>
@@ -1137,21 +1124,21 @@ export default function DashboardPage() {
         </Card>
 
         {/* Sales by Category */}
-        <Card className="w-full h-[500px]  md:col-span-2">
-          <CardHeader>
-            <CardTitle>{t('dashboard.salesByCategory.title')}</CardTitle>
-            <CardDescription>{t('dashboard.salesByCategory.description')}</CardDescription>
+        <Card className="w-full h-auto sm:h-[500px] lg:col-span-2">
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-sm sm:text-base md:text-lg">{t('dashboard.salesByCategory.title')}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">{t('dashboard.salesByCategory.description')}</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-4 md:p-6">
             {dashboardData.salesByCategory && dashboardData.salesByCategory.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={250}>
                 <PieChart cy="50%" cx="50%" >
                   <Pie
                     data={dashboardData.salesByCategory}
                     cx="50%"
                     cy="50%"
-                    innerRadius={70}
-                    outerRadius={100}
+                    innerRadius={50}
+                    outerRadius={80}
                     paddingAngle={0}
                     labelLine={false}
                     fill="#8884d8"
@@ -1237,22 +1224,22 @@ export default function DashboardPage() {
         </Card>
 
         {/* Sales List */}
-        <div className="container w-full md:col-span-3 mx-auto px-2  sm:px-4 lg:px-6">
-          <div className="grid grid-cols-1 gap-4">
+        <div className="container w-full lg:col-span-3 mx-auto px-2 sm:px-4 lg:px-6">
+          <div className="grid grid-cols-1 gap-3 sm:gap-4">
             <Card className="w-full">
-              <CardHeader className="p-2 sm:p-4">
-                <CardTitle className="text-sm sm:text-base">{t('dashboard.salesList.title')}</CardTitle>
+              <CardHeader className="p-2 sm:p-3 md:p-4">
+                <CardTitle className="text-xs sm:text-sm md:text-base">{t('dashboard.salesList.title')}</CardTitle>
               </CardHeader>
-              <CardContent className="p-2 sm:p-4">
+              <CardContent className="p-2 sm:p-3 md:p-4">
                 {dashboardData.salesList.length > 0 ? (
-                  <div className="overflow-x-auto max-h-[400px]">
+                  <div className="overflow-x-auto max-h-[300px] sm:max-h-[400px]">
                     <table className="w-full text-xs sm:text-sm">
                       <thead className="sticky top-0 bg-white z-10">
                         <tr className="border-b">
-                          <th className="px-1 sm:px-4 py-2 text-left text-xs sm:text-sm">{t('dashboard.salesList.columns.date')}</th>
-                          <th className="px-1 sm:px-4 py-2 text-left text-xs sm:text-sm hidden sm:table-cell">{t('dashboard.salesList.columns.orderId')}</th>
-                          <th className="px-1 sm:px-4 py-2 text-right text-xs sm:text-sm">{t('dashboard.salesList.columns.total')}</th>
-                          <th className="px-1 sm:px-4 py-2 text-left text-xs sm:text-sm hidden md:table-cell">
+                          <th className="px-1 sm:px-2 md:px-4 py-2 text-left text-xs sm:text-sm">{t('dashboard.salesList.columns.date')}</th>
+                          <th className="px-1 sm:px-2 md:px-4 py-2 text-left text-xs sm:text-sm hidden sm:table-cell">{t('dashboard.salesList.columns.orderId')}</th>
+                          <th className="px-1 sm:px-2 md:px-4 py-2 text-right text-xs sm:text-sm">{t('dashboard.salesList.columns.total')}</th>
+                          <th className="px-1 sm:px-2 md:px-4 py-2 text-left text-xs sm:text-sm hidden md:table-cell">
                             <Badge 
                               variant={
                                 'cash' === 'cash' ? 'default' :
@@ -1270,21 +1257,21 @@ export default function DashboardPage() {
                       <tbody>
                         {dashboardData.salesList.map((sale) => (
                           <tr key={sale.orderId} className="border-b last:border-b-0">
-                            <td className="px-1 sm:px-4 py-2 text-xs sm:text-sm">
+                            <td className="px-1 sm:px-2 md:px-4 py-2 text-xs sm:text-sm">
                               {new Date(sale.date).toLocaleDateString(i18n.language, {
                                 year: 'numeric',
                                 month: 'short',
                                 day: 'numeric'
                               })}
                             </td>
-                            <td className="px-1 sm:px-4 py-2 text-xs sm:text-sm hidden sm:table-cell">{sale.orderId}</td>
-                            <td className="px-1 sm:px-4 py-2 text-right text-xs sm:text-sm">
+                            <td className="px-1 sm:px-2 md:px-4 py-2 text-xs sm:text-sm hidden sm:table-cell">{sale.orderId}</td>
+                            <td className="px-1 sm:px-2 md:px-4 py-2 text-right text-xs sm:text-sm">
                               {sale.total.toLocaleString(i18n.language, { 
                                 style: 'currency', 
                                 currency: user?.currency || 'USD' 
                               })}
                             </td>
-                            <td className="px-1 sm:px-4 py-2 text-xs sm:text-sm hidden md:table-cell">
+                            <td className="px-1 sm:px-2 md:px-4 py-2 text-xs sm:text-sm hidden md:table-cell">
                               <Badge 
                                 variant={
                                   sale.paymentMethod === 'cash' ? 'default' :
@@ -1314,7 +1301,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Additional Insights */}
-        <div className="w-full md:col-span-3">
+        <div className="w-full lg:col-span-3">
         <Card>
           <CardHeader>
             <CardTitle>{t('dashboard.additionalInsights.title')}</CardTitle>

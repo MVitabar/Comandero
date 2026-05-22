@@ -45,7 +45,7 @@ export default function FirebaseTestPage() {
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Error</AlertTitle>
-                <AlertDescription>{error.message}</AlertDescription>
+                <AlertDescription>{String(error)}</AlertDescription>
               </Alert>
             )}
 

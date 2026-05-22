@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { UserRole } from "@/types/permissions"
-import { useNotifications } from "@/hooks/useNotifications"
 import { useEffect } from "react"
 import { collection, addDoc } from 'firebase/firestore';
 import { useFirebase } from "@/components/firebase-provider";
@@ -24,8 +23,7 @@ export default function AddTeamMemberPage() {
   const [invitationLink, setInvitationLink] = useState<string>('');
 
   const { user } = useAuth()
-  const { db } = useFirebase(); // Agregamos esta línea
-  const { sendNotification } = useNotifications();
+  const { db } = useFirebase();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target

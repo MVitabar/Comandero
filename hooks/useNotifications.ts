@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import OneSignal from 'react-onesignal';
 
 export const useNotifications = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -11,14 +10,8 @@ export const useNotifications = () => {
       const status = Notification.permission;
       setIsSubscribed(status === 'granted');
       
-      // Si prefieres el estado real de OneSignal, descomenta la siguiente línea:
-      // const isEnabled = await OneSignal.isPushNotificationsEnabled();
-      // setIsSubscribed(isEnabled);
-
-      // Usa la API clásica de OneSignal para obtener el ID del usuario (Player ID)
-      // @ts-ignore
-      const id = await OneSignal.getUserId();
-      setUserId(id);
+      // OneSignal has been removed - userId is no longer available
+      setUserId(null);
     };
 
     checkSubscription();
@@ -30,15 +23,16 @@ export const useNotifications = () => {
     url?: string;
   }) => {
     try {
-      // @ts-ignore
-      await OneSignal.sendSelfNotification(
-        data.title,
-        data.message,
-        data.url || window.location.origin,
-        '/icon.png'
-      );
+      // OneSignal has been removed - using browser notification API as fallback
+      if (Notification.permission === 'granted') {
+        new Notification(data.title, {
+          body: data.message,
+          icon: '/icon.png',
+          data: { url: data.url }
+        });
+      }
     } catch (error) {
-      // Puedes mostrar un toast si lo deseas
+      // Silently fail - notifications are optional
     }
   };
 

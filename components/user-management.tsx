@@ -15,13 +15,11 @@ import { Button } from '@/components/ui/button'
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from '@/components/ui/table'
 import { User } from '@/types'
 import { toast } from "sonner"
-import { useNotifications } from "@/hooks/useNotifications"
 import { useTranslation } from 'react-i18next';
 
 export function UserManagement() {
   const { canView, canDo } = usePermissions() as { canView: (module: string | number) => boolean; canDo?: (module: string | number, action: string) => boolean }
   const { db } = useFirebase()
-  const { sendNotification } = useNotifications();
   const { t } = useTranslation();
   
   // Especificar el tipo de estado como User[]

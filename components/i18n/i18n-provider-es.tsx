@@ -213,8 +213,13 @@ export const esTranslations = {
     "settings": "Configuración",
     "advancedReports": "Informes avanzados",
     "logout": "Cerrar sesión",
+    "logoutSuccess": "Sesión cerrada correctamente",
+    "logoutCancelled": "Cierre de sesión cancelado",
+    "logoutError": "Error al cerrar sesión",
     "language": "Idioma",
     "installApp": "Descargar App",
+    "installSuccess": "App instalada correctamente",
+    "installError": "Error al instalar la app",
     "languages": {
       "english": "Inglés",
       "spanish": "Español", 
@@ -748,17 +753,31 @@ export const esTranslations = {
 
   "forgotPassword": {
     "title": "Olvidaste tu contraseña",
-    "description": "Introduce tu email para recibir instrucciones de restablecimiento de contraseña",
+    "description": {
+      "initial": "Introduce tu email para recibir instrucciones de restablecimiento de contraseña",
+      "emailSent": "Instrucciones de restablecimiento enviadas a tu email"
+    },
     "email": "Email",
-    "sendInstructions": "Enviar instrucciones",
+    "button": {
+      "sendInstructions": "Enviar instrucciones",
+      "sending": "Enviando...",
+      "tryAnotherEmail": "Probar otro email"
+    },
+    "emailSent": {
+      "checkSpam": "Revisa tu carpeta de spam si no ves el email"
+    },
     "error": {
       "emailRequired": "Email es requerido",
-      "userNotFound": "No account found with this email address",
-      "generic": "Failed to send password reset email"
+      "authNotInitialized": "Autenticación no inicializada",
+      "invalidEmail": "Dirección de email inválida",
+      "userNotFound": "No se encontró cuenta con este email",
+      "genericError": "Error al enviar email de restablecimiento"
     },
     "success": {
-      "emailSent": "Password reset instructions sent"
-    }
+      "emailSent": "Instrucciones de restablecimiento enviadas"
+    },
+    "loginReminder": "¿Recuerdas tu contraseña?",
+    "loginLink": "Iniciar sesión"
   },
 
   "settings": {

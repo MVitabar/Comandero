@@ -102,11 +102,11 @@ export default function SettingsPage() {
   const allowedTabs = availableTabs.filter(tab => tab.permission)
 
   return (
-    <div className="container mx-auto py-6">
-      <h1 className="text-2xl font-bold mb-6">{t("settings.title")}</h1>
+    <div className="container mx-auto p-4 md:p-6 py-4 md:py-6">
+      <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">{t("settings.title")}</h1>
 
       {/* Mobile Dropdown */}
-      <div className="md:hidden mb-6">
+      <div className="md:hidden mb-4">
         <Select value={activeTab} onValueChange={setActiveTab}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder={t("settings.selectTab")} />
@@ -143,7 +143,7 @@ export default function SettingsPage() {
         {/* Tab Content - Same for both mobile and desktop */}
         {allowedTabs.map(tab => (
           <TabsContent key={tab.id} value={tab.id}>
-            <Card className="p-6">
+            <Card className="p-4 md:p-6">
               {tab.content}
             </Card>
           </TabsContent>

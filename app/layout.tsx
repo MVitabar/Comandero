@@ -94,7 +94,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   }
 
   // Para otras rutas públicas
-  const publicPages = ["/", "/login", "/register", "/invitation/register"]
+  const publicPages = ["/", "/login", "/register", "/invitation/register", "/forgot-password"]
   const isPublicPage = publicPages.some(page => pathname === page)
 
   // Si no está autenticado y no es una página pública, redirigir al login

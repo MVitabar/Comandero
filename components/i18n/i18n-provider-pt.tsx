@@ -213,8 +213,13 @@ export const ptTranslations = {
     "settings": "Configurações",
     "advancedReports": "Relatórios Avançados",
     "logout": "Logout",
+    "logoutSuccess": "Logout realizado com sucesso",
+    "logoutCancelled": "Logout cancelado",
+    "logoutError": "Erro ao fazer logout",
     "language": "Idioma",
     "installApp": "Instalar App",
+    "installSuccess": "App instalada com sucesso",
+    "installError": "Erro ao instalar app",
     "languages": {
       "english": "Inglês",
       "spanish": "Espanhol", 
@@ -748,17 +753,31 @@ export const ptTranslations = {
 
   "forgotPassword": {
     "title": "Esqueceu sua senha?",
-    "description": "Insira seu email para receber instruções de reset de senha",
+    "description": {
+      "initial": "Insira seu email para receber instruções de reset de senha",
+      "emailSent": "Instruções de reset de senha enviadas para seu email"
+    },
     "email": "Email",
-    "sendInstructions": "Enviar Instruções",
+    "button": {
+      "sendInstructions": "Enviar Instruções",
+      "sending": "Enviando...",
+      "tryAnotherEmail": "Tentar Outro Email"
+    },
+    "emailSent": {
+      "checkSpam": "Verifique sua pasta de spam se não vir o email"
+    },
     "error": {
       "emailRequired": "Email obrigatorio",
+      "authNotInitialized": "Autenticação não inicializada",
+      "invalidEmail": "Endereço de email inválido",
       "userNotFound": "Nenhuma conta encontrada com este endereço de email",
-      "generic": "Falha ao enviar email de reset de senha"
+      "genericError": "Falha ao enviar email de reset de senha"
     },
     "success": {
       "emailSent": "Instruções de reset de senha enviadas"
-    }
+    },
+    "loginReminder": "Lembra sua senha?",
+    "loginLink": "Login"
   },
 
   "settings": {

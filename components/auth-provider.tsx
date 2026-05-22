@@ -224,12 +224,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Complete Sign Up Error:', error);
       
       let errorMessage = "An unexpected error occurred";
-      if (error instanceof Error) {
-        console.error('Error Name:', error.name);
-        console.error('Error Message:', error.message);
-        console.error('Error Stack:', error.stack);
+      let errorName = "Unknown";
+      let errorStack = "No stack";
+      
+      if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = String((error as { message: unknown }).message);
+        if ('name' in error) {
+          errorName = String((error as { name: unknown }).name);
+        }
+        if ('stack' in error) {
+          errorStack = String((error as { stack: unknown }).stack);
+        }
+        
+        console.error('Error Name:', errorName);
+        console.error('Error Message:', errorMessage);
+        console.error('Error Stack:', errorStack);
 
-        switch (error.message) {
+        switch (errorMessage) {
           case 'auth/email-already-in-use':
             errorMessage = "Email is already registered";
             break;
@@ -240,7 +251,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             errorMessage = "Password is too weak";
             break;
           default:
-            errorMessage = error.message;
+            // Keep the original error message
+            break;
         }
       }
 
@@ -669,8 +681,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
     } catch (error) {
       let errorMessage = "An unexpected error occurred";
-      if (error instanceof Error) {
-        switch (error.message) {
+      if (error && typeof error === 'object' && 'message' in error) {
+        const errorMsg = String((error as { message: unknown }).message);
+        
+        switch (errorMsg) {
           case 'auth/user-not-found':
             errorMessage = "No user found with this email";
             break;
@@ -687,7 +701,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             errorMessage = "This account has been disabled";
             break;
           default:
-            errorMessage = error.message;
+            errorMessage = errorMsg;
         }
       }
 
@@ -742,9 +756,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         success: true
       };
     } catch (error) {
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : "An unexpected error occurred during logout";
+      let errorMessage = "An unexpected error occurred during logout";
+      if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = String((error as { message: unknown }).message);
+      }
 
       toast.error(t("auth.logout.error", { username: errorMessage }))
 
