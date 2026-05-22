@@ -90,11 +90,7 @@ export default function AddTeamMemberPage() {
       setInvitationLink(invitationLink);
 
       toast.success("Invitación generada exitosamente");
-      await sendNotification({
-        title: "Nueva invitación creada",
-        message: `Se generó una invitación para ${formData.username}`,
-        url: window.location.href,
-      });
+      new Notification("Invitación generada exitosamente");
       
       // Limpiar el formulario
       setFormData({
