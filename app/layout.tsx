@@ -20,6 +20,7 @@ import "./globals.css"
 import { PermissionsProvider } from "@/components/permissions-provider"
 import { Metadata } from "next"
 import { InstallPromptProvider } from "@/contexts/InstallPromptContext";
+import { Analytics } from '@vercel/analytics/next';
 const inter = Inter({ subsets: ["latin"] })
 
 export default function RootLayout({
@@ -49,6 +50,7 @@ export default function RootLayout({
             </AuthProvider>
           </FirebaseProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   )
