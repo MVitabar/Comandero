@@ -15,8 +15,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { UserRole } from "@/types"
-import "@/styles/globals.css"
-
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")

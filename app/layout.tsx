@@ -15,6 +15,7 @@ import LoginPage from "@/app/login/page"
 import RegisterPage from "@/app/register/page"
 import { UserProvider } from '@/contexts/UserContext';
 import { NotificationProvider } from '@/components/providers/NotificationProvider';
+import "@/styles/globals.css"
 import "./globals.css"
 import { PermissionsProvider } from "@/components/permissions-provider"
 import { Metadata } from "next"
@@ -85,32 +86,34 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     )
   }
 
-  // Verificar si es una ruta de invitación
-  const isInvitationRoute = pathname.includes('/invitation/register')
-  
-  // Si es una ruta de invitación, permitir acceso sin autenticación
-  if (isInvitationRoute) {
-    return <div className="min-h-screen">{children}</div>
+  const isInvitationRoute = pathname.includes("/invitation/register")
+  const fullWidthRoutes = ["/", "/login", "/register", "/forgot-password"]
+  const isFullWidthRoute =
+    isInvitationRoute || fullWidthRoutes.some((page) => pathname === page)
+
+  if (isFullWidthRoute) {
+    return (
+      <div className="min-h-screen w-full max-w-full overflow-x-hidden">
+        {children}
+      </div>
+    )
   }
 
-  // Para otras rutas públicas
   const publicPages = ["/", "/login", "/register", "/invitation/register", "/forgot-password"]
-  const isPublicPage = publicPages.some(page => pathname === page)
+  const isPublicPage = publicPages.some((page) => pathname === page)
 
-  // Si no está autenticado y no es una página pública, redirigir al login
   if (!user && !isPublicPage) {
     return <LoginPage />
   }
 
-  // Si está autenticado o es una página pública
   return user ? (
-    <div className="flex min-h-screen">
+    <div className="app-shell flex min-h-screen w-full min-w-0">
       <CollapsibleSidebar />
-      <main className="flex-1 overflow-x-hidden pl-0 md:pl-[250px] transition-all duration-300 pt-16 md:pt-0 pb-20 md:pb-0">
+      <main className="app-main flex-1 min-w-0 overflow-x-hidden pl-0 md:pl-[250px] transition-all duration-300 pt-16 md:pt-0 pb-20 md:pb-0">
         {children}
       </main>
     </div>
   ) : (
-    <div className="min-h-screen">{children}</div>
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden">{children}</div>
   )
 }

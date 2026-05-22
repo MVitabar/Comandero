@@ -39,10 +39,19 @@ import {
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import emailjs from "@emailjs/browser"
-import "@/styles/globals.css"
 import "./landing.css"
 import { useI18n } from "@/components/i18n-provider"
 import { LanguageSwitcher } from "@/components/language-switcher"
+
+const LANDING_CONTACT = {
+  whatsappUrl: "https://wa.me/5548996209954",
+  phoneDisplay: "+55 48 99620-9954",
+  email: "contato@polaristudio.com.br",
+  emailUrl: "mailto:contato@polaristudio.com.br",
+  supportUrl: "mailto:contato@polaristudio.com.br?subject=Comandero%20Support",
+  mapsUrl: "https://www.google.com/maps/search/?api=1&query=Crici%C3%BAma,Santa+Catarina,Brazil",
+  studioUrl: "https://www.polaristudio.com.br",
+} as const
 
 const TESTIMONIAL_KEYS = ["maria", "carlos", "fernanda", "roberto", "juliana", "marcelo"] as const
 const TESTIMONIAL_COLORS = [
@@ -161,14 +170,14 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="landing-page flex flex-col min-h-screen bg-slate-50 antialiased">
+    <div className="landing-page flex flex-col min-h-screen w-full bg-slate-50 antialiased">
       {/* Navbar */}
       <header
         className={`sticky top-0 z-50 border-b border-slate-200/60 transition-all duration-500 landing-glass ${
           scrolled ? "landing-glass-scrolled py-2.5" : "py-3.5"
         }`}
       >
-        <div className="container mx-auto px-4 flex items-center justify-between">
+        <div className="landing-container flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="relative">
               <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 blur-md opacity-40 group-hover:opacity-60 transition-opacity animate-pulse" />
@@ -217,7 +226,7 @@ export default function LandingPage() {
             mobileMenuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0 border-t-0"
           }`}
         >
-          <nav className="container mx-auto px-4 py-4 flex flex-col gap-3">
+          <nav className="landing-container py-4 flex flex-col gap-3">
             <a href="#features" onClick={() => setMobileMenuOpen(false)} className="landing-nav-link text-sm font-medium py-1">
               {t("landing.nav.features")}
             </a>
@@ -245,7 +254,7 @@ export default function LandingPage() {
         <div className="absolute top-16 left-[8%] w-80 h-80 bg-blue-500/30 rounded-full blur-[120px] animate-landing-float-slow" aria-hidden />
         <div className="absolute bottom-12 right-[6%] w-96 h-96 bg-purple-500/25 rounded-full blur-[140px] animate-landing-float-slow [animation-delay:-5s]" aria-hidden />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[100px] animate-pulse" aria-hidden />
-        <div className="container mx-auto px-4 flex flex-col items-center text-center relative z-10">
+        <div className="landing-container flex flex-col items-center text-center relative z-10">
           <div className="landing-reveal landing-visible inline-flex items-center px-4 py-2 rounded-full landing-glass-dark mb-8 shadow-lg shadow-blue-500/10">
             <Sparkles className="h-4 w-4 mr-2 text-amber-300 animate-pulse" />
             <span className="text-sm font-medium tracking-wide">{t("landing.hero.badge")}</span>
@@ -295,7 +304,7 @@ export default function LandingPage() {
 
       {/* Estatísticas Melhoradas */}
       <section className="py-20 -mt-8 relative z-20">
-        <div className="container mx-auto px-4">
+        <div className="landing-container">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="landing-reveal landing-glass-card landing-stat-card landing-card-modern p-8 rounded-2xl text-center group">
               <div className="relative mb-5 inline-flex">
@@ -347,7 +356,7 @@ export default function LandingPage() {
 
       {/* Features Section */}
       <section id="features" className="py-24 bg-white">
-        <div className="container mx-auto px-4">
+        <div className="landing-container">
           <div className="landing-reveal text-center mb-16">
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold mb-4 ring-1 ring-blue-100">
               <Zap className="h-4 w-4 mr-2" />
@@ -463,7 +472,7 @@ export default function LandingPage() {
 
       {/* Benefits Section */}
       <section id="benefits" className="py-24 landing-section-alt">
-        <div className="container mx-auto px-4">
+        <div className="landing-container">
           <div className="landing-reveal text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 landing-gradient-text tracking-tight">{t("landing.benefits.title")}</h2>
             <p className="text-slate-600 max-w-2xl mx-auto text-lg leading-relaxed">
@@ -547,7 +556,7 @@ export default function LandingPage() {
 
       {/* Como Funciona */}
       <section className="py-24 bg-white">
-        <div className="container mx-auto px-4">
+        <div className="landing-container">
           <div className="landing-reveal text-center mb-16">
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-purple-50 text-purple-700 text-sm font-semibold mb-4 ring-1 ring-purple-100">
               <Target className="h-4 w-4 mr-2" />
@@ -583,7 +592,7 @@ export default function LandingPage() {
 
       {/* Pricing Section */}
       <section id="pricing" className="py-24 landing-section-alt">
-        <div className="container mx-auto px-4">
+        <div className="landing-container">
           <div className="landing-reveal text-center mb-16">
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-emerald-50 text-emerald-700 text-sm font-semibold mb-4 ring-1 ring-emerald-100">
               <Shield className="h-4 w-4 mr-2" />
@@ -695,7 +704,7 @@ export default function LandingPage() {
 
       {/* Integrações */}
       <section className="py-24 bg-white">
-        <div className="container mx-auto px-4">
+        <div className="landing-container">
           <div className="landing-reveal text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 landing-gradient-text tracking-tight">{t("landing.integrations.title")}</h2>
             <p className="text-slate-600 max-w-2xl mx-auto text-lg">
@@ -725,7 +734,7 @@ export default function LandingPage() {
 
       {/* FAQ Section */}
       <section id="faq" className="py-24 landing-section-alt">
-        <div className="container mx-auto px-4">
+        <div className="landing-container">
           <div className="landing-reveal text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 landing-gradient-text tracking-tight">{t("landing.faq.title")}</h2>
             <p className="text-slate-600 max-w-2xl mx-auto text-lg">
@@ -749,7 +758,7 @@ export default function LandingPage() {
 
       {/* Depoimentos Detalhados */}
       <section className="py-24 bg-white">
-        <div className="container mx-auto px-4">
+        <div className="landing-container">
           <div className="landing-reveal text-center mb-16">
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-amber-50 text-amber-700 text-sm font-semibold mb-4 ring-1 ring-amber-100">
               <Star className="h-4 w-4 mr-2 fill-amber-500 text-amber-500" />
@@ -808,8 +817,8 @@ export default function LandingPage() {
       </section>
 
       {/* Contato */}
-      <section className="py-24 landing-section-alt">
-        <div className="container mx-auto px-4">
+      <section id="contact" className="py-16 md:py-24 landing-section-alt">
+        <div className="landing-container">
           <div className="landing-reveal text-center mb-16">
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold mb-4 ring-1 ring-blue-100">
               <MessageSquare className="h-4 w-4 mr-2" />
@@ -823,74 +832,92 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-12">
-            <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 space-x-4 space-y-8">
-              <div className="landing-reveal landing-glass-card landing-card-modern p-6 rounded-2xl group">
-                <div className="flex items-start gap-4">
-                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-2xl shadow-lg shadow-blue-500/25 group-hover:scale-110 transition-transform duration-300">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 auto-rows-fr">
+              <a
+                href={LANDING_CONTACT.whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="landing-reveal landing-contact-card landing-glass-card landing-card-modern p-6 rounded-2xl group"
+              >
+                <div className="flex items-start gap-4 w-full min-w-0">
+                  <div className="shrink-0 bg-gradient-to-br from-blue-500 to-blue-600 p-3.5 rounded-2xl shadow-lg shadow-blue-500/25 group-hover:scale-110 transition-transform duration-300">
                     <Phone className="h-6 w-6 text-white" />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <h3 className="font-bold text-lg mb-1">{t("landing.contact.whatsapp.title")}</h3>
-                    <p className="text-gray-600">+55 48 996 209954</p>
+                    <p className="text-gray-600 break-words">{LANDING_CONTACT.phoneDisplay}</p>
                     <p className="text-sm text-gray-500">{t("landing.contact.whatsapp.hint")}</p>
                   </div>
                 </div>
-              </div>
+              </a>
 
-              <div className="landing-reveal landing-reveal-delay-1 landing-glass-card landing-card-modern p-6 rounded-2xl group">
-                <div className="flex items-start gap-4">
-                  <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-4 rounded-2xl shadow-lg shadow-purple-500/25 group-hover:scale-110 transition-transform duration-300">
+              <a
+                href={LANDING_CONTACT.emailUrl}
+                className="landing-reveal landing-reveal-delay-1 landing-contact-card landing-glass-card landing-card-modern p-6 rounded-2xl group"
+              >
+                <div className="flex items-start gap-4 w-full min-w-0">
+                  <div className="shrink-0 bg-gradient-to-br from-purple-500 to-purple-600 p-3.5 rounded-2xl shadow-lg shadow-purple-500/25 group-hover:scale-110 transition-transform duration-300">
                     <MessageSquare className="h-6 w-6 text-white" />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <h3 className="font-bold text-lg mb-1">{t("landing.contact.email.title")}</h3>
-                    <p className="text-gray-600">contato@polaristudio.com.br</p>
+                    <p className="text-gray-600 break-all">{LANDING_CONTACT.email}</p>
                     <p className="text-sm text-gray-500">{t("landing.contact.email.hint")}</p>
                   </div>
                 </div>
-              </div>
+              </a>
 
-              <div className="landing-reveal landing-reveal-delay-2 landing-glass-card landing-card-modern p-6 rounded-2xl group">
-                <div className="flex items-start gap-4">
-                  <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-4 rounded-2xl shadow-lg shadow-emerald-500/25 group-hover:scale-110 transition-transform duration-300">
+              <a
+                href={LANDING_CONTACT.supportUrl}
+                className="landing-reveal landing-reveal-delay-2 landing-contact-card landing-glass-card landing-card-modern p-6 rounded-2xl group"
+              >
+                <div className="flex items-start gap-4 w-full min-w-0">
+                  <div className="shrink-0 bg-gradient-to-br from-emerald-500 to-emerald-600 p-3.5 rounded-2xl shadow-lg shadow-emerald-500/25 group-hover:scale-110 transition-transform duration-300">
                     <Headphones className="h-6 w-6 text-white" />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <h3 className="font-bold text-lg mb-1">{t("landing.contact.support.title")}</h3>
-                    <p className="text-gray-600">contato@polaristudio.com.br</p>
+                    <p className="text-gray-600 break-all">{LANDING_CONTACT.email}</p>
                     <p className="text-sm text-gray-500">{t("landing.contact.support.hint")}</p>
                   </div>
                 </div>
-              </div>
+              </a>
 
-              <div className="landing-reveal landing-glass-card landing-card-modern p-6 rounded-2xl group">
-                <div className="flex items-start gap-4">
-                  <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-4 rounded-2xl shadow-lg shadow-orange-500/25 group-hover:scale-110 transition-transform duration-300">
+              <a
+                href={LANDING_CONTACT.mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="landing-reveal landing-contact-card landing-glass-card landing-card-modern p-6 rounded-2xl group"
+              >
+                <div className="flex items-start gap-4 w-full min-w-0">
+                  <div className="shrink-0 bg-gradient-to-br from-orange-500 to-orange-600 p-3.5 rounded-2xl shadow-lg shadow-orange-500/25 group-hover:scale-110 transition-transform duration-300">
                     <Globe className="h-6 w-6 text-white" />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <h3 className="font-bold text-lg mb-1">{t("landing.contact.headquarters.title")}</h3>
                     <p className="text-gray-600">{t("landing.contact.headquarters.city")}</p>
                     <p className="text-sm text-gray-500">{t("landing.contact.headquarters.state")}</p>
                   </div>
                 </div>
-              </div>
+              </a>
 
-              <div className="landing-reveal landing-reveal-delay-1 p-6 rounded-2xl bg-gradient-to-br from-blue-50 via-white to-purple-50 border border-blue-200/60 ring-1 ring-blue-100 landing-card-modern md:col-span-2">
-                <div className="flex items-start gap-4">
-                  <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-4 rounded-2xl shadow-lg shadow-purple-500/20">
+              <a
+                href={LANDING_CONTACT.studioUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="landing-reveal landing-reveal-delay-1 landing-contact-card p-6 rounded-2xl bg-gradient-to-br from-blue-50 via-white to-purple-50 border border-blue-200/60 ring-1 ring-blue-100 landing-card-modern md:col-span-2"
+              >
+                <div className="flex items-start gap-4 w-full min-w-0">
+                  <div className="shrink-0 bg-gradient-to-br from-blue-600 to-purple-600 p-3.5 rounded-2xl shadow-lg shadow-purple-500/20 group-hover:scale-110 transition-transform duration-300">
                     <Code className="h-6 w-6 text-white" />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <h3 className="font-bold text-lg mb-1">{t("landing.contact.developer.label")}</h3>
                     <p className="text-gray-800 font-semibold">{t("landing.contact.developer.name")}</p>
-                    <a href="https://www.polaristudio.com.br" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 text-sm">
-                      www.polaristudio.com.br
-                    </a>
+                    <p className="text-blue-600 group-hover:text-blue-700 text-sm">www.polaristudio.com.br</p>
                   </div>
                 </div>
-              </div>
+              </a>
             </div>
 
             {/* <div className="bg-white p-8 rounded-2xl shadow-xl border-2 border-gray-100">
@@ -996,7 +1023,6 @@ export default function LandingPage() {
                 </Button>
               </form>
             </div> */}
-          </div>
         </div>
       </section>
 
@@ -1005,7 +1031,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 landing-grid-pattern opacity-40" aria-hidden />
         <div className="absolute top-0 left-1/4 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl animate-landing-float" aria-hidden />
         <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-purple-400/20 rounded-full blur-3xl animate-landing-float-slow" aria-hidden />
-        <div className="container mx-auto px-4 text-center relative z-10 landing-reveal">
+        <div className="landing-container text-center relative z-10 landing-reveal">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 tracking-tight">{t("landing.cta.title")}</h2>
           <p className="text-lg md:text-xl mb-10 max-w-2xl mx-auto text-blue-100/90 leading-relaxed">
             {t("landing.cta.subtitle")}
@@ -1029,7 +1055,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="bg-slate-950 text-white py-14 border-t border-slate-800">
-        <div className="container mx-auto px-4">
+        <div className="landing-container">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center gap-2.5 mb-4">
