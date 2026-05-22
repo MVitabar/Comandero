@@ -63,10 +63,8 @@ export function UserManagement() {
       // Filtrar el usuario eliminado del estado
       setUsers(prevUsers => prevUsers.filter(user => user.id !== userId))
       toast.success(t("users.deleted"));
-      await sendNotification({
-        title: t("users.deleted"),
-        message: `Se eliminó el usuario con ID ${userId}`,
-        url: window.location.href,
+      await new Notification(t("users.deleted"), {
+        
       });
     } catch (error) {
       console.error('Error deleting user:', error)
