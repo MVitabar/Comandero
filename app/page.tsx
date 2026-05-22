@@ -178,12 +178,12 @@ export default function LandingPage() {
                 <Rocket className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Link href="/login">
-              <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10 px-8 py-6 text-lg backdrop-blur-sm">
+            {/* <Link href="/login">
+              <Button variant="outline" size="lg" className="border-white/30 text-blue-400 hover:bg-white/10 hover:text-white px-8 py-6 text-lg backdrop-blur-sm">
                 <Play className="mr-2 h-5 w-5" />
                 Ver demo
               </Button>
-            </Link>
+            </Link> */}
           </div>
           <div className="flex items-center gap-8 text-sm text-gray-400">
             <div className="flex items-center gap-2">
