@@ -107,6 +107,91 @@
   transition-delay: 0.32s;
 }
 
+/* Navbar fijo con animación al scroll */
+.landing-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  width: 100%;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition:
+    background-color 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    padding 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: landing-nav-enter 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes landing-nav-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-nav-top {
+  background: rgba(255, 255, 255, 0.72);
+  border-bottom-color: rgba(226, 232, 240, 0.45);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset;
+}
+
+.landing-nav-scrolled {
+  background: rgba(255, 255, 255, 0.94);
+  border-bottom-color: rgba(226, 232, 240, 0.9);
+  box-shadow:
+    0 4px 24px rgba(37, 99, 235, 0.1),
+    0 1px 0 rgba(147, 51, 234, 0.06);
+}
+
+.landing-nav-scrolled::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #6366f1);
+  background-size: 200% 100%;
+  animation: landing-nav-accent 4s ease-in-out infinite;
+  opacity: 0.85;
+}
+
+@keyframes landing-nav-accent {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.landing-nav-logo {
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-nav-scrolled .landing-nav-logo {
+  transform: scale(0.92);
+}
+
+.landing-nav-spacer {
+  height: 4.75rem;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .landing-nav-spacer {
+    height: 5rem;
+  }
+}
+
 .landing-glass {
   background: rgba(255, 255, 255, 0.78);
   backdrop-filter: blur(20px);
@@ -245,6 +330,15 @@
     opacity: 1;
     transform: none;
     transition: none;
+  }
+
+  .landing-nav {
+    animation: none;
+    transform: none;
+  }
+
+  .landing-nav-scrolled::after {
+    animation: none;
   }
 
   .landing-mesh,

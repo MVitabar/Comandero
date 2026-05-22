@@ -135,7 +135,7 @@ export const landingEn = {
       basic: {
         name: "Basic",
         description: "For small restaurants",
-        price: "R$49",
+        price: "$19",
         badge: "",
         features: {
           users3: "Up to 3 users",
@@ -148,7 +148,7 @@ export const landingEn = {
       pro: {
         name: "Professional",
         description: "For growing restaurants",
-        price: "R$129",
+        price: "$49",
         badge: "Most popular",
         features: {
           users10: "Up to 10 users",
@@ -163,7 +163,7 @@ export const landingEn = {
       enterprise: {
         name: "Enterprise",
         description: "For restaurant chains",
-        price: "R$299",
+        price: "$99",
         features: {
           unlimitedUsers: "Unlimited users",
           allPro: "Everything in Professional",
@@ -442,7 +442,7 @@ export const landingEs = {
       basic: {
         name: "Básico",
         description: "Para restaurantes pequeños",
-        price: "R$49",
+        price: "$15",
         badge: "",
         features: {
           users3: "Hasta 3 usuarios",
@@ -455,7 +455,7 @@ export const landingEs = {
       pro: {
         name: "Profesional",
         description: "Para restaurantes en crecimiento",
-        price: "R$129",
+        price: "$39",
         badge: "Más popular",
         features: {
           users10: "Hasta 10 usuarios",
@@ -470,7 +470,7 @@ export const landingEs = {
       enterprise: {
         name: "Empresarial",
         description: "Para cadenas de restaurantes",
-        price: "R$299",
+        price: "$79",
         features: {
           unlimitedUsers: "Usuarios ilimitados",
           allPro: "Todo lo del plan Profesional",
@@ -749,7 +749,7 @@ export const landingPt = {
       basic: {
         name: "Básico",
         description: "Para pequenos restaurantes",
-        price: "R$49",
+        price: "R$29",
         badge: "",
         features: {
           users3: "Até 3 usuários",
@@ -762,7 +762,7 @@ export const landingPt = {
       pro: {
         name: "Profissional",
         description: "Para restaurantes em crescimento",
-        price: "R$129",
+        price: "R$79",
         badge: "Mais popular",
         features: {
           users10: "Até 10 usuários",
@@ -777,7 +777,7 @@ export const landingPt = {
       enterprise: {
         name: "Empresarial",
         description: "Para redes de restaurantes",
-        price: "R$299",
+        price: "R$179",
         features: {
           unlimitedUsers: "Usuários ilimitados",
           allPro: "Todos os recursos do Profissional",

@@ -173,12 +173,12 @@ export default function LandingPage() {
     <div className="landing-page flex flex-col min-h-screen w-full bg-slate-50 antialiased">
       {/* Navbar */}
       <header
-        className={`sticky top-0 z-50 border-b border-slate-200/60 transition-all duration-500 landing-glass ${
-          scrolled ? "landing-glass-scrolled py-2.5" : "py-3.5"
+        className={`landing-nav border-b ${
+          scrolled ? "landing-nav-scrolled py-2" : "landing-nav-top py-3 md:py-3.5"
         }`}
       >
-        <div className="landing-container flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 group">
+        <div className="landing-container flex items-center justify-between relative">
+          <Link href="/" className="landing-nav-logo flex items-center gap-2.5 group">
             <div className="relative">
               <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 blur-md opacity-40 group-hover:opacity-60 transition-opacity animate-pulse" />
               <Image src="/icons/icon-192x192.png" alt={t("landing.brand.logoAlt")} width={36} height={36} className="relative rounded-lg ring-2 ring-white/80 shadow-sm" />
@@ -222,7 +222,7 @@ export default function LandingPage() {
         </div>
         {/* Mobile Menu */}
         <div
-          className={`md:hidden overflow-hidden transition-all duration-300 ease-out border-t border-slate-200/80 landing-glass ${
+          className={`md:hidden overflow-hidden transition-all duration-300 ease-out border-t border-slate-200/80 bg-white/95 backdrop-blur-xl ${
             mobileMenuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0 border-t-0"
           }`}
         >
@@ -247,6 +247,7 @@ export default function LandingPage() {
           </nav>
         </div>
       </header>
+      <div className="landing-nav-spacer" aria-hidden="true" />
 
       {/* Hero Section */}
       <section className="relative landing-mesh animate-landing-gradient text-white py-24 md:py-36 overflow-hidden">
