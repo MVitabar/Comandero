@@ -35,6 +35,7 @@ import {
 } from 'firebase/firestore'
 import { getFirestorePaths } from '@/lib/firestore-paths';
 import { nanoid } from 'nanoid';
+import { useI18n } from '@/components/i18n-provider';
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -62,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { db, auth, isInitialized, error } = useFirebase()
   const router = useRouter()
   const pathname = usePathname()
+  const { t } = useI18n()
 
   // Debug method to check authentication state
   const debugAuthState = () => {
@@ -149,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!email) {
         return {
           success: false,
-          error: 'Email is required',
+          error: t('auth.errors.emailRequired'),
           needsPasswordChange: false
         };
       }
@@ -157,7 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!password) {
         return {
           success: false,
-          error: 'Password is required',
+          error: t('auth.errors.passwordRequired'),
           needsPasswordChange: false
         };
       }
@@ -187,7 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!newUser) {
         return {
           success: false,
-          error: 'Failed to create user profile',
+          error: t('auth.errors.profileNotFound'),
           needsPasswordChange: false
         };
       }
@@ -223,7 +225,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Comprehensive error logging
       console.error('Complete Sign Up Error:', error);
       
-      let errorMessage = "An unexpected error occurred";
+      let errorMessage = t('auth.errors.unexpectedError');
       let errorName = "Unknown";
       let errorStack = "No stack";
       
@@ -242,13 +244,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         switch (errorMessage) {
           case 'auth/email-already-in-use':
-            errorMessage = "Email is already registered";
+            errorMessage = t('auth.errors.emailAlreadyRegistered');
             break;
           case 'auth/invalid-email':
-            errorMessage = "Invalid email address";
+            errorMessage = t('auth.errors.invalidEmail');
             break;
           case 'auth/weak-password':
-            errorMessage = "Password is too weak";
+            errorMessage = t('auth.errors.weakPassword');
             break;
           default:
             // Keep the original error message
@@ -468,7 +470,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const ownerQuery = query(establishmentUsersRef, where('role', '==', UserRole.OWNER), limit(1));
         const ownerSnapshot = await getDocs(ownerQuery);
         if (!usersSnapshot.empty && !ownerSnapshot.empty) {
-          throw new Error('Ya existe un OWNER para este establecimiento');
+          throw new Error(t('auth.errors.ownerAlreadyExists'));
         }
       }
 
@@ -568,7 +570,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
       (authError) => {
         setLoading(false)
-        toast.error("Error during authentication state change")
+        toast.error(t("auth.errors.stateChange"))
       }
     )
 
@@ -600,7 +602,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!email || !email.includes('@')) {
         return {
           success: false,
-          error: 'Invalid email format',
+          error: t('auth.errors.invalidEmailFormat'),
           needsPasswordChange: false
         };
       }
@@ -609,7 +611,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!password) {
         return {
           success: false,
-          error: 'Password cannot be empty',
+          error: t('auth.errors.passwordEmpty'),
           needsPasswordChange: false
         };
       }
@@ -634,7 +636,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!customUser) {
         return {
           success: false,
-          error: 'User profile not found. Please contact support.',
+          error: t('auth.errors.userProfileNotFound'),
           needsPasswordChange: false
         };
       }
@@ -643,7 +645,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (customUser.status === 'suspended') {
         return {
           success: false,
-          error: 'Your account has been suspended. Please contact support.',
+          error: t('auth.errors.accountSuspended'),
           needsPasswordChange: false
         };
       }
@@ -680,25 +682,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         needsPasswordChange: false
       };
     } catch (error) {
-      let errorMessage = "An unexpected error occurred";
+      let errorMessage = t('auth.errors.unexpectedError');
       if (error && typeof error === 'object' && 'message' in error) {
         const errorMsg = String((error as { message: unknown }).message);
         
         switch (errorMsg) {
           case 'auth/user-not-found':
-            errorMessage = "No user found with this email";
+            errorMessage = t('auth.errors.userNotFound');
             break;
           case 'auth/wrong-password':
-            errorMessage = "Incorrect password";
+            errorMessage = t('auth.errors.wrongPassword');
             break;
           case 'auth/too-many-requests':
-            errorMessage = "Too many login attempts. Please try again later.";
+            errorMessage = t('auth.errors.tooManyRequests');
             break;
           case 'auth/invalid-email':
-            errorMessage = "Invalid email address";
+            errorMessage = t('auth.errors.invalidEmail');
             break;
           case 'auth/user-disabled':
-            errorMessage = "This account has been disabled";
+            errorMessage = t('auth.errors.userDisabled');
             break;
           default:
             errorMessage = errorMsg;
@@ -756,7 +758,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         success: true
       };
     } catch (error) {
-      let errorMessage = "An unexpected error occurred during logout";
+      let errorMessage = t('auth.errors.logoutUnexpected');
       if (error && typeof error === 'object' && 'message' in error) {
         errorMessage = String((error as { message: unknown }).message);
       }
@@ -825,11 +827,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return batch.commit();
-  }
-
-  function t(key: string, params?: Record<string, string | number>): string {
-    console.warn(`Translation not implemented for key: ${key}`)
-    return key
   }
 
   return <AuthContext.Provider value={{ 

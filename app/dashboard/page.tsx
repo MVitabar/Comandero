@@ -598,7 +598,7 @@ export default function DashboardPage() {
       })
     } catch (error: unknown) {
       // Type guard to check if error is an Error object
-      let errorMessage = 'Unknown error'
+      let errorMessage = t('auth.errors.unexpectedError')
       if (error && typeof error === 'object' && 'message' in error) {
         errorMessage = String((error as { message: unknown }).message)
       } else if (typeof error === 'string') {
@@ -653,13 +653,13 @@ export default function DashboardPage() {
   useEffect(() => {
     // Notificar cuando hay un crecimiento negativo
     if (dashboardData.monthlyGrowth < 0) {
-      toast.warning("¡Alerta de ventas!")
+      toast.warning(t("dashboard.toast.salesAlert"))
     }
 
     // Notificar metas alcanzadas
     const targetSales = 10000; // Define a target sales value
     if (dashboardData.totalSales > targetSales) {
-      toast.success("¡Meta alcanzada!")
+      toast.success(t("dashboard.toast.goalReached"))
     }
   }, [dashboardData])
 
@@ -704,41 +704,41 @@ export default function DashboardPage() {
   const handleExportGeneralExcel = () => {
     const wb = XLSX.utils.book_new();
     const wsSales = XLSX.utils.json_to_sheet(dashboardData.dailySalesData || []);
-    XLSX.utils.book_append_sheet(wb, wsSales, "Ventas por Día");
+    XLSX.utils.book_append_sheet(wb, wsSales, t("dashboard.export.salesByDay"));
     const wsProducts = XLSX.utils.json_to_sheet(dashboardData.topSellingItems || []);
-    XLSX.utils.book_append_sheet(wb, wsProducts, "Top Productos");
+    XLSX.utils.book_append_sheet(wb, wsProducts, t("dashboard.export.topProducts"));
     const wsInventory = XLSX.utils.json_to_sheet(dashboardData.inventoryItems.details || []);
-    XLSX.utils.book_append_sheet(wb, wsInventory, "Inventario");
-    XLSX.writeFile(wb, `Reporte-General-${new Date().toISOString().slice(0,10)}.xlsx`);
-    toast.success("Reporte general descargado en Excel");
+    XLSX.utils.book_append_sheet(wb, wsInventory, t("dashboard.export.inventory"));
+    XLSX.writeFile(wb, `${t("dashboard.export.generalReport")}-${new Date().toISOString().slice(0,10)}.xlsx`);
+    toast.success(t("dashboard.toast.excelDownloaded"));
   }
 
   const handleExportGeneralPDF = async () => {
     const jsPDF = (await import("jspdf")).default;
     const autoTable = (await import("jspdf-autotable")).default;
     const doc = new jsPDF();
-    doc.text("Ventas por Día", 14, 14);
+    doc.text(t("dashboard.export.salesByDay"), 14, 14);
     autoTable(doc, {
       startY: 20,
-      head: [['Fecha', 'Ventas']],
+      head: [[t("dashboard.export.date"), t("dashboard.export.sales")]],
       body: (dashboardData.dailySalesData || []).map(row => [row.date, row.sales]),
     });
     let y = (doc as any).lastAutoTable?.finalY + 10 || 30;
-    doc.text("Top Productos", 14, y);
+    doc.text(t("dashboard.export.topProducts"), 14, y);
     autoTable(doc, {
       startY: y + 6,
-      head: [['Producto', 'Cantidad']],
+      head: [[t("dashboard.export.product"), t("dashboard.export.quantity")]],
       body: (dashboardData.topSellingItems || []).map(row => [row.name, row.quantity]),
     });
     y = (doc as any).lastAutoTable?.finalY + 10 || y + 30;
-    doc.text("Inventario", 14, y);
+    doc.text(t("dashboard.export.inventory"), 14, y);
     autoTable(doc, {
       startY: y + 6,
-      head: [['Producto', 'Stock']],
+      head: [[t("dashboard.export.product"), t("dashboard.export.stock")]],
       body: (dashboardData.inventoryItems.details || []).map(row => [row.name, row.inStock]),
     });
-    doc.save(`Reporte-General-${new Date().toISOString().slice(0,10)}.pdf`);
-    toast.success("Reporte general descargado en PDF");
+    doc.save(`${t("dashboard.export.generalReport")}-${new Date().toISOString().slice(0,10)}.pdf`);
+    toast.success(t("dashboard.toast.pdfDownloaded"));
   }
 
   return (

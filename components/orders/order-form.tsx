@@ -242,7 +242,7 @@ export function OrderForm({
       setLoading(false)
     } catch (error) {
       setLoading(false)
-      let errorMessage = "Unknown error"
+      let errorMessage = t("auth.errors.unexpectedError")
       if (error && typeof error === 'object' && 'message' in error) {
         errorMessage = String((error as { message: unknown }).message)
       }
@@ -286,7 +286,7 @@ export function OrderForm({
             uid: table.id,
             mapId: mapDoc.id,
             number: table.name 
-              ? parseInt(table.name.replace('Mesa ', ''), 10) 
+              ? parseInt(table.name.replace(t("orders.tableNamePrefix"), ''), 10) 
               : table.number || 0
           }))
 
@@ -299,7 +299,7 @@ export function OrderForm({
         setSelectedTable(availableTables[0])
       }
     } catch (error) {
-      let errorMessage = "Unknown error"
+      let errorMessage = t("auth.errors.unexpectedError")
       if (error && typeof error === 'object' && 'message' in error) {
         errorMessage = String((error as { message: unknown }).message)
       }
@@ -394,21 +394,21 @@ export function OrderForm({
           // Prioritize selected table number, then input table number
           if (selectedTable?.number) return selectedTable.number
           if (tableNumber.trim()) return tableNumber
-          return 'Balcão'
+          return t("orders.counter")
         }
         
         // For other order types
-        return tableNumber.trim() || 'Balcão'
+        return tableNumber.trim() || t("orders.counter")
       })()
 
       // Safely map order items with type-safe defaults
       const safeOrderItems = orderItems.map(item => ({
         id: item.id || `temp-item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         itemId: item.itemId || '',
-        name: item.name || 'Item Sem Nome',
+        name: item.name || t("orders.unnamedItem"),
         
         // Ensure all required fields have safe defaults
-        category: item.category || 'Sem Categoria',
+        category: item.category || t("orders.noCategory"),
         price: Number(item.price || 0),
         quantity: Number(item.quantity || 1),
         
@@ -432,7 +432,7 @@ export function OrderForm({
       const orderData: Order = {
         createdBy: {
           uid: user.uid,
-          displayName: user.username || user.email || 'Unknown',
+          displayName: user.username || user.email || t("commons.unknown"),
           email: user.email,
           role: user.role
         },
@@ -513,7 +513,7 @@ export function OrderForm({
 
         // Show success toast
         toast.success(t("orders.success.orderCreated"), {
-          description: `Pedido creado por ${calculateTotal()}`
+          description: t("orders.success.orderCreatedDescription", { total: calculateTotal() })
         });
 
         // Notificación push usando endpoint seguro
@@ -538,7 +538,9 @@ export function OrderForm({
 
       } catch (error) {
         toast.error(t("orders.errors.orderCreationFailed"), {
-          description: `Error al crear el pedido: ${error}`
+          description: t("orders.errorsOrder.orderCreationFailedDescription", {
+            error: String(error),
+          }),
         });
       }
 
@@ -570,7 +572,9 @@ export function OrderForm({
 
     } catch (error) {
       toast.error(t("orders.errors.orderCreationFailed"), {
-        description: `Error al crear el pedido: ${error}`
+        description: t("orders.errorsOrder.orderCreationFailedDescription", {
+          error: String(error),
+        })
       });
     }
   }
@@ -595,7 +599,7 @@ export function OrderForm({
       restaurantId: user?.establishmentId || '',
       tableId: table?.id || '',
       tableNumber: orderType === 'table' ? parseInt(tableNumber) : 0,
-      waiter: user?.displayName || user?.email || user?.uid || 'Owner',
+      waiter: user?.displayName || user?.email || user?.uid || t("roles.owner"),
       items: orderItems,
       total: calculateTotal(),
       subtotal: calculateTotal(),
@@ -625,7 +629,7 @@ export function OrderForm({
       },
       createdBy: {
         uid: user.uid,
-        displayName: user.username || user.email || 'Unknown',
+        displayName: user.username || user.email || t("commons.unknown"),
         email: user.email,
         role: user.role
       },
@@ -710,7 +714,7 @@ export function OrderForm({
 
       // Show success toast
       toast.success(t("orders.success.orderCreated"), {
-        description: `Pedido creado por ${calculateTotal()}`
+        description: t("orders.success.orderCreatedDescription", { total: calculateTotal() })
       });
 
       // Notificación push usando endpoint seguro
@@ -735,7 +739,9 @@ export function OrderForm({
 
     } catch (error) {
       toast.error(t("orders.errors.orderCreationFailed"), {
-        description: `Error al crear el pedido: ${error}`
+        description: t("orders.errorsOrder.orderCreationFailedDescription", {
+          error: String(error),
+        })
       });
     }
 

@@ -53,7 +53,7 @@ export function UserManagement() {
 
   const handleDeleteUser = async (userId: string) => {
     if (!canDo || !canDo('users-management', 'deleteUser')) {
-      toast.error("No tienes permisos para eliminar usuarios.");
+      toast.error(t("users.management.errors.noDeletePermission"));
       return;
     }
 
@@ -68,7 +68,7 @@ export function UserManagement() {
       });
     } catch (error) {
       console.error('Error deleting user:', error)
-      toast.error("Error al eliminar el usuario.");
+      toast.error(t("users.management.errors.deleteFailed"));
     }
   }
 
@@ -78,14 +78,14 @@ export function UserManagement() {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Gestión de Usuarios</h1>
+      <h1 className="text-2xl font-bold mb-4">{t("users.management.title")}</h1>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Nombre</TableHead>
-            <TableHead>Correo</TableHead>
-            <TableHead>Rol</TableHead>
-            <TableHead>Acciones</TableHead>
+            <TableHead>{t("users.management.columns.name")}</TableHead>
+            <TableHead>{t("users.management.columns.email")}</TableHead>
+            <TableHead>{t("users.management.columns.role")}</TableHead>
+            <TableHead>{t("users.management.columns.actions")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

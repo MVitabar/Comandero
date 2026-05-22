@@ -7,6 +7,7 @@ import { Order, MenuItem } from "@/types";
 import { useFirebase } from "@/components/firebase-provider";
 import { collection, getDocs, doc, updateDoc, arrayUnion } from "firebase/firestore";
 import { toast } from "sonner";
+import { useI18n } from "@/components/i18n-provider";
 
 // Ajuste: Definición local de Category (solo id, opcional name)
 type Category = {
@@ -22,6 +23,7 @@ interface AddItemsDialogProps {
 }
 
 export function AddItemsDialog({ order, open, onClose, onItemsAdded }: AddItemsDialogProps) {
+  const { t } = useI18n();
   const { db } = useFirebase();
   const [categories, setCategories] = useState<Category[]>([]);
   const [items, setItems] = useState<MenuItem[]>([]);
@@ -72,7 +74,7 @@ export function AddItemsDialog({ order, open, onClose, onItemsAdded }: AddItemsD
   const handleAddItem = async () => {
     if (!selectedItem || quantity < 1) return;
     if (!order.docId) {
-      toast.error("No se encontró el ID del documento de la orden.");
+      toast.error(t("orders.addItemsDialog.errors.orderDocIdMissing"));
       return;
     }
     try {
@@ -85,7 +87,7 @@ export function AddItemsDialog({ order, open, onClose, onItemsAdded }: AddItemsD
         items: arrayUnion({ ...item, quantity }),
       });
       console.log("Item agregado al pedido con éxito");
-      toast.success("Item agregado al pedido");
+      toast.success(t("orders.addItemsDialog.success"));
       if (onItemsAdded) onItemsAdded();
       onClose();
     } catch (error) {
@@ -94,7 +96,7 @@ export function AddItemsDialog({ order, open, onClose, onItemsAdded }: AddItemsD
       if (error && typeof error === 'object' && 'message' in error) {
         errorMessage = String((error as { message: unknown }).message);
       }
-      toast.error("Error al agregar item: " + errorMessage);
+      toast.error(t("orders.addItemsDialog.errors.addFailed", { message: errorMessage }));
     }
   };
 
@@ -102,17 +104,17 @@ export function AddItemsDialog({ order, open, onClose, onItemsAdded }: AddItemsD
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent aria-describedby="add-items-description">
         <DialogHeader>
-          <DialogTitle>Agregar ítems al pedido</DialogTitle>
+          <DialogTitle>{t("orders.addItemsDialog.title")}</DialogTitle>
           <DialogDescription id="add-items-description">
-            Selecciona los ítems y la cantidad a agregar al pedido.
+            {t("orders.addItemsDialog.description")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
             <SelectTrigger>
               {selectedCategory
-                ? categories.find(c => c.id === selectedCategory)?.name || "Seleccionar categoría"
-                : "Seleccionar categoría"}
+                ? categories.find(c => c.id === selectedCategory)?.name || t("orders.addItemsDialog.selectCategory")
+                : t("orders.addItemsDialog.selectCategory")}
             </SelectTrigger>
             <SelectContent>
               {categories.map(cat => (
@@ -123,8 +125,8 @@ export function AddItemsDialog({ order, open, onClose, onItemsAdded }: AddItemsD
           <Select value={selectedItem} onValueChange={setSelectedItem} disabled={!selectedCategory}>
             <SelectTrigger>
               {selectedItem
-                ? items.find(i => i.uid === selectedItem)?.name || "Seleccionar producto"
-                : "Seleccionar producto"}
+                ? items.find(i => i.uid === selectedItem)?.name || t("orders.addItemsDialog.selectProduct")
+                : t("orders.addItemsDialog.selectProduct")}
             </SelectTrigger>
             <SelectContent>
               {items.map(item => (
@@ -137,13 +139,13 @@ export function AddItemsDialog({ order, open, onClose, onItemsAdded }: AddItemsD
             min={1}
             value={quantity}
             onChange={e => setQuantity(Number(e.target.value))}
-            placeholder="Cantidad"
+            placeholder={t("orders.addItemsDialog.quantity")}
             disabled={!selectedItem}
           />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={handleAddItem} disabled={!selectedItem || quantity < 1}>Agregar</Button>
+          <Button variant="outline" onClick={onClose}>{t("commons.cancel")}</Button>
+          <Button onClick={handleAddItem} disabled={!selectedItem || quantity < 1}>{t("orders.addItemsDialog.add")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

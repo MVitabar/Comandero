@@ -51,14 +51,14 @@ export default function TableDialog({
         
         const tableCount = existingTables.length
         const newTableNumber = tableCount + 1
-        setTableName(`Mesa ${newTableNumber}`)
+        setTableName(t("tables.defaultTableName", { number: newTableNumber }))
       } catch (error) {
         console.error('Error generating table name:', error)
       }
     }
 
     generateTableName()
-  }, [db, user, tableMap])
+  }, [db, user, tableMap, t])
 
   const handleCreateTable = async () => {
     if (!db || !user) return
@@ -93,7 +93,7 @@ export default function TableDialog({
       // Determine the next table number
       const tableCount = existingTables.length
       const newTableNumber = tableCount + 1
-      const generatedTableName = `Mesa ${newTableNumber}`
+      const generatedTableName = t("tables.defaultTableName", { number: newTableNumber })
 
       // Cuando crees o edites una mesa, asegúrate de incluir tableMapId/mapId
       const newTable: RestaurantTable = {

@@ -11,6 +11,7 @@ import { UserRole } from "@/types/permissions"
 import { useEffect } from "react"
 import { collection, addDoc } from 'firebase/firestore';
 import { useFirebase } from "@/components/firebase-provider";
+import { useI18n } from "@/components/i18n-provider";
 
 export default function AddTeamMemberPage() {
   const [formData, setFormData] = useState({
@@ -22,6 +23,7 @@ export default function AddTeamMemberPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [invitationLink, setInvitationLink] = useState<string>('');
 
+  const { t } = useI18n()
   const { user } = useAuth()
   const { db } = useFirebase();
 
@@ -43,14 +45,14 @@ export default function AddTeamMemberPage() {
     const newErrors: Record<string, string> = {}
 
     if (!formData.username.trim()) {
-      newErrors.username = "El nombre de usuario es requerido"
+      newErrors.username = t("users.invitation.errors.usernameRequired")
     }
 
     // Ya no necesitamos validar password y confirmPassword
     // porque ahora usamos sistema de invitación
 
     if (!user?.currentEstablishmentName) {
-      newErrors.form = "No se encontró el establecimiento asociado"
+      newErrors.form = t("users.invitation.errors.establishmentNotFound")
     }
 
     setErrors(newErrors)
@@ -63,7 +65,7 @@ export default function AddTeamMemberPage() {
     if (!validateForm()) return
 
     if (!user || !db) { // Agregamos la verificación de db
-      toast.error("Debes estar conectado para agregar un miembro al equipo");
+      toast.error(t("users.invitation.errors.mustBeLoggedIn"));
       return;
     }
 
@@ -89,8 +91,8 @@ export default function AddTeamMemberPage() {
       const invitationLink = `${window.location.origin}/invitation/register?id=${invitationRef.id}`;
       setInvitationLink(invitationLink);
 
-      toast.success("Invitación generada exitosamente");
-      new Notification("Invitación generada exitosamente");
+      toast.success(t("users.invitation.success.invitationCreated"));
+      new Notification(t("users.invitation.success.invitationCreated"));
       
       // Limpiar el formulario
       setFormData({
@@ -101,7 +103,7 @@ export default function AddTeamMemberPage() {
       
     } catch (error: any) {
       console.error("Error al generar invitación:", error);
-      toast.error("Error al generar la invitación");
+      toast.error(t("users.invitation.errors.invitationFailed"));
     } finally {
       setLoading(false);
     }
@@ -115,19 +117,19 @@ export default function AddTeamMemberPage() {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(generatedEmail);
-    toast.success('Email copiado al portapapeles');
+    toast.success(t("users.invitation.success.emailCopied"));
   };
 
   return (
     <div className="max-w-md mx-auto mt-10">
       <Card>
         <CardHeader>
-          <CardTitle>Agregar Miembro del Equipo</CardTitle>
+          <CardTitle>{t("users.invitation.title")}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="username">Nombre de Usuario</Label>
+              <Label htmlFor="username">{t("users.invitation.labels.username")}</Label>
               <Input
                 id="username"
                 name="username"
@@ -140,7 +142,7 @@ export default function AddTeamMemberPage() {
             </div>
 
             <div>
-              <Label htmlFor="role">Rol</Label>
+              <Label htmlFor="role">{t("users.invitation.labels.role")}</Label>
               <select
                 id="role"
                 name="role"
@@ -156,7 +158,7 @@ export default function AddTeamMemberPage() {
             </div>
 
             <Button type="submit" disabled={loading}>
-              {loading ? "Generando..." : "Generar Invitación"}
+              {loading ? t("users.invitation.actions.generating") : t("users.invitation.actions.generate")}
               
             </Button>
           </form>
@@ -165,7 +167,7 @@ export default function AddTeamMemberPage() {
           {invitationLink && (
             <div className="mt-4 p-4 bg-gray-100 rounded-md">
               <div className="flex flex-col gap-2">
-                <span className="font-medium">Enlace de invitación:</span>
+                <span className="font-medium">{t("users.invitation.invitationLinkLabel")}</span>
                 <div className="flex items-center justify-between">
                   <input
                     type="text"
@@ -178,14 +180,14 @@ export default function AddTeamMemberPage() {
                     size="sm"
                     onClick={() => {
                       navigator.clipboard.writeText(invitationLink);
-                      toast.success('Enlace copiado al portapapeles');
+                      toast.success(t("users.invitation.success.linkCopied"));
                     }}
                   >
-                    Copiar
+                    {t("commons.copy")}
                   </Button>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Este enlace expirará en 24 horas
+                  {t("users.invitation.invitationExpiry")}
                 </p>
               </div>
             </div>
@@ -196,13 +198,13 @@ export default function AddTeamMemberPage() {
         {formData.username && (
           <div className="mt-4 p-4 bg-gray-100 rounded-md">
             <div className="flex items-center justify-between">
-              <span className="font-medium">Email generado: {generatedEmail}</span>
+              <span className="font-medium">{t("users.invitation.generatedEmailLabel")} {generatedEmail}</span>
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={copyToClipboard}
               >
-                <span className="mr-2">Copiar</span>
+                <span className="mr-2">{t("commons.copy")}</span>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"

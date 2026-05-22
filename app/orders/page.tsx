@@ -23,7 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Plus, Search, MoreHorizontal, Edit, Trash, X, Eye, PlusSquare, Repeat } from "lucide-react"
 import Link from "next/link"
-import { t, TFunction } from 'i18next';
+import { TFunction } from 'i18next';
 import { Order, OrderStatus, FlexibleOrderStatus, BaseOrderStatus, OrderItem } from "@/types"
 import { 
   collection, 
@@ -50,81 +50,18 @@ import {
   canViewOnlyDrinks,
 } from '@/lib/orderFilters';
 
-// Language codes
-type LanguageCode = 'en' | 'es' | 'pt';
-
-// Status Translation Type
-type StatusTranslation = {
-  [key in LanguageCode]: string;
-};
-
-// Comprehensive Status Translation Mapping
-const STATUS_TRANSLATIONS: Record<BaseOrderStatus, StatusTranslation> = {
-  "pending": {
-    en: "Pending",
-    es: "Pendiente", 
-    pt: "Pendente"
-  },
-  "preparing": {
-    en: "In Preparation",
-    es: "En preparación", 
-    pt: "Em Preparação"
-  },
-  "ready": {
-    en: "Ready",
-    es: "Listo", 
-    pt: "Pronto"
-  },
-  "delivered": {
-    en: "Delivered",
-    es: "Entregado", 
-    pt: "Entregue"
-  },
-  "cancelled": {
-    en: "Cancelled",
-    es: "Cancelado", 
-    pt: "Cancelado"
-  },
-  "closed": {
-    en: "Closed",
-    es: "Cerrado", 
-    pt: "Fechado"
-  },
-  "ordering": {
-    en: "Ordering",
-    es: "Ordenando", 
-    pt: "Ordenando"
-  },
-  "served": {
-    en: "Served",
-    es: "Servido", 
-    pt: "Servido"
-  },
-  "finished": {
-    en: "Finished",
-    es: "Finalizado", 
-    pt: "Finalizado"
-  },
-  "null": {
-    en: "Unknown",
-    es: "Desconocido", 
-    pt: "Desconhecido"
-  }
-};
-
-// Translation Utility
-const translateStatus = (
-  status: FlexibleOrderStatus | undefined | null | string, 
-  language: LanguageCode = 'en'
-): string => {
-  // Check if status is a valid OrderStatus
-  const validStatus = status && Object.keys(STATUS_TRANSLATIONS).includes(status.toString())
-    ? status.toString() as BaseOrderStatus
-    : 'null';
-
-  // Directly return the translation from STATUS_TRANSLATIONS
-  return STATUS_TRANSLATIONS[validStatus][language];
-};
+const ORDER_STATUS_KEYS: BaseOrderStatus[] = [
+  "pending",
+  "preparing",
+  "ready",
+  "delivered",
+  "cancelled",
+  "closed",
+  "ordering",
+  "served",
+  "finished",
+  "null",
+];
 
 // Define a type for Badge variants to ensure type safety
 type BadgeVariant = 'default' | 'destructive' | 'outline' | 'secondary';
@@ -152,16 +89,22 @@ const getStatusBadgeVariant = (status?: BaseOrderStatus): BadgeVariant => {
   }
 }
 
-// Función auxiliar para obtener la etiqueta de tipo de pedido
-const getOrderTypeLabel = (orderType?: string): string => {
-  // Utiliza traducciones en vez de hardcodeado
-  return orderType
-    ? t(`orders.types.${orderType}`)
-    : t('orders.types.unknown');
-};
-
 export default function OrdersPage() {
-  const { t, i18n }: { t: TFunction, i18n: any } = useI18n()
+  const { t }: { t: TFunction } = useI18n()
+
+  const translateStatus = (
+    status: FlexibleOrderStatus | undefined | null | string
+  ): string => {
+    const validStatus =
+      status && ORDER_STATUS_KEYS.includes(status.toString() as BaseOrderStatus)
+        ? (status.toString() as BaseOrderStatus)
+        : "null"
+    return t(`orders.status.${validStatus}`)
+  }
+
+  const getOrderTypeLabel = (orderType?: string): string => {
+    return orderType ? t(`orders.types.${orderType}`) : t("orders.types.unknown")
+  }
   const { db } = useFirebase()
   const { user } = useAuth()
   const router = useRouter();
@@ -185,7 +128,7 @@ export default function OrdersPage() {
     // Verifica que el usuario tenga un establecimiento asignado
     if (!user.establishmentId) {
       console.error('No establishment ID found for user');
-      toast.error("Establishment ID not found");
+      toast.error(t("orders.error.establishmentIdNotFound"));
       setLoading(false);
       return;
     }
@@ -218,7 +161,7 @@ export default function OrdersPage() {
           updatedAt: data.updatedAt?.toDate() || new Date(),
           tableId: data.tableId || data.debugContext?.orderContext?.tableId,
           mapId: data.mapId || data.debugContext?.orderContext?.mapId,
-          waiter: data.createdBy?.username || data.createdBy?.email || 'Unknown',
+          waiter: data.createdBy?.username || data.createdBy?.email || t("commons.unknown"),
           specialRequests: data.specialRequests || '',
           paymentInfo: {
             method: data.paymentInfo?.method || 'other',
@@ -227,7 +170,7 @@ export default function OrdersPage() {
           debugContext: data.debugContext,
           createdBy: {
             uid: data.createdBy?.uid || data.uid,
-            displayName: data.createdBy?.username || data.createdBy?.email || 'Unknown',
+            displayName: data.createdBy?.username || data.createdBy?.email || t("commons.unknown"),
             email: data.createdBy?.email || null,
             role: data.createdBy?.role || 'unknown'
           }
@@ -238,7 +181,7 @@ export default function OrdersPage() {
       setLoading(false);
     }, (error) => {
       console.error("Error fetching orders in real-time:", error);
-      toast.error("Error en la suscripción de órdenes");
+      toast.error(t("orders.errors.subscriptionFailed"));
       setLoading(false);
     });
 
@@ -296,7 +239,7 @@ export default function OrdersPage() {
       toast.success(
         t("orders.success.statusUpdated", {
           orderId: selectedOrder.id,
-          status: translateStatus(validStatus, i18n?.language as LanguageCode)
+          status: translateStatus(validStatus)
         })
       )
     } catch (error) {
@@ -456,9 +399,9 @@ export default function OrdersPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t("orders.filter.allStatuses")}</SelectItem>
-            {Object.keys(STATUS_TRANSLATIONS).map((status) => (
+            {ORDER_STATUS_KEYS.map((status) => (
               <SelectItem key={status} value={status}>
-                {translateStatus(status, i18n?.language as LanguageCode)}
+                {translateStatus(status)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -486,7 +429,7 @@ export default function OrdersPage() {
                   <Card key={order.id} className="w-full">
                     <CardHeader className="flex flex-row items-center justify-end space-y-0 pb-2 p-3 sm:p-6">
                       <Badge variant={getStatusBadgeVariant(order.status as BaseOrderStatus)}>
-                        {translateStatus(order.status, i18n?.language as LanguageCode)}
+                        {translateStatus(order.status)}
                       </Badge>
                     </CardHeader>
                     <CardContent className="p-3 sm:p-6">
@@ -549,19 +492,19 @@ export default function OrdersPage() {
                         </div>
                         <div className="flex items-center justify-end">
                           <div className="flex items-center gap-1 sm:gap-2">
-                            <Button variant="ghost" size="icon" onClick={() => handleViewOrder(order)} title="Ver pedido">
+                            <Button variant="ghost" size="icon" onClick={() => handleViewOrder(order)} title={t("orders.actions.viewOrder")}>
                               <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
                             </Button>
                             {canCreate('orders') && (
                               <Button variant="ghost" size="icon" onClick={() => {
                                 setSelectedOrder(order);
                                 setIsAddItemsDialogOpen(true);
-                              }} title="Agregar ítems">
+                              }} title={t("orders.actions.addItems")}>
                                 <PlusSquare className="h-4 w-4 sm:h-5 sm:w-5" />
                               </Button>
                             )}
                             {canUpdate('orders') && (
-                              <Button variant="ghost" size="icon" onClick={() => openStatusDialog(order)} title="Cambiar status">
+                              <Button variant="ghost" size="icon" onClick={() => openStatusDialog(order)} title={t("orders.actions.changeStatus")}>
                                 <Repeat className="h-4 w-4 sm:h-5 sm:w-5" />
                               </Button>
                             )}
@@ -569,7 +512,7 @@ export default function OrdersPage() {
                               <Button variant="ghost" size="icon" onClick={() => {
                                 setSelectedOrder(order);
                                 setIsDeleteDialogOpen(true);
-                              }} title="Eliminar">
+                              }} title={t("orders.actions.delete")}>
                                 <Trash className="h-4 w-4 sm:h-5 sm:w-5" />
                               </Button>
                             )}
@@ -628,11 +571,9 @@ export default function OrdersPage() {
                   <SelectValue placeholder={t("orders.selectStatus")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {[
-                    'pending', 'preparing', 'ready', 'delivered', 'cancelled', 'closed', 'ordering', 'served', 'finished'
-                  ].map(status => (
+                  {ORDER_STATUS_KEYS.filter((s) => s !== "null").map((status) => (
                     <SelectItem key={status} value={status}>
-                      {translateStatus(status, i18n?.language as LanguageCode)}
+                      {translateStatus(status)}
                     </SelectItem>
                   ))}
                 </SelectContent>

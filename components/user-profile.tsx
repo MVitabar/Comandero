@@ -79,10 +79,10 @@ export function UserProfile() {
 
   return (
     <div className="max-w-md mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Perfil de Usuario</h1>
+      <h1 className="text-2xl font-bold mb-4">{t("profile.title")}</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <Label>Nombre de Usuario</Label>
+          <Label>{t("profile.labels.username")}</Label>
           <Input 
             name="username"
             value={userData.username}
@@ -91,14 +91,14 @@ export function UserProfile() {
           />
         </div>
         <div>
-          <Label>Correo Electrónico</Label>
+          <Label>{t("profile.labels.email")}</Label>
           <Input 
             value={userData.email}
             disabled
           />
         </div>
         <div>
-          <Label>Número de Teléfono</Label>
+          <Label>{t("profile.labels.phone")}</Label>
           <Input 
             name="phoneNumber"
             value={userData.phoneNumber}
@@ -108,7 +108,7 @@ export function UserProfile() {
         </div>
         {canDo && canDo('profile', 'changeRole') && (
           <div>
-            <Label>Rol</Label>
+            <Label>{t("profile.labels.role")}</Label>
             <Select 
               value={userData.role} 
               onValueChange={handleRoleChange}
@@ -118,10 +118,10 @@ export function UserProfile() {
                 <SelectValue placeholder={t("profile.selectRole")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={UserRole.ADMIN}>Administrador</SelectItem>
-                <SelectItem value={UserRole.MANAGER}>Gerente</SelectItem>
-                <SelectItem value={UserRole.CHEF}>Chef</SelectItem>
-                <SelectItem value={UserRole.WAITER}>Mesero</SelectItem>
+                <SelectItem value={UserRole.ADMIN}>{t("roles.admin")}</SelectItem>
+                <SelectItem value={UserRole.MANAGER}>{t("roles.manager")}</SelectItem>
+                <SelectItem value={UserRole.CHEF}>{t("roles.chef")}</SelectItem>
+                <SelectItem value={UserRole.WAITER}>{t("roles.waiter")}</SelectItem>
               </SelectContent>
             </Select>
           </div>

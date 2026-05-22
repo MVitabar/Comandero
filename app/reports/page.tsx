@@ -106,7 +106,7 @@ export default function ReportsPage() {
       setFilteredOrders(fetchedOrders)
     } catch (error) {
       console.error("Error fetching order reports:", error)
-      toast.error("Failed to fetch order data")
+      toast.error(t("reports.errors.fetchOrdersFailed"))
     } finally {
       setLoading(false)
     }
@@ -135,7 +135,7 @@ export default function ReportsPage() {
       setSalesData(fetchedSales)
     } catch (error) {
       console.error("Error fetching sales reports:", error)
-      toast.error("Failed to fetch sales data")
+      toast.error(t("reports.errors.fetchSalesFailed"))
     } finally {
       setLoading(false)
     }

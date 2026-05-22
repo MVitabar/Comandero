@@ -37,11 +37,52 @@ import {
   Send,
 } from "lucide-react"
 import Image from "next/image"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import emailjs from "@emailjs/browser"
+import "@/styles/globals.css"
+import "./landing.css"
+import { useI18n } from "@/components/i18n-provider"
+import { LanguageSwitcher } from "@/components/language-switcher"
+
+const TESTIMONIAL_KEYS = ["maria", "carlos", "fernanda", "roberto", "juliana", "marcelo"] as const
+const TESTIMONIAL_COLORS = [
+  "from-blue-500 to-blue-600",
+  "from-purple-500 to-purple-600",
+  "from-pink-500 to-pink-600",
+  "from-green-500 to-green-600",
+  "from-orange-500 to-orange-600",
+  "from-cyan-500 to-cyan-600",
+] as const
+const TESTIMONIAL_STARS = [5, 5, 5, 4, 5, 5] as const
+
+const INTEGRATION_KEYS = [
+  "paymentGateways",
+  "delivery",
+  "crm",
+  "accounting",
+  "reservations",
+  "marketing",
+  "customApi",
+  "support",
+] as const
+
+const INTEGRATION_ICONS = [
+  CreditCard,
+  ShoppingCart,
+  MessageSquare,
+  BarChart3,
+  Calendar,
+  Globe,
+  Code,
+  HelpCircle,
+] as const
+
+const FAQ_KEYS = ["technical", "trial", "implementation", "cancel", "support", "security"] as const
 
 export default function LandingPage() {
+  const { t } = useI18n()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -50,6 +91,41 @@ export default function LandingPage() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle")
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 16)
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+
+  useEffect(() => {
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    const elements = document.querySelectorAll(".landing-reveal")
+    if (prefersReduced) {
+      elements.forEach((el) => el.classList.add("landing-visible"))
+      return
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("landing-visible")
+          }
+        })
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -48px 0px" }
+    )
+    elements.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
+
+  const howItWorksSteps = [
+    { icon: Download, color: "from-blue-500 to-blue-600", number: "01", stepKey: "signup" as const },
+    { icon: Settings, color: "from-purple-500 to-purple-600", number: "02", stepKey: "customize" as const },
+    { icon: Users, color: "from-pink-500 to-pink-600", number: "03", stepKey: "train" as const },
+    { icon: Rocket, color: "from-orange-500 to-orange-600", number: "04", stepKey: "launch" as const },
+  ]
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -85,97 +161,112 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="landing-page flex flex-col min-h-screen bg-slate-50 antialiased">
       {/* Navbar */}
-      <header className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
+      <header
+        className={`sticky top-0 z-50 border-b border-slate-200/60 transition-all duration-500 landing-glass ${
+          scrolled ? "landing-glass-scrolled py-2.5" : "py-3.5"
+        }`}
+      >
+        <div className="container mx-auto px-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5 group">
             <div className="relative">
-              <div className="absolute inset-0 bg-blue-500 rounded-full blur-lg opacity-20 animate-pulse"></div>
-              <Image src="/icons/icon-192x192.png" alt="Comandero Logo" width={32} height={32} className="relative" />
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 blur-md opacity-40 group-hover:opacity-60 transition-opacity animate-pulse" />
+              <Image src="/icons/icon-192x192.png" alt={t("landing.brand.logoAlt")} width={36} height={36} className="relative rounded-lg ring-2 ring-white/80 shadow-sm" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Comandero</span>
-          </div>
-          <nav className="hidden md:flex items-center space-x-8">
-            <a href="#features" className="text-sm font-medium hover:text-blue-600 transition-colors">
-              Recursos
+            <span className="text-xl font-bold tracking-tight landing-gradient-text animate-landing-shine">{t("landing.brand.name")}</span>
+          </Link>
+          <nav className="hidden md:flex items-center gap-8">
+            <a href="#features" className="landing-nav-link text-sm font-medium">
+              {t("landing.nav.features")}
             </a>
-            <a href="#benefits" className="text-sm font-medium hover:text-blue-600 transition-colors">
-              Benefícios
+            <a href="#benefits" className="landing-nav-link text-sm font-medium">
+              {t("landing.nav.benefits")}
             </a>
-            <a href="#pricing" className="text-sm font-medium hover:text-blue-600 transition-colors">
-              Preços
+            <a href="#pricing" className="landing-nav-link text-sm font-medium">
+              {t("landing.nav.pricing")}
             </a>
-            <a href="#faq" className="text-sm font-medium hover:text-blue-600 transition-colors">
-              FAQ
+            <a href="#faq" className="landing-nav-link text-sm font-medium">
+              {t("landing.nav.faq")}
             </a>
           </nav>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher />
             <Link href="/login">
-              <Button variant="outline" size="sm" className="hidden sm:inline-flex">
-                Entrar
+              <Button variant="outline" size="sm" className="hidden sm:inline-flex border-slate-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-300">
+                {t("landing.nav.login")}
               </Button>
             </Link>
             <Link href="/register">
-              <Button size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                Cadastrar
+              <Button size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md shadow-blue-500/25 hover:shadow-lg hover:shadow-blue-500/30 hover:scale-[1.02] transition-all duration-300">
+                {t("landing.nav.register")}
               </Button>
             </Link>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2"
+              className="md:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors"
+              aria-label={mobileMenuOpen ? t("landing.nav.closeMenu") : t("landing.nav.openMenu")}
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
         {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t bg-white">
-            <nav className="container mx-auto px-4 py-4 flex flex-col space-y-4">
-              <a href="#features" className="text-sm font-medium hover:text-blue-600 transition-colors">
-                Recursos
-              </a>
-              <a href="#benefits" className="text-sm font-medium hover:text-blue-600 transition-colors">
-                Benefícios
-              </a>
-              <a href="#pricing" className="text-sm font-medium hover:text-blue-600 transition-colors">
-                Preços
-              </a>
-              <a href="#faq" className="text-sm font-medium hover:text-blue-600 transition-colors">
-                FAQ
-              </a>
-              <Link href="/login">
-                <Button variant="outline" size="sm" className="w-full">
-                  Entrar
-                </Button>
-              </Link>
-            </nav>
-          </div>
-        )}
+        <div
+          className={`md:hidden overflow-hidden transition-all duration-300 ease-out border-t border-slate-200/80 landing-glass ${
+            mobileMenuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0 border-t-0"
+          }`}
+        >
+          <nav className="container mx-auto px-4 py-4 flex flex-col gap-3">
+            <a href="#features" onClick={() => setMobileMenuOpen(false)} className="landing-nav-link text-sm font-medium py-1">
+              {t("landing.nav.features")}
+            </a>
+            <a href="#benefits" onClick={() => setMobileMenuOpen(false)} className="landing-nav-link text-sm font-medium py-1">
+              {t("landing.nav.benefits")}
+            </a>
+            <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="landing-nav-link text-sm font-medium py-1">
+              {t("landing.nav.pricing")}
+            </a>
+            <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="landing-nav-link text-sm font-medium py-1">
+              {t("landing.nav.faq")}
+            </a>
+            <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="outline" size="sm" className="w-full mt-1">
+                {t("landing.nav.login")}
+              </Button>
+            </Link>
+          </nav>
+        </div>
       </header>
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-blue-900 via-purple-900 to-black text-white py-20 md:py-32 overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500 rounded-full filter blur-[128px] opacity-20 animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-72 h-72 bg-purple-500 rounded-full filter blur-[128px] opacity-20 animate-pulse"></div>
+      <section className="relative landing-mesh animate-landing-gradient text-white py-24 md:py-36 overflow-hidden">
+        <div className="absolute inset-0 landing-grid-pattern" aria-hidden />
+        <div className="absolute top-16 left-[8%] w-80 h-80 bg-blue-500/30 rounded-full blur-[120px] animate-landing-float-slow" aria-hidden />
+        <div className="absolute bottom-12 right-[6%] w-96 h-96 bg-purple-500/25 rounded-full blur-[140px] animate-landing-float-slow [animation-delay:-5s]" aria-hidden />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[100px] animate-pulse" aria-hidden />
         <div className="container mx-auto px-4 flex flex-col items-center text-center relative z-10">
-          <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm mb-6 border border-white/20">
-            <Sparkles className="h-4 w-4 mr-2 text-yellow-400" />
-            <span className="text-sm font-medium">Plataforma #1 para gestão de restaurantes</span>
+          <div className="landing-reveal landing-visible inline-flex items-center px-4 py-2 rounded-full landing-glass-dark mb-8 shadow-lg shadow-blue-500/10">
+            <Sparkles className="h-4 w-4 mr-2 text-amber-300 animate-pulse" />
+            <span className="text-sm font-medium tracking-wide">{t("landing.hero.badge")}</span>
           </div>
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-            Gestão de restaurantes <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">simplificada</span>
+          <h1 className="landing-reveal landing-visible landing-reveal-delay-1 text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-[1.1] tracking-tight max-w-5xl">
+            {t("landing.hero.titleLine1")}{" "}
+            <span className="block sm:inline mt-1 sm:mt-0 text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-violet-300 to-purple-400 animate-landing-shine bg-[length:200%_auto]">
+              {t("landing.hero.titleLine2")}
+            </span>
           </h1>
-          <p className="text-xl md:text-2xl mb-10 max-w-3xl text-gray-300">
-            Uma plataforma completa para administrar todos os aspectos do seu restaurante, desde pedidos até estoque.
+          <p className="landing-reveal landing-visible landing-reveal-delay-2 text-lg md:text-xl lg:text-2xl mb-10 max-w-2xl text-slate-300/95 leading-relaxed font-light">
+            {t("landing.hero.subtitle")}
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 mb-12">
+          <div className="landing-reveal landing-visible landing-reveal-delay-3 flex flex-col sm:flex-row gap-4 mb-14">
             <Link href="/register">
-              <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-6 text-lg shadow-lg shadow-blue-500/25">
-                Começar grátis
-                <Rocket className="ml-2 h-5 w-5" />
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-10 py-7 text-lg rounded-xl shadow-xl shadow-blue-600/30 hover:shadow-2xl hover:shadow-purple-500/25 hover:scale-[1.03] transition-all duration-300"
+              >
+                {t("landing.hero.ctaPrimary")}
+                <Rocket className="ml-2 h-5 w-5 group-hover:translate-x-0.5 transition-transform" />
               </Button>
             </Link>
             {/* <Link href="/login">
@@ -185,175 +276,183 @@ export default function LandingPage() {
               </Button>
             </Link> */}
           </div>
-          <div className="flex items-center gap-8 text-sm text-gray-400">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-400" />
-              <span>Sem cartão de crédito</span>
+          <div className="landing-reveal landing-visible landing-reveal-delay-4 flex flex-wrap justify-center gap-6 md:gap-10 text-sm text-slate-400">
+            <div className="flex items-center gap-2 landing-glass-dark px-4 py-2 rounded-full">
+              <CheckCircle className="h-5 w-5 text-emerald-400 shrink-0" />
+              <span>{t("landing.hero.trust.noCreditCard")}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-400" />
-              <span>14 dias grátis</span>
+            <div className="flex items-center gap-2 landing-glass-dark px-4 py-2 rounded-full">
+              <CheckCircle className="h-5 w-5 text-emerald-400 shrink-0" />
+              <span>{t("landing.hero.trust.freeTrialDays")}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-400" />
-              <span>Cancelamento fácil</span>
+            <div className="flex items-center gap-2 landing-glass-dark px-4 py-2 rounded-full">
+              <CheckCircle className="h-5 w-5 text-emerald-400 shrink-0" />
+              <span>{t("landing.hero.trust.easyCancel")}</span>
             </div>
           </div>
         </div>
       </section>
 
       {/* Estatísticas Melhoradas */}
-      <section className="py-16 bg-gradient-to-b from-gray-50 to-white">
+      <section className="py-20 -mt-8 relative z-20">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow text-center group">
-              <div className="relative mb-4">
-                <div className="absolute inset-0 bg-blue-500 rounded-full filter blur-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
-                <TrendingUp className="h-12 w-12 text-blue-600 mx-auto relative" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="landing-reveal landing-glass-card landing-stat-card landing-card-modern p-8 rounded-2xl text-center group">
+              <div className="relative mb-5 inline-flex">
+                <div className="absolute inset-0 bg-blue-500 rounded-2xl blur-xl opacity-25 group-hover:opacity-40 transition-opacity scale-150" />
+                <div className="relative p-4 rounded-2xl bg-blue-500/10 ring-1 ring-blue-200/60">
+                  <TrendingUp className="h-10 w-10 text-blue-600" />
+                </div>
               </div>
-              <div className="text-5xl font-bold text-blue-600 mb-2">+500</div>
-              <p className="text-gray-600 font-medium">Restaurantes ativos</p>
-              <p className="text-sm text-gray-400 mt-2">Em todo o Brasil</p>
+              <div className="text-4xl md:text-5xl font-bold text-blue-600 mb-2 tabular-nums">{t("landing.stats.restaurants.value")}</div>
+              <p className="text-slate-700 font-semibold">{t("landing.stats.restaurants.title")}</p>
+              <p className="text-sm text-slate-500 mt-1">{t("landing.stats.restaurants.subtitle")}</p>
             </div>
-            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow text-center group">
-              <div className="relative mb-4">
-                <div className="absolute inset-0 bg-green-500 rounded-full filter blur-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
-                <Clock className="h-12 w-12 text-green-600 mx-auto relative" />
+            <div className="landing-reveal landing-reveal-delay-1 landing-glass-card landing-stat-card landing-card-modern p-8 rounded-2xl text-center group">
+              <div className="relative mb-5 inline-flex">
+                <div className="absolute inset-0 bg-emerald-500 rounded-2xl blur-xl opacity-25 group-hover:opacity-40 transition-opacity scale-150" />
+                <div className="relative p-4 rounded-2xl bg-emerald-500/10 ring-1 ring-emerald-200/60">
+                  <Clock className="h-10 w-10 text-emerald-600" />
+                </div>
               </div>
-              <div className="text-5xl font-bold text-green-600 mb-2">30%</div>
-              <p className="text-gray-600 font-medium">Redução no tempo</p>
-              <p className="text-sm text-gray-400 mt-2">De gestão</p>
+              <div className="text-4xl md:text-5xl font-bold text-emerald-600 mb-2 tabular-nums">{t("landing.stats.timeReduction.value")}</div>
+              <p className="text-slate-700 font-semibold">{t("landing.stats.timeReduction.title")}</p>
+              <p className="text-sm text-slate-500 mt-1">{t("landing.stats.timeReduction.subtitle")}</p>
             </div>
-            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow text-center group">
-              <div className="relative mb-4">
-                <div className="absolute inset-0 bg-purple-500 rounded-full filter blur-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
-                <Award className="h-12 w-12 text-purple-600 mx-auto relative" />
+            <div className="landing-reveal landing-reveal-delay-2 landing-glass-card landing-stat-card landing-card-modern p-8 rounded-2xl text-center group">
+              <div className="relative mb-5 inline-flex">
+                <div className="absolute inset-0 bg-purple-500 rounded-2xl blur-xl opacity-25 group-hover:opacity-40 transition-opacity scale-150" />
+                <div className="relative p-4 rounded-2xl bg-purple-500/10 ring-1 ring-purple-200/60">
+                  <Award className="h-10 w-10 text-purple-600" />
+                </div>
               </div>
-              <div className="text-5xl font-bold text-purple-600 mb-2">98%</div>
-              <p className="text-gray-600 font-medium">Satisfação</p>
-              <p className="text-sm text-gray-400 mt-2">Dos clientes</p>
+              <div className="text-4xl md:text-5xl font-bold text-purple-600 mb-2 tabular-nums">{t("landing.stats.satisfaction.value")}</div>
+              <p className="text-slate-700 font-semibold">{t("landing.stats.satisfaction.title")}</p>
+              <p className="text-sm text-slate-500 mt-1">{t("landing.stats.satisfaction.subtitle")}</p>
             </div>
-            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow text-center group">
-              <div className="relative mb-4">
-                <div className="absolute inset-0 bg-orange-500 rounded-full filter blur-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
-                <Headphones className="h-12 w-12 text-orange-600 mx-auto relative" />
+            <div className="landing-reveal landing-reveal-delay-3 landing-glass-card landing-stat-card landing-card-modern p-8 rounded-2xl text-center group">
+              <div className="relative mb-5 inline-flex">
+                <div className="absolute inset-0 bg-orange-500 rounded-2xl blur-xl opacity-25 group-hover:opacity-40 transition-opacity scale-150" />
+                <div className="relative p-4 rounded-2xl bg-orange-500/10 ring-1 ring-orange-200/60">
+                  <Headphones className="h-10 w-10 text-orange-600" />
+                </div>
               </div>
-              <div className="text-5xl font-bold text-orange-600 mb-2">24/7</div>
-              <p className="text-gray-600 font-medium">Suporte técnico</p>
-              <p className="text-sm text-gray-400 mt-2">Sempre disponível</p>
+              <div className="text-4xl md:text-5xl font-bold text-orange-600 mb-2 tabular-nums">{t("landing.stats.support.value")}</div>
+              <p className="text-slate-700 font-semibold">{t("landing.stats.support.title")}</p>
+              <p className="text-sm text-slate-500 mt-1">{t("landing.stats.support.subtitle")}</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 bg-white">
+      <section id="features" className="py-24 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-600 text-sm font-medium mb-4">
+          <div className="landing-reveal text-center mb-16">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold mb-4 ring-1 ring-blue-100">
               <Zap className="h-4 w-4 mr-2" />
-              Recursos poderosos
+              {t("landing.features.badge")}
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Recursos principais
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 landing-gradient-text tracking-tight">
+              {t("landing.features.title")}
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto text-lg">
-              Nossa plataforma oferece todas as ferramentas que você precisa para gerenciar seu restaurante de maneira eficiente.
+            <p className="text-slate-600 max-w-2xl mx-auto text-lg leading-relaxed">
+              {t("landing.features.subtitle")}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="group hover:shadow-2xl transition-all duration-300 border-2 hover:border-blue-500">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            <Card className="landing-reveal landing-feature-glow landing-card-modern group border-slate-200/80 shadow-sm hover:border-blue-400/50 rounded-2xl overflow-hidden">
               <CardContent className="pt-6">
                 <div className="rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 p-4 w-16 h-16 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <ShoppingCart className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Gestão de pedidos</h3>
+                <h3 className="text-xl font-bold mb-3">{t("landing.features.orders.title")}</h3>
                 <p className="text-gray-600">
-                  Faça pedidos de maneira rápida e eficiente, com atualizações em tempo real para a cozinha.
+                  {t("landing.features.orders.description")}
                 </p>
                 <div className="mt-4 flex items-center text-blue-600 font-medium group-hover:translate-x-2 transition-transform">
-                  <span>Saiba mais</span>
+                  <span>{t("landing.features.learnMore")}</span>
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="group hover:shadow-2xl transition-all duration-300 border-2 hover:border-purple-500">
+            <Card className="landing-reveal landing-reveal-delay-1 landing-feature-glow landing-card-modern group border-slate-200/80 shadow-sm hover:border-purple-400/50 rounded-2xl overflow-hidden">
               <CardContent className="pt-6">
                 <div className="rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 p-4 w-16 h-16 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <Utensils className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Gestão de mesas</h3>
+                <h3 className="text-xl font-bold mb-3">{t("landing.features.tables.title")}</h3>
                 <p className="text-gray-600">
-                  Visualize e administre a disposição das suas mesas, com status em tempo real.
+                  {t("landing.features.tables.description")}
                 </p>
                 <div className="mt-4 flex items-center text-purple-600 font-medium group-hover:translate-x-2 transition-transform">
-                  <span>Saiba mais</span>
+                  <span>{t("landing.features.learnMore")}</span>
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="group hover:shadow-2xl transition-all duration-300 border-2 hover:border-green-500">
+            <Card className="landing-reveal landing-reveal-delay-2 landing-feature-glow landing-card-modern group border-slate-200/80 shadow-sm hover:border-emerald-400/50 rounded-2xl overflow-hidden">
               <CardContent className="pt-6">
                 <div className="rounded-2xl bg-gradient-to-br from-green-500 to-green-600 p-4 w-16 h-16 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <BarChart3 className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Relatórios e análises</h3>
+                <h3 className="text-xl font-bold mb-3">{t("landing.features.reports.title")}</h3>
                 <p className="text-gray-600">
-                  Obtenha relatórios detalhados sobre vendas, estoque e desempenho do seu restaurante.
+                  {t("landing.features.reports.description")}
                 </p>
                 <div className="mt-4 flex items-center text-green-600 font-medium group-hover:translate-x-2 transition-transform">
-                  <span>Saiba mais</span>
+                  <span>{t("landing.features.learnMore")}</span>
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="group hover:shadow-2xl transition-all duration-300 border-2 hover:border-orange-500">
+            <Card className="landing-reveal landing-reveal-delay-3 landing-feature-glow landing-card-modern group border-slate-200/80 shadow-sm hover:border-orange-400/50 rounded-2xl overflow-hidden">
               <CardContent className="pt-6">
                 <div className="rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 p-4 w-16 h-16 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <Calendar className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Reservas</h3>
+                <h3 className="text-xl font-bold mb-3">{t("landing.features.reservations.title")}</h3>
                 <p className="text-gray-600">
-                  Gerencie as reservas dos seus clientes de maneira simples e evite sobrecargas.
+                  {t("landing.features.reservations.description")}
                 </p>
                 <div className="mt-4 flex items-center text-orange-600 font-medium group-hover:translate-x-2 transition-transform">
-                  <span>Saiba mais</span>
+                  <span>{t("landing.features.learnMore")}</span>
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="group hover:shadow-2xl transition-all duration-300 border-2 hover:border-pink-500">
+            <Card className="landing-reveal landing-reveal-delay-1 landing-feature-glow landing-card-modern group border-slate-200/80 shadow-sm hover:border-pink-400/50 rounded-2xl overflow-hidden">
               <CardContent className="pt-6">
                 <div className="rounded-2xl bg-gradient-to-br from-pink-500 to-pink-600 p-4 w-16 h-16 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <Users className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Gestão de pessoal</h3>
+                <h3 className="text-xl font-bold mb-3">{t("landing.features.staff.title")}</h3>
                 <p className="text-gray-600">
-                  Administre os papéis e permissões da sua equipe, atribuindo tarefas específicas.
+                  {t("landing.features.staff.description")}
                 </p>
                 <div className="mt-4 flex items-center text-pink-600 font-medium group-hover:translate-x-2 transition-transform">
-                  <span>Saiba mais</span>
+                  <span>{t("landing.features.learnMore")}</span>
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="group hover:shadow-2xl transition-all duration-300 border-2 hover:border-cyan-500">
+            <Card className="landing-reveal landing-reveal-delay-2 landing-feature-glow landing-card-modern group border-slate-200/80 shadow-sm hover:border-cyan-400/50 rounded-2xl overflow-hidden">
               <CardContent className="pt-6">
                 <div className="rounded-2xl bg-gradient-to-br from-cyan-500 to-cyan-600 p-4 w-16 h-16 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <Settings className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Estoque</h3>
+                <h3 className="text-xl font-bold mb-3">{t("landing.features.inventory.title")}</h3>
                 <p className="text-gray-600">
-                  Controle seu estoque em tempo real, com alertas de estoque baixo e gestão de fornecedores.
+                  {t("landing.features.inventory.description")}
                 </p>
                 <div className="mt-4 flex items-center text-cyan-600 font-medium group-hover:translate-x-2 transition-transform">
-                  <span>Saiba mais</span>
+                  <span>{t("landing.features.learnMore")}</span>
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </div>
               </CardContent>
@@ -363,71 +462,82 @@ export default function LandingPage() {
       </section>
 
       {/* Benefits Section */}
-      <section id="benefits" className="py-20 bg-gray-50">
+      <section id="benefits" className="py-24 landing-section-alt">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">Benefícios para seu negócio</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Descubra como nossa plataforma pode transformar a operação do seu restaurante.
+          <div className="landing-reveal text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 landing-gradient-text tracking-tight">{t("landing.benefits.title")}</h2>
+            <p className="text-slate-600 max-w-2xl mx-auto text-lg leading-relaxed">
+              {t("landing.benefits.subtitle")}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="flex items-start space-x-4">
-              <CheckCircle className="h-6 w-6 text-green-500 flex-shrink-0 mt-1" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="landing-reveal flex items-start gap-4 p-6 rounded-2xl landing-glass-card landing-card-modern">
+              <div className="p-2 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-200/60 shrink-0">
+                <CheckCircle className="h-6 w-6 text-emerald-600" />
+              </div>
               <div>
-                <h3 className="text-xl font-bold mb-2">Aumento de eficiência</h3>
-                <p className="text-gray-600">
-                  Reduza o tempo dedicado a tarefas administrativas e concentre-se no que realmente importa: seus
-                  clientes.
+                <h3 className="text-xl font-bold mb-2 text-slate-800">{t("landing.benefits.efficiency.title")}</h3>
+                <p className="text-slate-600 leading-relaxed">
+                  {t("landing.benefits.efficiency.description")}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start space-x-4">
-              <CheckCircle className="h-6 w-6 text-green-500 flex-shrink-0 mt-1" />
+            <div className="landing-reveal landing-reveal-delay-1 flex items-start gap-4 p-6 rounded-2xl landing-glass-card landing-card-modern">
+              <div className="p-2 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-200/60 shrink-0">
+                <CheckCircle className="h-6 w-6 text-emerald-600" />
+              </div>
               <div>
-                <h3 className="text-xl font-bold mb-2">Redução de erros</h3>
-                <p className="text-gray-600">
-                  Minimize erros em pedidos e faturamento com um sistema digital integrado.
+                <h3 className="text-xl font-bold mb-2 text-slate-800">{t("landing.benefits.errors.title")}</h3>
+                <p className="text-slate-600 leading-relaxed">
+                  {t("landing.benefits.errors.description")}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start space-x-4">
-              <CheckCircle className="h-6 w-6 text-green-500 flex-shrink-0 mt-1" />
+            <div className="landing-reveal landing-reveal-delay-2 flex items-start gap-4 p-6 rounded-2xl landing-glass-card landing-card-modern">
+              <div className="p-2 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-200/60 shrink-0">
+                <CheckCircle className="h-6 w-6 text-emerald-600" />
+              </div>
               <div>
-                <h3 className="text-xl font-bold mb-2">Melhor controle de estoque</h3>
-                <p className="text-gray-600">
+                <h3 className="text-xl font-bold mb-2 text-slate-800">Melhor controle de estoque</h3>
+                <p className="text-slate-600 leading-relaxed">
                   Evite perdas e otimize suas compras com um acompanhamento preciso do seu estoque.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start space-x-4">
-              <CheckCircle className="h-6 w-6 text-green-500 flex-shrink-0 mt-1" />
+            <div className="landing-reveal flex items-start gap-4 p-6 rounded-2xl landing-glass-card landing-card-modern">
+              <div className="p-2 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-200/60 shrink-0">
+                <CheckCircle className="h-6 w-6 text-emerald-600" />
+              </div>
               <div>
-                <h3 className="text-xl font-bold mb-2">Dados para decisões</h3>
-                <p className="text-gray-600">
+                <h3 className="text-xl font-bold mb-2 text-slate-800">Dados para decisões</h3>
+                <p className="text-slate-600 leading-relaxed">
                   Tome decisões baseadas em dados reais sobre o desempenho do seu restaurante.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start space-x-4">
-              <CheckCircle className="h-6 w-6 text-green-500 flex-shrink-0 mt-1" />
+            <div className="landing-reveal landing-reveal-delay-1 flex items-start gap-4 p-6 rounded-2xl landing-glass-card landing-card-modern">
+              <div className="p-2 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-200/60 shrink-0">
+                <CheckCircle className="h-6 w-6 text-emerald-600" />
+              </div>
               <div>
-                <h3 className="text-xl font-bold mb-2">Melhoria da experiência do cliente</h3>
-                <p className="text-gray-600">Ofereça um serviço mais rápido e personalizado aos seus clientes.</p>
+                <h3 className="text-xl font-bold mb-2 text-slate-800">{t("landing.benefits.experience.title")}</h3>
+                <p className="text-slate-600 leading-relaxed">{t("landing.benefits.experience.description")}</p>
               </div>
             </div>
 
-            <div className="flex items-start space-x-4">
-              <CheckCircle className="h-6 w-6 text-green-500 flex-shrink-0 mt-1" />
+            <div className="landing-reveal landing-reveal-delay-2 flex items-start gap-4 p-6 rounded-2xl landing-glass-card landing-card-modern">
+              <div className="p-2 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-200/60 shrink-0">
+                <CheckCircle className="h-6 w-6 text-emerald-600" />
+              </div>
               <div>
-                <h3 className="text-xl font-bold mb-2">Escalabilidade</h3>
-                <p className="text-gray-600">
-                  Nosso sistema cresce com seu negócio, adaptando-se às suas necessidades em constante mudança.
+                <h3 className="text-xl font-bold mb-2 text-slate-800">{t("landing.benefits.scalability.title")}</h3>
+                <p className="text-slate-600 leading-relaxed">
+                  {t("landing.benefits.scalability.description")}
                 </p>
               </div>
             </div>
@@ -436,230 +546,147 @@ export default function LandingPage() {
       </section>
 
       {/* Como Funciona */}
-      <section className="py-20 bg-gradient-to-b from-white to-gray-50">
+      <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-purple-100 text-purple-600 text-sm font-medium mb-4">
+          <div className="landing-reveal text-center mb-16">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-purple-50 text-purple-700 text-sm font-semibold mb-4 ring-1 ring-purple-100">
               <Target className="h-4 w-4 mr-2" />
-              Processo simples
+              {t("landing.howItWorks.badge")}
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Como funciona
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 landing-gradient-text tracking-tight">
+              {t("landing.howItWorks.title")}
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto text-lg">
-              Implementar o Comandero no seu negócio é simples e rápido.
+              {t("landing.howItWorks.subtitle")}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
-            <div className="hidden md:block absolute top-1/2 left-1/4 right-1/4 h-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 -translate-y-1/2"></div>
-            {[
-              {
-                icon: <Download className="h-12 w-12 text-white" />,
-                title: "1. Cadastre-se",
-                description: "Crie sua conta e configure o perfil do seu restaurante em minutos.",
-                color: "from-blue-500 to-blue-600",
-                number: "01"
-              },
-              {
-                icon: <Settings className="h-12 w-12 text-white" />,
-                title: "2. Personalize",
-                description: "Configure seu cardápio, mesas, pessoal e preferências de acordo com suas necessidades.",
-                color: "from-purple-500 to-purple-600",
-                number: "02"
-              },
-              {
-                icon: <Users className="h-12 w-12 text-white" />,
-                title: "3. Treine",
-                description: "Capacite sua equipe com nossos tutoriais e suporte personalizado.",
-                color: "from-pink-500 to-pink-600",
-                number: "03"
-              },
-              {
-                icon: <Rocket className="h-12 w-12 text-white" />,
-                title: "4. Comece!",
-                description: "Comece a gerenciar seu restaurante de maneira mais eficiente desde o primeiro dia.",
-                color: "from-orange-500 to-orange-600",
-                number: "04"
-              },
-            ].map((step, i) => (
-              <div key={i} className="flex flex-col items-center text-center relative z-10">
-                <div className={`rounded-2xl bg-gradient-to-br ${step.color} p-8 mb-6 shadow-lg hover:shadow-2xl transition-shadow group hover:scale-105 transition-transform`}>
-                  <div className="absolute top-2 right-2 text-white/30 font-bold text-2xl">{step.number}</div>
-                  {step.icon}
+            <div className="hidden md:block absolute top-[4.5rem] left-[12%] right-[12%] h-1 bg-gradient-to-r from-blue-400 via-purple-400 to-orange-400 rounded-full opacity-60 -z-0" aria-hidden />
+            {howItWorksSteps.map((step, i) => {
+              const StepIcon = step.icon
+              return (
+              <div key={step.stepKey} className={`landing-reveal ${i > 0 ? `landing-reveal-delay-${Math.min(i, 3)}` : ""} flex flex-col items-center text-center relative z-10`}>
+                <div className={`relative rounded-2xl bg-gradient-to-br ${step.color} p-8 mb-6 shadow-xl shadow-blue-500/10 landing-card-modern group`}>
+                  <div className="absolute top-3 right-3 text-white/25 font-bold text-2xl tabular-nums">{step.number}</div>
+                  <div className="group-hover:scale-110 transition-transform duration-300">
+                    <StepIcon className="h-12 w-12 text-white" />
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold mb-2">{step.title}</h3>
-                <p className="text-gray-600">{step.description}</p>
+                <h3 className="text-xl font-bold mb-2 text-slate-800">{t(`landing.howItWorks.steps.${step.stepKey}.title`)}</h3>
+                <p className="text-slate-600 leading-relaxed max-w-[220px]">{t(`landing.howItWorks.steps.${step.stepKey}.description`)}</p>
               </div>
-            ))}
+            )})}
           </div>
         </div>
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 bg-gradient-to-b from-gray-50 to-white">
+      <section id="pricing" className="py-24 landing-section-alt">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-600 text-sm font-medium mb-4">
+          <div className="landing-reveal text-center mb-16">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-emerald-50 text-emerald-700 text-sm font-semibold mb-4 ring-1 ring-emerald-100">
               <Shield className="h-4 w-4 mr-2" />
-              Planos flexíveis
+              {t("landing.pricing.badge")}
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Planos simples e transparentes
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 landing-gradient-text tracking-tight">
+              {t("landing.pricing.title")}
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto text-lg">
-              Escolha o plano que melhor se adapta às necessidades do seu restaurante.
+              {t("landing.pricing.subtitle")}
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {/* Básico */}
-            <Card className="border-2 border-gray-200 hover:border-blue-300 transition-all duration-300 hover:shadow-xl">
+            <Card className="landing-reveal landing-card-modern border-slate-200/80 rounded-2xl shadow-sm hover:border-blue-300/80 hover:shadow-xl">
               <CardContent className="pt-8">
                 <div className="text-center">
-                  <h3 className="text-2xl font-bold mb-2">Básico</h3>
-                  <p className="text-gray-600 mb-6">Para pequenos restaurantes</p>
+                  <h3 className="text-2xl font-bold mb-2 text-slate-800">{t("landing.pricing.plans.basic.name")}</h3>
+                  <p className="text-gray-600 mb-6">{t("landing.pricing.plans.basic.description")}</p>
                   <p className="text-5xl font-bold mb-2">
-                    R$49<span className="text-lg text-gray-600">/mês</span>
+                    {t("landing.pricing.plans.basic.price")}<span className="text-lg text-gray-600">{t("landing.pricing.perMonth")}</span>
                   </p>
-                  <p className="text-sm text-gray-500 mb-8">Cobrado mensalmente</p>
+                  <p className="text-sm text-gray-500 mb-8">{t("landing.pricing.billedMonthly")}</p>
                   <ul className="space-y-4 mb-8 text-left">
-                    <li className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>Até 3 usuários</span>
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>Gestão de pedidos e mesas</span>
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>Relatórios básicos</span>
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>Suporte por email</span>
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>Aplicativo móvel</span>
-                    </li>
+                    {(["users3", "ordersTables", "basicReports", "emailSupport", "mobileApp"] as const).map((feature) => (
+                      <li key={feature} className="flex items-center">
+                        <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                        <span>{t(`landing.pricing.plans.basic.features.${feature}`)}</span>
+                      </li>
+                    ))}
                   </ul>
                   <Button className="w-full" variant="outline">
-                    Começar
+                    {t("landing.pricing.ctaStart")}
                   </Button>
                 </div>
               </CardContent>
             </Card>
             {/* Profissional */}
-            <Card className="border-2 border-blue-600 shadow-2xl relative transform scale-105">
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
-                Mais popular
+            <Card className="landing-reveal landing-reveal-delay-1 border-2 border-blue-500/80 shadow-2xl shadow-blue-500/15 relative md:scale-[1.03] rounded-2xl ring-4 ring-blue-500/10 landing-card-modern">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg animate-pulse">
+                {t("landing.pricing.plans.pro.badge")}
               </div>
               <CardContent className="pt-8">
                 <div className="text-center">
-                  <h3 className="text-2xl font-bold mb-2">Profissional</h3>
-                  <p className="text-gray-600 mb-6">Para restaurantes em crescimento</p>
+                  <h3 className="text-2xl font-bold mb-2">{t("landing.pricing.plans.pro.name")}</h3>
+                  <p className="text-gray-600 mb-6">{t("landing.pricing.plans.pro.description")}</p>
                   <p className="text-5xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    R$129<span className="text-lg text-gray-600">/mês</span>
+                    {t("landing.pricing.plans.pro.price")}<span className="text-lg text-gray-600">{t("landing.pricing.perMonth")}</span>
                   </p>
-                  <p className="text-sm text-gray-500 mb-8">Cobrado mensalmente</p>
+                  <p className="text-sm text-gray-500 mb-8">{t("landing.pricing.billedMonthly")}</p>
                   <ul className="space-y-4 mb-8 text-left">
-                    <li className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>Até 10 usuários</span>
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>Todos os recursos do Básico</span>
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>Gestão de estoque</span>
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>Relatórios avançados</span>
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>Integração com delivery</span>
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>Suporte por chat</span>
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>API básica</span>
-                    </li>
+                    {(["users10", "allBasic", "inventory", "advancedReports", "delivery", "chatSupport", "basicApi"] as const).map((feature) => (
+                      <li key={feature} className="flex items-center">
+                        <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                        <span>{t(`landing.pricing.plans.pro.features.${feature}`)}</span>
+                      </li>
+                    ))}
                   </ul>
                   <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                    Começar
+                    {t("landing.pricing.ctaStart")}
                   </Button>
                 </div>
               </CardContent>
             </Card>
             {/* Empresarial */}
-            <Card className="border-2 border-gray-200 hover:border-purple-300 transition-all duration-300 hover:shadow-xl">
+            <Card className="landing-reveal landing-reveal-delay-2 landing-card-modern border-slate-200/80 rounded-2xl shadow-sm hover:border-purple-300/80 hover:shadow-xl">
               <CardContent className="pt-8">
                 <div className="text-center">
-                  <h3 className="text-2xl font-bold mb-2">Empresarial</h3>
-                  <p className="text-gray-600 mb-6">Para redes de restaurantes</p>
+                  <h3 className="text-2xl font-bold mb-2 text-slate-800">{t("landing.pricing.plans.enterprise.name")}</h3>
+                  <p className="text-gray-600 mb-6">{t("landing.pricing.plans.enterprise.description")}</p>
                   <p className="text-5xl font-bold mb-2">
-                    R$299<span className="text-lg text-gray-600">/mês</span>
+                    {t("landing.pricing.plans.enterprise.price")}<span className="text-lg text-gray-600">{t("landing.pricing.perMonth")}</span>
                   </p>
-                  <p className="text-sm text-gray-500 mb-8">Cobrado mensalmente</p>
+                  <p className="text-sm text-gray-500 mb-8">{t("landing.pricing.billedMonthly")}</p>
                   <ul className="space-y-4 mb-8 text-left">
-                    <li className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>Usuários ilimitados</span>
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>Todos os recursos do Profissional</span>
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>Múltiplas unidades</span>
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>API e integrações avançadas</span>
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>Suporte prioritário 24/7</span>
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>Gerente de conta dedicado</span>
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                      <span>Personalização completa</span>
-                    </li>
+                    {(["unlimitedUsers", "allPro", "multiUnit", "advancedApi", "prioritySupport", "accountManager", "fullCustomization"] as const).map((feature) => (
+                      <li key={feature} className="flex items-center">
+                        <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                        <span>{t(`landing.pricing.plans.enterprise.features.${feature}`)}</span>
+                      </li>
+                    ))}
                   </ul>
                   <Button className="w-full" variant="outline">
-                    Contatar vendas
+                    {t("landing.pricing.ctaContactSales")}
                   </Button>
                 </div>
               </CardContent>
             </Card>
           </div>
           <div className="text-center mt-12">
-            <p className="text-gray-600 mb-4">Todos os planos incluem:</p>
+            <p className="text-gray-600 mb-4">{t("landing.pricing.allPlansInclude")}</p>
             <div className="flex flex-wrap justify-center gap-4">
               <div className="flex items-center text-sm text-gray-500">
                 <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                <span>14 dias grátis</span>
+                <span>{t("landing.pricing.trust.freeTrialDays")}</span>
               </div>
               <div className="flex items-center text-sm text-gray-500">
                 <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                <span>Sem cartão de crédito</span>
+                <span>{t("landing.pricing.trust.noCreditCard")}</span>
               </div>
               <div className="flex items-center text-sm text-gray-500">
                 <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                <span>Cancelamento a qualquer momento</span>
+                <span>{t("landing.pricing.trust.cancelAnytime")}</span>
               </div>
             </div>
           </div>
@@ -667,309 +694,197 @@ export default function LandingPage() {
       </section>
 
       {/* Integrações */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">Integrações</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              O Comandero se integra com as ferramentas que você já utiliza.
+          <div className="landing-reveal text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 landing-gradient-text tracking-tight">{t("landing.integrations.title")}</h2>
+            <p className="text-slate-600 max-w-2xl mx-auto text-lg">
+              {t("landing.integrations.subtitle")}
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {[
-              {
-                icon: <CreditCard className="h-10 w-10 text-gray-700" />,
-                name: "Gateways de pagamento",
-              },
-              {
-                icon: <ShoppingCart className="h-10 w-10 text-gray-700" />,
-                name: "Plataformas de delivery",
-              },
-              {
-                icon: <MessageSquare className="h-10 w-10 text-gray-700" />,
-                name: "CRM",
-              },
-              {
-                icon: <BarChart3 className="h-10 w-10 text-gray-700" />,
-                name: "Contabilidade",
-              },
-              {
-                icon: <Calendar className="h-10 w-10 text-gray-700" />,
-                name: "Reservas online",
-              },
-              {
-                icon: <Globe className="h-10 w-10 text-gray-700" />,
-                name: "Marketing digital",
-              },
-              {
-                icon: <Code className="h-10 w-10 text-gray-700" />,
-                name: "API personalizada",
-              },
-              {
-                icon: <HelpCircle className="h-10 w-10 text-gray-700" />,
-                name: "Suporte técnico",
-              },
-            ].map((integration, i) => (
-              <div key={i} className="flex flex-col items-center text-center p-4 bg-white rounded-lg shadow-sm">
-                <div className="mb-3">{integration.icon}</div>
-                <h3 className="font-medium">{integration.name}</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            {INTEGRATION_KEYS.map((key, i) => {
+              const Icon = INTEGRATION_ICONS[i]
+              return (
+              <div
+                key={key}
+                className={`landing-reveal ${i % 4 === 1 ? "landing-reveal-delay-1" : i % 4 === 2 ? "landing-reveal-delay-2" : i % 4 === 3 ? "landing-reveal-delay-3" : ""} flex flex-col items-center text-center p-6 landing-glass-card landing-card-modern rounded-2xl group`}
+              >
+                <div className="mb-4 p-3 rounded-xl bg-gradient-to-br from-slate-100 to-slate-50 group-hover:from-blue-50 group-hover:to-purple-50 transition-colors duration-300">
+                  <div className="text-slate-600 group-hover:text-blue-600 transition-colors">
+                    <Icon className="h-10 w-10" />
+                  </div>
+                </div>
+                <h3 className="font-semibold text-slate-700 text-sm">{t(`landing.integrations.${key}`)}</h3>
               </div>
-            ))}
+            )})}
           </div>
         </div>
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="py-20 bg-gray-50">
+      <section id="faq" className="py-24 landing-section-alt">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">Perguntas frequentes</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Respostas para as perguntas mais comuns sobre nossa plataforma.
+          <div className="landing-reveal text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 landing-gradient-text tracking-tight">{t("landing.faq.title")}</h2>
+            <p className="text-slate-600 max-w-2xl mx-auto text-lg">
+              {t("landing.faq.subtitle")}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <div>
-              <h3 className="text-xl font-bold mb-2">Preciso de conhecimentos técnicos?</h3>
-              <p className="text-gray-600">
-                Não, nossa plataforma foi projetada para ser intuitiva e fácil de usar, sem necessidade de conhecimentos
-                técnicos prévios.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-bold mb-2">Posso testar antes de comprar?</h3>
-              <p className="text-gray-600">
-                Sim, oferecemos um teste gratuito de 14 dias para que você possa explorar todas as funcionalidades.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-bold mb-2">Como é o processo de implementação?</h3>
-              <p className="text-gray-600">
-                Nossa equipe irá guiá-lo em todo o processo, desde a configuração inicial até o treinamento do seu
-                pessoal.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-bold mb-2">Posso cancelar a qualquer momento?</h3>
-              <p className="text-gray-600">
-                Sim, não há contratos de longo prazo. Você pode cancelar sua assinatura a qualquer momento.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-bold mb-2">Vocês oferecem suporte técnico?</h3>
-              <p className="text-gray-600">
-                Sim, todos os nossos planos incluem suporte técnico, com diferentes níveis de acordo com o plano
-                escolhido.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-bold mb-2">Meus dados estão seguros?</h3>
-              <p className="text-gray-600">
-                Absolutamente. Utilizamos criptografia de nível bancário e cumprimos com todas as regulamentações de
-                proteção de dados, incluindo a LGPD.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Depoimentos Detalhados */}
-      <section className="py-20 bg-gradient-to-b from-white to-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-yellow-100 text-yellow-600 text-sm font-medium mb-4">
-              <Star className="h-4 w-4 mr-2 fill-current" />
-              Avaliações de clientes
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              O que dizem nossos clientes
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto text-lg">
-              Descubra como o Comandero transformou negócios como o seu.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                name: "Maria Silva",
-                role: "Proprietária, Sabor Carioca",
-                image: "/placeholder.svg?height=100&width=100",
-                quote:
-                  "Desde que implementamos o Comandero, reduzimos o tempo de serviço em 35% e os erros nos pedidos praticamente desapareceram. O sistema é intuitivo e nossa equipe o adotou rapidamente.",
-                stars: 5,
-                color: "from-blue-500 to-blue-600"
-              },
-              {
-                name: "Carlos Oliveira",
-                role: "Diretor de Operações, Grupo Gourmet Brasil",
-                image: "/placeholder.svg?height=100&width=100",
-                quote:
-                  "O controle de estoque em tempo real nos permitiu reduzir desperdícios e otimizar nossas compras. Vimos um aumento de 20% em nossa margem de lucro em apenas três meses.",
-                stars: 5,
-                color: "from-purple-500 to-purple-600"
-              },
-              {
-                name: "Fernanda Santos",
-                role: "CEO, Rede Sabores do Brasil",
-                image: "/placeholder.svg?height=100&width=100",
-                quote:
-                  "A capacidade de gerenciar múltiplas unidades a partir de uma única plataforma foi uma mudança radical para nossa rede. A visibilidade e controle que temos agora é incomparável.",
-                stars: 5,
-                color: "from-pink-500 to-pink-600"
-              },
-              {
-                name: "Roberto Almeida",
-                role: "Gerente, Bistrô Paulista",
-                image: "/placeholder.svg?height=100&width=100",
-                quote:
-                  "O suporte técnico é excepcional. Qualquer problema é resolvido rapidamente, e a equipe está sempre disposta a ajudar com novas funcionalidades que precisamos.",
-                stars: 4,
-                color: "from-green-500 to-green-600"
-              },
-              {
-                name: "Juliana Costa",
-                role: "Chef Executiva, Sabores do Mundo",
-                image: "/placeholder.svg?height=100&width=100",
-                quote:
-                  "Como chef, posso me concentrar na cozinha enquanto o sistema gerencia eficientemente os pedidos. A comunicação entre a equipe de salão e a cozinha melhorou enormemente.",
-                stars: 5,
-                color: "from-orange-500 to-orange-600"
-              },
-              {
-                name: "Marcelo Souza",
-                role: "Proprietário, Café Mineiro",
-                image: "/placeholder.svg?height=100&width=100",
-                quote:
-                  "Para um café pequeno como o nosso, o Comandero tem sido perfeito. Fácil de usar, acessível e com todas as funções que precisamos sem complicações desnecessárias.",
-                stars: 5,
-                color: "from-cyan-500 to-cyan-600"
-              },
-            ].map((testimonial, i) => (
-              <Card key={i} className="overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 hover:border-blue-300 group">
-                <CardContent className="p-8">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="rounded-full overflow-hidden w-20 h-20 flex-shrink-0 ring-4 ring-blue-100 group-hover:ring-blue-200 transition-ring">
-                      <div className={`w-full h-full bg-gradient-to-br ${testimonial.color} flex items-center justify-center`}>
-                        <span className="text-white text-2xl font-bold">{testimonial.name.charAt(0)}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-lg">{testimonial.name}</h3>
-                      <p className="text-sm text-gray-600">{testimonial.role}</p>
-                      <div className="flex mt-2">
-                        {Array(testimonial.stars)
-                          .fill(0)
-                          .map((_, i) => (
-                            <Star key={i} className="h-4 w-4 text-yellow-500 fill-current" />
-                          ))}
-                        {Array(5 - testimonial.stars)
-                          .fill(0)
-                          .map((_, i) => (
-                            <Star key={i} className="h-4 w-4 text-gray-300 fill-current" />
-                          ))}
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 italic text-lg leading-relaxed">"{testimonial.quote}"</p>
-                  <div className="mt-6 pt-6 border-t">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Verificado</span>
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
+            {FAQ_KEYS.map((key, i) => (
+              <div
+                key={key}
+                className={`landing-reveal ${i % 3 === 1 ? "landing-reveal-delay-1" : i % 3 === 2 ? "landing-reveal-delay-2" : ""} p-6 rounded-2xl landing-glass-card landing-card-modern`}
+              >
+                <h3 className="text-lg font-bold mb-2 text-slate-800">{t(`landing.faq.items.${key}.title`)}</h3>
+                <p className="text-slate-600 leading-relaxed">{t(`landing.faq.items.${key}.answer`)}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Contato */}
-      <section className="py-20  bg-gradient-to-b from-gray-50 to-white">
+      {/* Depoimentos Detalhados */}
+      <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-600 text-sm font-medium mb-4">
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Entre em contato
+          <div className="landing-reveal text-center mb-16">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-amber-50 text-amber-700 text-sm font-semibold mb-4 ring-1 ring-amber-100">
+              <Star className="h-4 w-4 mr-2 fill-amber-500 text-amber-500" />
+              {t("landing.testimonials.badge")}
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Tem perguntas?
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 landing-gradient-text tracking-tight">
+              {t("landing.testimonials.title")}
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto text-lg">
-              Nossa equipe está disponível para ajudá-lo com qualquer dúvida que você tenha sobre o Comandero.
+              {t("landing.testimonials.subtitle")}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {TESTIMONIAL_KEYS.map((key, i) => {
+              const name = t(`landing.testimonials.items.${key}.name`)
+              const stars = TESTIMONIAL_STARS[i]
+              return (
+              <Card key={key} className={`landing-reveal ${i % 3 === 1 ? "landing-reveal-delay-1" : i % 3 === 2 ? "landing-reveal-delay-2" : ""} overflow-hidden landing-card-modern border-slate-200/80 rounded-2xl hover:border-blue-300/60 group shadow-sm`}>
+                <CardContent className="p-8">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="rounded-full overflow-hidden w-20 h-20 flex-shrink-0 ring-4 ring-blue-100/80 group-hover:ring-blue-200 transition-all duration-300">
+                      <div className={`w-full h-full bg-gradient-to-br ${TESTIMONIAL_COLORS[i]} flex items-center justify-center`}>
+                        <span className="text-white text-2xl font-bold">{name.charAt(0)}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg">{name}</h3>
+                      <p className="text-sm text-gray-600">{t(`landing.testimonials.items.${key}.role`)}</p>
+                      <div className="flex mt-2">
+                        {Array(stars)
+                          .fill(0)
+                          .map((_, starIndex) => (
+                            <Star key={starIndex} className="h-4 w-4 text-yellow-500 fill-current" />
+                          ))}
+                        {Array(5 - stars)
+                          .fill(0)
+                          .map((_, starIndex) => (
+                            <Star key={starIndex} className="h-4 w-4 text-gray-300 fill-current" />
+                          ))}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-gray-700 italic text-lg leading-relaxed">&quot;{t(`landing.testimonials.items.${key}.quote`)}&quot;</p>
+                  <div className="mt-6 pt-6 border-t">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500">{t("landing.testimonials.verified")}</span>
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )})}
+          </div>
+        </div>
+      </section>
+
+      {/* Contato */}
+      <section className="py-24 landing-section-alt">
+        <div className="container mx-auto px-4">
+          <div className="landing-reveal text-center mb-16">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold mb-4 ring-1 ring-blue-100">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              {t("landing.contact.badge")}
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 landing-gradient-text tracking-tight">
+              {t("landing.contact.title")}
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+              {t("landing.contact.subtitle")}
             </p>
           </div>
 
           <div className="grid grid-cols-1 gap-12">
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 space-y-8">
-              <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow group">
-                <div className="flex items-start space-x-4">
-                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-2xl group-hover:scale-110 transition-transform">
+            <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 space-x-4 space-y-8">
+              <div className="landing-reveal landing-glass-card landing-card-modern p-6 rounded-2xl group">
+                <div className="flex items-start gap-4">
+                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-2xl shadow-lg shadow-blue-500/25 group-hover:scale-110 transition-transform duration-300">
                     <Phone className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg mb-1">WhatsApp</h3>
+                    <h3 className="font-bold text-lg mb-1">{t("landing.contact.whatsapp.title")}</h3>
                     <p className="text-gray-600">+55 48 996 209954</p>
-                    <p className="text-sm text-gray-500">Disponível para contato rápido</p>
+                    <p className="text-sm text-gray-500">{t("landing.contact.whatsapp.hint")}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow group">
-                <div className="flex items-start space-x-4">
-                  <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-4 rounded-2xl group-hover:scale-110 transition-transform">
+              <div className="landing-reveal landing-reveal-delay-1 landing-glass-card landing-card-modern p-6 rounded-2xl group">
+                <div className="flex items-start gap-4">
+                  <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-4 rounded-2xl shadow-lg shadow-purple-500/25 group-hover:scale-110 transition-transform duration-300">
                     <MessageSquare className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg mb-1">Email</h3>
+                    <h3 className="font-bold text-lg mb-1">{t("landing.contact.email.title")}</h3>
                     <p className="text-gray-600">contato@polaristudio.com.br</p>
-                    <p className="text-sm text-gray-500">Respondemos em menos de 24 horas</p>
+                    <p className="text-sm text-gray-500">{t("landing.contact.email.hint")}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow group">
-                <div className="flex items-start space-x-4">
-                  <div className="bg-gradient-to-br from-green-500 to-green-600 p-4 rounded-2xl group-hover:scale-110 transition-transform">
+              <div className="landing-reveal landing-reveal-delay-2 landing-glass-card landing-card-modern p-6 rounded-2xl group">
+                <div className="flex items-start gap-4">
+                  <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-4 rounded-2xl shadow-lg shadow-emerald-500/25 group-hover:scale-110 transition-transform duration-300">
                     <Headphones className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg mb-1">Suporte técnico</h3>
+                    <h3 className="font-bold text-lg mb-1">{t("landing.contact.support.title")}</h3>
                     <p className="text-gray-600">contato@polaristudio.com.br</p>
-                    <p className="text-sm text-gray-500">Disponível 24/7 para clientes</p>
+                    <p className="text-sm text-gray-500">{t("landing.contact.support.hint")}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow group">
-                <div className="flex items-start space-x-4">
-                  <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-4 rounded-2xl group-hover:scale-110 transition-transform">
+              <div className="landing-reveal landing-glass-card landing-card-modern p-6 rounded-2xl group">
+                <div className="flex items-start gap-4">
+                  <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-4 rounded-2xl shadow-lg shadow-orange-500/25 group-hover:scale-110 transition-transform duration-300">
                     <Globe className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg mb-1">Sede</h3>
-                    <p className="text-gray-600">Criciúma, Brasil</p>
-                    <p className="text-sm text-gray-500">Santa Catarina</p>
+                    <h3 className="font-bold text-lg mb-1">{t("landing.contact.headquarters.title")}</h3>
+                    <p className="text-gray-600">{t("landing.contact.headquarters.city")}</p>
+                    <p className="text-sm text-gray-500">{t("landing.contact.headquarters.state")}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-2xl border-2 border-blue-200">
-                <div className="flex items-start space-x-4">
-                  <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-4 rounded-2xl">
+              <div className="landing-reveal landing-reveal-delay-1 p-6 rounded-2xl bg-gradient-to-br from-blue-50 via-white to-purple-50 border border-blue-200/60 ring-1 ring-blue-100 landing-card-modern md:col-span-2">
+                <div className="flex items-start gap-4">
+                  <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-4 rounded-2xl shadow-lg shadow-purple-500/20">
                     <Code className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg mb-1">Desenvolvido por</h3>
-                    <p className="text-gray-800 font-semibold">Polaris Studio</p>
+                    <h3 className="font-bold text-lg mb-1">{t("landing.contact.developer.label")}</h3>
+                    <p className="text-gray-800 font-semibold">{t("landing.contact.developer.name")}</p>
                     <a href="https://www.polaristudio.com.br" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 text-sm">
                       www.polaristudio.com.br
                     </a>
@@ -1086,21 +1001,26 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-blue-900 text-white">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">Pronto para transformar seu restaurante?</h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto">
-            Junte-se a centenas de restaurantes que já estão melhorando sua gestão com nossa plataforma.
+      <section className="relative py-24 landing-cta-mesh text-white overflow-hidden">
+        <div className="absolute inset-0 landing-grid-pattern opacity-40" aria-hidden />
+        <div className="absolute top-0 left-1/4 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl animate-landing-float" aria-hidden />
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-purple-400/20 rounded-full blur-3xl animate-landing-float-slow" aria-hidden />
+        <div className="container mx-auto px-4 text-center relative z-10 landing-reveal">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 tracking-tight">{t("landing.cta.title")}</h2>
+          <p className="text-lg md:text-xl mb-10 max-w-2xl mx-auto text-blue-100/90 leading-relaxed">
+            {t("landing.cta.subtitle")}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/register">
-              <Button size="lg" className="bg-white text-blue-900 hover:bg-gray-100">
-                Começar grátis
+              <Button size="lg" className="bg-white text-blue-900 hover:bg-blue-50 shadow-xl hover:scale-[1.03] transition-all duration-300 px-8">
+                {t("landing.cta.primary")}
+                <Rocket className="ml-2 h-5 w-5" />
               </Button>
             </Link>
             <Link href="#features">
-              <Button variant="outline" size="lg" className="border-white text-black hover:bg-white/10">
-                Saiba mais
+              <Button variant="outline" size="lg" className="border-white/40 text-white hover:bg-white/10 hover:border-white/60 backdrop-blur-sm px-8 transition-all duration-300">
+                {t("landing.cta.secondary")}
+                <ChevronRight className="ml-1 h-5 w-5" />
               </Button>
             </Link>
           </div>
@@ -1108,40 +1028,40 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-slate-950 text-white py-14 border-t border-slate-800">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <Image src="/icons/icon-192x192.png" alt="Comandero Logo" width={24} height={24} />
-                <span className="text-xl font-bold">Comandero</span>
+              <div className="flex items-center gap-2.5 mb-4">
+                <Image src="/icons/icon-192x192.png" alt={t("landing.brand.logoAlt")} width={28} height={28} className="rounded-md" />
+                <span className="text-xl font-bold landing-gradient-text">{t("landing.brand.name")}</span>
               </div>
-              <p className="text-gray-400">A solução completa para a gestão de restaurantes.</p>
+              <p className="text-slate-400 leading-relaxed">{t("landing.footer.tagline")}</p>
             </div>
 
             <div>
-              <h3 className="text-lg font-bold mb-4">Produto</h3>
+              <h3 className="text-lg font-bold mb-4">{t("landing.footer.product.title")}</h3>
               <ul className="space-y-2">
                 <li>
                   <a href="#features" className="text-gray-400 hover:text-white transition-colors">
-                    Recursos
+                    {t("landing.nav.features")}
                   </a>
                 </li>
                 <li>
                   <a href="#pricing" className="text-gray-400 hover:text-white transition-colors">
-                    Preços
+                    {t("landing.nav.pricing")}
                   </a>
                 </li>
                 <li>
                   <a href="#faq" className="text-gray-400 hover:text-white transition-colors">
-                    FAQ
+                    {t("landing.nav.faq")}
                   </a>
                 </li>
               </ul>
             </div>
 
             <div>
-              <h3 className="text-lg font-bold mb-4">Contato</h3>
+              <h3 className="text-lg font-bold mb-4">{t("landing.footer.contact.title")}</h3>
               <ul className="space-y-2">
                 <li>
                   <a href="https://www.polaristudio.com.br" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
@@ -1162,29 +1082,29 @@ export default function LandingPage() {
             </div>
 
             <div>
-              <h3 className="text-lg font-bold mb-4">Legal</h3>
+              <h3 className="text-lg font-bold mb-4">{t("landing.footer.legal.title")}</h3>
               <ul className="space-y-2">
                 <li>
                   <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                    Termos de serviço
+                    {t("landing.footer.legal.terms")}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                    Política de privacidade
+                    {t("landing.footer.legal.privacy")}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                    Cookies
+                    {t("landing.footer.legal.cookies")}
                   </a>
                 </li>
               </ul>
             </div>
           </div>
 
-          <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-            <p>&copy; {new Date().getFullYear()} Comandero. Todos os direitos reservados.</p>
+          <div className="border-t border-slate-800/80 mt-12 pt-8 text-center text-slate-500 text-sm">
+            <p>&copy; {new Date().getFullYear()} {t("landing.footer.copyright")}</p>
           </div>
         </div>
       </footer>

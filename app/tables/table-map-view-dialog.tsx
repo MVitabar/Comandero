@@ -270,7 +270,7 @@ export default function TableMapViewDialog({
           },
           orderContext: {
             orderType: order.orderType || 'table',
-            tableNumber: `Mesa ${selectedTable?.name || 1}`,
+            tableNumber: t("tables.defaultTableName", { number: selectedTable?.name ?? 1 }),
             tableId: order.tableId || selectedTable?.id || '',
             mapId: order.mapId || selectedTable?.mapId || '',
           },

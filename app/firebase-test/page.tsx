@@ -2,12 +2,14 @@
 
 import { useState } from "react"
 import { useFirebase } from "@/components/firebase-provider"
+import { useI18n } from "@/components/i18n-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CheckCircle2, XCircle, AlertCircle } from "lucide-react"
 
 export default function FirebaseTestPage() {
+  const { t } = useI18n()
   const { app, auth, db, isInitialized, error } = useFirebase()
   const [testResults, setTestResults] = useState<Record<string, boolean | null>>({
     app: null,
@@ -23,17 +25,20 @@ export default function FirebaseTestPage() {
     })
   }
 
+  const configStatus = (value: string | undefined) =>
+    value ? `✓ ${t("dev.firebaseTest.set")}` : `✗ ${t("dev.firebaseTest.missing")}`
+
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Firebase Configuration Test</CardTitle>
-          <CardDescription>Test your Firebase configuration to ensure everything is working correctly</CardDescription>
+          <CardTitle>{t("dev.firebaseTest.title")}</CardTitle>
+          <CardDescription>{t("dev.firebaseTest.description")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span>Firebase Initialized:</span>
+              <span>{t("dev.firebaseTest.initialized")}</span>
               {isInitialized ? (
                 <CheckCircle2 className="h-5 w-5 text-green-500" />
               ) : (
@@ -44,7 +49,7 @@ export default function FirebaseTestPage() {
             {error && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
+                <AlertTitle>{t("dev.firebaseTest.error")}</AlertTitle>
                 <AlertDescription>{String(error)}</AlertDescription>
               </Alert>
             )}
@@ -52,7 +57,7 @@ export default function FirebaseTestPage() {
             {testResults.app !== null && (
               <div className="space-y-2 mt-4">
                 <div className="flex items-center justify-between">
-                  <span>Firebase App:</span>
+                  <span>{t("dev.firebaseTest.app")}</span>
                   {testResults.app ? (
                     <CheckCircle2 className="h-5 w-5 text-green-500" />
                   ) : (
@@ -61,7 +66,7 @@ export default function FirebaseTestPage() {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span>Firebase Auth:</span>
+                  <span>{t("dev.firebaseTest.auth")}</span>
                   {testResults.auth ? (
                     <CheckCircle2 className="h-5 w-5 text-green-500" />
                   ) : (
@@ -70,7 +75,7 @@ export default function FirebaseTestPage() {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span>Firebase Firestore:</span>
+                  <span>{t("dev.firebaseTest.firestore")}</span>
                   {testResults.db ? (
                     <CheckCircle2 className="h-5 w-5 text-green-500" />
                   ) : (
@@ -83,17 +88,17 @@ export default function FirebaseTestPage() {
             {isInitialized && !error && (
               <div className="mt-4 text-sm">
                 <p>
-                  <strong>Firebase Config:</strong>
+                  <strong>{t("dev.firebaseTest.configLabel")}</strong>
                 </p>
                 <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto mt-2">
                   {JSON.stringify(
                     {
-                      apiKey: app?.options.apiKey ? "✓ Set" : "✗ Missing",
-                      authDomain: app?.options.authDomain ? "✓ Set" : "✗ Missing",
-                      projectId: app?.options.projectId ? "✓ Set" : "✗ Missing",
-                      storageBucket: app?.options.storageBucket ? "✓ Set" : "✗ Missing",
-                      messagingSenderId: app?.options.messagingSenderId ? "✓ Set" : "✗ Missing",
-                      appId: app?.options.appId ? "✓ Set" : "✗ Missing",
+                      apiKey: configStatus(app?.options.apiKey),
+                      authDomain: configStatus(app?.options.authDomain),
+                      projectId: configStatus(app?.options.projectId),
+                      storageBucket: configStatus(app?.options.storageBucket),
+                      messagingSenderId: configStatus(app?.options.messagingSenderId),
+                      appId: configStatus(app?.options.appId),
                     },
                     null,
                     2,
@@ -105,11 +110,10 @@ export default function FirebaseTestPage() {
         </CardContent>
         <CardFooter>
           <Button onClick={runTests} className="w-full">
-            Run Tests
+            {t("dev.firebaseTest.runTests")}
           </Button>
         </CardFooter>
       </Card>
     </div>
   )
 }
-

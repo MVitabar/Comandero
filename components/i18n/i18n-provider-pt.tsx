@@ -1,4 +1,7 @@
-export const ptTranslations = {
+import { landingPt } from "./landing-translations"
+import { supplementalPt, mergeTranslations } from "./supplemental-translations"
+
+const ptTranslationsBase = {
   
   "commons": {
     "yes": "Sim",
@@ -1081,8 +1084,10 @@ export const ptTranslations = {
       "barman": "Barman",
       "default": "Usuário"
     },
+
+  landing: landingPt,
 };
 
-
+export const ptTranslations = mergeTranslations(ptTranslationsBase, supplementalPt)
 
 export default ptTranslations;

@@ -50,14 +50,14 @@ export default function NewOrderPage() {
 
   const handleCreateOrder = async (order: Order) => {
     if (!db || !user) {
-      toast.error("Database or user not found")
+      toast.error(t("orders.errors.dbOrUserNotFound"))
       return
     }
 
     // Validate establishmentId before proceeding
     if (!user.establishmentId) {
       console.error('No establishment ID found for user')
-      toast.error("Establishment ID not found")
+      toast.error(t("orders.errors.establishmentIdNotFound"))
       return
     }
 
@@ -81,7 +81,7 @@ export default function NewOrderPage() {
       router.push('/orders')
     } catch (error) {
       console.error("Error creating order:", error)
-      toast.error("Erro ao criar pedido")
+      toast.error(t("orders.errors.createFailed"))
     }
   }
 

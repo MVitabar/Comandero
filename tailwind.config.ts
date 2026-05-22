@@ -78,10 +78,36 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "landing-gradient": {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+        },
+        "landing-float": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-14px)" },
+        },
+        "landing-float-slow": {
+          "0%, 100%": { transform: "translate(0, 0) scale(1)" },
+          "33%": { transform: "translate(10px, -18px) scale(1.05)" },
+          "66%": { transform: "translate(-8px, 10px) scale(0.98)" },
+        },
+        "landing-shine": {
+          "0%": { backgroundPosition: "-200% center" },
+          "100%": { backgroundPosition: "200% center" },
+        },
+        "landing-fade-up": {
+          from: { opacity: "0", transform: "translateY(24px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "landing-gradient": "landing-gradient 14s ease infinite",
+        "landing-float": "landing-float 6s ease-in-out infinite",
+        "landing-float-slow": "landing-float-slow 10s ease-in-out infinite",
+        "landing-shine": "landing-shine 5s linear infinite",
+        "landing-fade-up": "landing-fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards",
       },
     },
   },

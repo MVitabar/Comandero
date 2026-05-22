@@ -79,7 +79,7 @@ export default function UsersPage() {
         setLoading(false);
       } catch (error) {
         console.error('Error fetching users:', error);
-        let errorMessage = "Unknown error";
+        let errorMessage = t("auth.errors.unexpectedError");
         if (error && typeof error === 'object' && 'message' in error) {
           errorMessage = String((error as { message: unknown }).message);
         }
@@ -112,7 +112,7 @@ export default function UsersPage() {
       setUserToDelete(null);
     } catch (error) {
       console.error("Error deleting user:", error);
-      let errorMessage = "Unknown error";
+      let errorMessage = t("auth.errors.unexpectedError");
       if (error && typeof error === 'object' && 'message' in error) {
         errorMessage = String((error as { message: unknown }).message);
       }
