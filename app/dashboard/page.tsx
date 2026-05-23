@@ -553,8 +553,20 @@ export default function DashboardPage() {
       const salesList = salesSnapshot.docs.map(doc => {
         const orderData = doc.data() as Order
         
+        // Convert Firestore Timestamp to Date if needed
+        let createdAtDate: Date | null = null
+        if (orderData.createdAt) {
+          if (orderData.createdAt instanceof Date) {
+            createdAtDate = orderData.createdAt
+          } else if (typeof orderData.createdAt === 'object' && 'toDate' in orderData.createdAt) {
+            createdAtDate = (orderData.createdAt as any).toDate()
+          } else if (typeof orderData.createdAt === 'string') {
+            createdAtDate = new Date(orderData.createdAt)
+          }
+        }
+        
         return {
-          date: orderData.createdAt ? format(orderData.createdAt, 'PP', { locale: i18n.language === 'pt-BR' ? ptBR : enUS }) : '',
+          date: createdAtDate ? format(createdAtDate, 'PP', { locale: i18n.language === 'pt-BR' ? ptBR : enUS }) : '',
           orderId: doc.id,
           total: orderData.total || 0,
           paymentMethod: 
@@ -565,7 +577,13 @@ export default function DashboardPage() {
         }
       })
       .filter(sale => sale.total > 0) // Ensure only sales with value are shown
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .sort((a, b) => {
+        // Handle empty dates in sorting
+        if (!a.date && !b.date) return 0
+        if (!a.date) return 1
+        if (!b.date) return -1
+        return new Date(b.date).getTime() - new Date(a.date).getTime()
+      })
       .slice(0, 50) // Limit to most recent 50 sales
 
       // Update state with complete dashboard data
@@ -1058,7 +1076,7 @@ export default function DashboardPage() {
                                       </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                      <TableRow className="hover:bg-gray-100 transition-colors">
+                                      <TableRow key={item.id || 'item-row'} className="hover:bg-gray-100 transition-colors">
                                         <TableCell className="text-xs sm:text-sm text-gray-700 px-2 sm:px-4 py-2">
                                           {getCategoryName(item.category, item.categoryName)}
                                         </TableCell>

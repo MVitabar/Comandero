@@ -663,13 +663,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           location: activityContext.location
         };
 
-        // Update user document with login activity
-        await updateDoc(userRef, {
-          status: 'active',
-          'activity.lastSuccessfulLogin': serverTimestamp(),
-          'activity.loginAttempts': arrayUnion(loginAttempt),
-          'activity.failedLoginCount': 0 // Reset failed login count on successful login
-        });
+        // Check if document exists before updating
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+          // Update user document with login activity
+          await updateDoc(userRef, {
+            status: 'active',
+            'activity.lastSuccessfulLogin': serverTimestamp(),
+            'activity.loginAttempts': arrayUnion(loginAttempt),
+            'activity.failedLoginCount': 0 // Reset failed login count on successful login
+          });
+        }
       }
 
       // Update user state
@@ -721,11 +725,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           location: activityContext.location
         };
 
-        // Update user document with failed login attempt
-        await updateDoc(userRef, {
-          'activity.loginAttempts': arrayUnion(failedLoginAttempt),
-          'activity.failedLoginCount': increment(1)
-        });
+        // Check if document exists before updating
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+          // Update user document with failed login attempt
+          await updateDoc(userRef, {
+            'activity.loginAttempts': arrayUnion(failedLoginAttempt),
+            'activity.failedLoginCount': increment(1)
+          });
+        }
       }
 
       toast.error(t("auth.login.error", { username: errorMessage }))
@@ -744,9 +752,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Update user status before logout
       if (db && user) {
         const userRef = doc(db, 'users', user.email?.toLowerCase().replace(/[^a-z0-9]/g, '_') || '')
-        await updateDoc(userRef, {
-          status: 'inactive'
-        });
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+          await updateDoc(userRef, {
+            status: 'inactive'
+          });
+        }
       }
 
       await signOut(auth);
