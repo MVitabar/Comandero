@@ -1,68 +1,78 @@
-// public/sw.js
-const CACHE_NAME = 'comandero-v1';
-const urlsToCache = [
-  '/',
-  '/login',
-  '/register',
-  '/dashboard',
-  '/invitation/register',
-  '/invitation/accept',
-  '/index.html',
-  '/manifest.webmanifest',
-  '/icon.png',
+const CACHE_NAME = 'comandero-v2';
+
+const STATIC_ASSETS = [
+  '/manifest.json',
   '/favicon.ico',
-  '/static/css/',
-  '/static/js/'
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Opened cache');
-      return cache.addAll(urlsToCache);
+      // addAll solo con assets que existen con seguridad
+      return cache.addAll(STATIC_ASSETS);
     })
   );
-  // Forzar la activación inmediata
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  // Activar el nuevo service worker inmediatamente
-  event.waitUntil(clients.claim());
-});
-
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      // Si encontramos una coincidencia en el cache, la devolvemos
-      if (response) {
-        return response;
-      }
-
-      // Si no hay coincidencia, hacemos la petición a la red
-      return fetch(event.request).then((response) => {
-        // Verificar si la respuesta es válida
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
-        }
-
-        // Clonar la respuesta ya que se va a usar tanto en el cache como en el navegador
-        const responseToCache = response.clone();
-
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-
-        return response;
-      });
-    })
+  event.waitUntil(
+    // Eliminar caches viejos
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys
+          .filter((key) => key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
+      )
+    ).then(() => clients.claim())
   );
 });
 
-self.addEventListener('message', (event) => {
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Solo cachear GET, ignorar rutas de API y _next/data
+  if (
+    request.method !== 'GET' ||
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/_next/data/')
+  ) {
+    return;
+  }
+
+  // Assets estáticos: cache primero
+  if (
+    url.pathname.startsWith('/_next/static/') ||
+    url.pathname.startsWith('/icons/')
+  ) {
+    event.respondWith(
+      caches.match(request).then(
+        (cached) => cached || fetch(request).then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          return response;
+        })
+      )
+    );
+    return;
+  }
+
+  // Páginas: network primero, cache como fallback
+  event.respondWith(
+    fetch(request)
+      .then((response) => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(request))
+  );
 });
 
-self.addEventListener('push', (event) => {
-});
-
-// Eliminados console.log innecesarios
+self.addEventListener('message', (event) => {});
+self.addEventListener('push', (event) => {});
