@@ -319,6 +319,13 @@ const enTranslationsBase = {
         "orderId": "Order ID",
         "total": "Total",
         "paymentMethod": "Payment Method"
+      },
+      "paymentMethods": {
+        "cash": "Cash",
+        "credit": "Credit Card",
+        "debit": "Debit Card",
+        "transfer": "Bank Transfer",
+        "other": "Other"
       }
     }
   },
@@ -411,16 +418,18 @@ const enTranslationsBase = {
         "status": "Status",
         "total": "Total",
         "actions": "Actions"
-      },
-      "paymentMethods": {
-        "cash": "Cash",
-        "credit": "Credit Card",
-        "debit": "Debit Card",
-        "transfer": "Bank Transfer",
-        "other": "Other"
       }
     },
     "confirmPayment": "Confirm Payment",
+    "selectPaymentMethod": "Select Payment Method",
+    "paymentMethodDescription": "Choose the payment method for this order",
+    "paymentMethods": {
+      "cash": "Cash",
+      "credit": "Credit Card",
+      "debit": "Debit Card",
+      "transfer": "Bank Transfer",
+      "other": "Other"
+    },
     "itemUnavailable": "(Indisponível)",
     "stockAvailable": "- R$ {{price}} ({{stock}} disponível)",
     "changeStatusTitle": "Change Status",

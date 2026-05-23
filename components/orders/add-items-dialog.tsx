@@ -5,7 +5,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Order, MenuItem } from "@/types";
 import { useFirebase } from "@/components/firebase-provider";
-import { collection, getDocs, doc, updateDoc, arrayUnion } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
 import { toast } from "sonner";
 import { useI18n } from "@/components/i18n-provider";
 
@@ -83,8 +83,81 @@ export function AddItemsDialog({ order, open, onClose, onItemsAdded }: AddItemsD
       // Usa docId para la referencia
       const orderRef = doc(db, `restaurants/${order.restaurantId}/orders/${order.docId}`);
       console.log("Agregando item al pedido:", item, "Cantidad:", quantity, "Pedido:", order.docId);
+      
+      // Get current order to check if items is an array or object
+      const orderSnap = await getDoc(orderRef);
+      if (!orderSnap.exists()) {
+        toast.error(t("orders.addItemsDialog.errors.orderNotFound"));
+        return;
+      }
+      
+      const currentOrder = orderSnap.data();
+      const currentItems = currentOrder.items;
+      
+      // Convert current items to array if needed
+      let itemsArray: any[] = [];
+      if (Array.isArray(currentItems)) {
+        itemsArray = [...currentItems];
+      } else if (typeof currentItems === 'object' && currentItems !== null) {
+        itemsArray = Object.values(currentItems);
+      }
+      
+      // Check if item already exists in the order
+      const existingItemIndex = itemsArray.findIndex(
+        (existingItem) => existingItem.itemId === item.uid || existingItem.id === item.uid
+      );
+      
+      let newItems;
+      if (existingItemIndex >= 0) {
+        // Item exists, update its quantity
+        newItems = itemsArray.map((existingItem, index) => 
+          index === existingItemIndex
+            ? { ...existingItem, quantity: (Number(existingItem.quantity) || 0) + quantity }
+            : existingItem
+        );
+      } else {
+        // Item doesn't exist, add it as new item
+        const newItem = {
+          ...item,
+          quantity,
+          id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          itemId: item.uid,
+          status: 'pending'
+        };
+        newItems = [...itemsArray, newItem];
+      }
+      
+      // Remove duplicate items with the same itemId (keep the one with higher quantity)
+      const uniqueItems = newItems.reduce((acc: any[], item) => {
+        const existingIndex = acc.findIndex(existing => 
+          existing.itemId === item.itemId || existing.id === item.itemId
+        );
+        if (existingIndex >= 0) {
+          // Merge quantities
+          acc[existingIndex] = {
+            ...acc[existingIndex],
+            quantity: (Number(acc[existingIndex].quantity) || 0) + (Number(item.quantity) || 0)
+          };
+        } else {
+          acc.push(item);
+        }
+        return acc;
+      }, []);
+      
+      // Calculate new total
+      const newTotal = uniqueItems.reduce((sum, item) => {
+        const itemPrice = Number(item.price) || 0;
+        const itemQuantity = Number(item.quantity) || 1;
+        return sum + (itemPrice * itemQuantity);
+      }, 0);
+      
+      const newSubtotal = newTotal;
+      
       await updateDoc(orderRef, {
-        items: arrayUnion({ ...item, quantity }),
+        items: uniqueItems,
+        total: newTotal,
+        subtotal: newSubtotal,
+        updatedAt: new Date()
       });
       console.log("Item agregado al pedido con éxito");
       toast.success(t("orders.addItemsDialog.success"));

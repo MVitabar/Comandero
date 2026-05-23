@@ -8,6 +8,7 @@ import { useAuth } from "@/components/auth-provider"
 import {toast} from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -120,6 +121,7 @@ export default function OrdersPage() {
   // Estados separados para filtro global y status dialog
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
   const [selectedStatus, setSelectedStatus] = useState<BaseOrderStatus>('pending');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('cash');
 
   const [categories, setCategories] = useState<{ id: string; type?: 'food' | 'drink' }[]>([]);
 
@@ -255,7 +257,14 @@ export default function OrdersPage() {
       }
       const validStatus = selectedStatus as BaseOrderStatus;
       const orderRef = doc(db, 'restaurants', user.establishmentId, 'orders', String(selectedOrder.id))
-      await updateDoc(orderRef, { status: validStatus, updatedAt: new Date() })
+      
+      // Include payment method when closing or finishing an order
+      const updateData: any = { status: validStatus, updatedAt: new Date() };
+      if (validStatus === "closed" || validStatus === "finished") {
+        updateData.paymentMethod = selectedPaymentMethod;
+      }
+      
+      await updateDoc(orderRef, updateData)
 
       // Si la orden es de mesa y el status es "finished" o "closed", liberar la mesa
       const tableMapId = selectedOrder.mapId || selectedOrder.debugContext?.orderContext?.mapId;
@@ -354,12 +363,31 @@ export default function OrdersPage() {
   // Definir un tipo que incluya 'all' junto con BaseOrderStatus
   type FilterStatus = BaseOrderStatus | 'all';
 
-  // Normalizar items a un array
+  // Normalizar items a un array y deduplicar por itemId
   const normalizeOrderItems = (items: Record<string, OrderItem> | OrderItem[] | undefined): OrderItem[] => {
     if (!items) return [];
-    return Array.isArray(items) 
+    const itemsArray = Array.isArray(items) 
       ? items 
       : Object.values(items);
+    
+    // Deduplicate items by itemId (merge quantities)
+    const deduplicatedItems = itemsArray.reduce((acc: OrderItem[], item) => {
+      const existingIndex = acc.findIndex(existing => 
+        existing.itemId === item.itemId || existing.id === item.itemId
+      );
+      if (existingIndex >= 0) {
+        // Merge quantities
+        acc[existingIndex] = {
+          ...acc[existingIndex],
+          quantity: (Number(acc[existingIndex].quantity) || 0) + (Number(item.quantity) || 0)
+        };
+      } else {
+        acc.push(item);
+      }
+      return acc;
+    }, []);
+    
+    return deduplicatedItems;
   };
 
   // Aplicar filtro de roles y luego filtro de búsqueda y status
@@ -509,8 +537,8 @@ export default function OrdersPage() {
                             <>
                               <h4 className="font-semibold mb-1 text-sm sm:text-base">{t("orders.types.food")}</h4>
                               <div className="flex flex-wrap gap-1 sm:gap-2 items-center">
-                                {comidas.map((item) => (
-                                  <span key={item.id} className="text-xs sm:text-sm bg-muted rounded-md px-2 py-1">
+                                {comidas.map((item, idx) => (
+                                  <span key={`${item.itemId || item.id}-${idx}`} className="text-xs sm:text-sm bg-muted rounded-md px-2 py-1">
                                     {item.name} x{item.quantity}
                                   </span>
                                 ))}
@@ -522,8 +550,8 @@ export default function OrdersPage() {
                             <>
                               <h4 className="font-semibold mb-1 mt-2 text-sm sm:text-base">{t("orders.types.drinks")}</h4>
                               <div className="flex flex-wrap gap-1 sm:gap-2 items-center">
-                                {bebidas.map((item) => (
-                                  <span key={item.id} className="text-xs sm:text-sm bg-muted rounded-md px-2 py-1">
+                                {bebidas.map((item, idx) => (
+                                  <span key={`${item.itemId || item.id}-${idx}`} className="text-xs sm:text-sm bg-muted rounded-md px-2 py-1">
                                     {item.name} x{item.quantity}
                                   </span>
                                 ))}
@@ -533,7 +561,7 @@ export default function OrdersPage() {
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">{t("commons.table.headers.price")}</p>
-                          <p className="text-sm sm:text-base">R$ {order.total.toFixed(2)}</p>
+                          <p className="text-sm sm:text-base">$ {order.total.toFixed(2)}</p>
                         </div>
                         <div className="flex items-center justify-end">
                           <div className="flex items-center gap-1 sm:gap-2">
@@ -623,6 +651,28 @@ export default function OrdersPage() {
                   ))}
                 </SelectContent>
               </Select>
+              
+              {(selectedStatus === "closed" || selectedStatus === "finished") && (
+                <div className="space-y-2">
+                  <Label>{t("orders.selectPaymentMethod")}</Label>
+                  <Select
+                    value={selectedPaymentMethod}
+                    onValueChange={setSelectedPaymentMethod}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t("orders.selectPaymentMethod")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cash">{t("orders.paymentMethods.cash")}</SelectItem>
+                      <SelectItem value="credit">{t("orders.paymentMethods.credit")}</SelectItem>
+                      <SelectItem value="debit">{t("orders.paymentMethods.debit")}</SelectItem>
+                      <SelectItem value="transfer">{t("orders.paymentMethods.transfer")}</SelectItem>
+                      <SelectItem value="other">{t("orders.paymentMethods.other")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
               <Button onClick={handleUpdateStatus} className="w-full">
                 {t("orders.changeStatusButton")}
               </Button>

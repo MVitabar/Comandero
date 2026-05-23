@@ -933,7 +933,7 @@ export function OrderForm({
             >
               {item.name} 
               {(item.stock ?? 0) > 0 
-                ? ` - R$ ${item.price.toFixed(2)} (${t("orders.stockAvailable", { stock: item.stock })})` 
+                ? ` - R$ ${item.price.toFixed(2)} (${item.stock} disponibles)` 
                 : t("orders.itemUnavailable")
               }
             </SelectItem>
@@ -979,14 +979,22 @@ export function OrderForm({
           <SelectValue placeholder={t("orders.selectCategory")} />
         </SelectTrigger>
         <SelectContent>
-          {uniqueCategories.map(category => (
-            <SelectItem 
-              key={category} 
-              value={category}
-            >
-              {t(`orders.categories.${category}`)}
-            </SelectItem>
-          ))}
+          {uniqueCategories.map(category => {
+            // Try to get translation, fallback to category name if not found
+            const translation = t(`orders.categories.${category}`);
+            const displayName = translation.includes('orders.categories.') 
+              ? category.charAt(0).toUpperCase() + category.slice(1) 
+              : translation;
+            
+            return (
+              <SelectItem 
+                key={category} 
+                value={category}
+              >
+                {displayName}
+              </SelectItem>
+            );
+          })}
         </SelectContent>
       </Select>
     )

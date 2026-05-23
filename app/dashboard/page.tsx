@@ -1195,7 +1195,7 @@ export default function DashboardPage() {
                   </Pie>
                   <Tooltip 
                     formatter={(value, name) => [
-                      `${new Intl.NumberFormat(i18n.language, { style: 'currency', currency: user?.currency || 'USD' }).format(value as number)}`, 
+                      `$${new Intl.NumberFormat(i18n.language).format(value as number)}`, 
                       dashboardData.salesByCategory.find(s => s.category === name)?.name ?? getCategoryName(String(name))
                     ]}
                   />
@@ -1292,7 +1292,7 @@ export default function DashboardPage() {
                               }
                               className="capitalize"
                             >
-                              {t(`dashboard.paymentMethods.${'cash'}`)}
+                              {t(`dashboard.salesList.paymentMethods.${'cash'}`)}
                             </Badge>
                           </th>
                         </tr>
@@ -1325,7 +1325,7 @@ export default function DashboardPage() {
                                 }
                                 className="capitalize"
                               >
-                                {t(`dashboard.paymentMethods.${sale.paymentMethod}`)}
+                                {t(`dashboard.salesList.paymentMethods.${sale.paymentMethod}`)}
                               </Badge>
                             </td>
                           </tr>

@@ -459,9 +459,23 @@ export function TableCard({
           order={{ ...activeOrder, docId: activeOrder.docId || activeOrder.id }}
           open={showAddItemsModal}
           onClose={() => setShowAddItemsModal(false)}
-          onItemsAdded={() => {
-            // Opcional: refresca el pedido activo aquí si lo deseas
-            // fetchActiveOrder && fetchActiveOrder();
+          onItemsAdded={async () => {
+            // Refresh the active order after adding items
+            if (activeOrder.id && db) {
+              try {
+                const orderRef = doc(db, 'restaurants', restaurantId, 'orders', activeOrder.id);
+                const orderSnap = await getDoc(orderRef);
+                if (orderSnap.exists()) {
+                  const updatedOrder = orderSnap.data() as Order;
+                  // Force re-render by updating the parent component's state
+                  if (onViewOrder) {
+                    onViewOrder();
+                  }
+                }
+              } catch (error) {
+                console.error('Error refreshing order after adding items:', error);
+              }
+            }
           }}
         />
       )}

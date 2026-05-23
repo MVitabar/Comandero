@@ -110,10 +110,7 @@ export function OrderDetailsDialog({
                       <td className="p-2">{item.name}</td>
                       <td className="p-2 text-right">{item.quantity}</td>
                       <td className="p-2 text-right">
-                        {new Intl.NumberFormat('es-AR', { 
-                          style: 'currency', 
-                          currency: 'ARS' 
-                        }).format(item.price * item.quantity)}
+                        ${new Intl.NumberFormat('es-AR').format(item.price * item.quantity)}
                       </td>
                     </tr>
                   ))}
@@ -124,10 +121,7 @@ export function OrderDetailsDialog({
                       {t("total")}:
                     </td>
                     <td className="p-2 text-right font-semibold">
-                      {new Intl.NumberFormat('es-AR', { 
-                        style: 'currency', 
-                        currency: 'ARS' 
-                      }).format(order.total)}
+                      ${new Intl.NumberFormat('es-AR').format(order.total)}
                     </td>
                   </tr>
                 </tfoot>

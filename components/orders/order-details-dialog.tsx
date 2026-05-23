@@ -117,13 +117,33 @@ export function OrderDetailsDialog({
   const handleUpdateItemStatus = async (item: OrderItem, newStatus: string) => {
     // Normaliza items a array y tipa correctamente
     const itemsArray: OrderItem[] = liveOrder.items 
-      ? Object.keys(liveOrder.items).map(key => 
-          (liveOrder.items as Record<string, OrderItem>)[key]
+      ? (Array.isArray(liveOrder.items) 
+          ? liveOrder.items 
+          : Object.keys(liveOrder.items).map(key => 
+              (liveOrder.items as Record<string, OrderItem>)[key]
+            )
         )
       : [];
 
+    // Deduplicate items by itemId (merge quantities)
+    const deduplicatedItems = itemsArray.reduce((acc: OrderItem[], item) => {
+      const existingIndex = acc.findIndex(existing => 
+        existing.itemId === item.itemId || existing.id === item.itemId
+      );
+      if (existingIndex >= 0) {
+        // Merge quantities
+        acc[existingIndex] = {
+          ...acc[existingIndex],
+          quantity: (Number(acc[existingIndex].quantity) || 0) + (Number(item.quantity) || 0)
+        };
+      } else {
+        acc.push(item);
+      }
+      return acc;
+    }, []);
+
     // Aplica el cambio de status
-    const updatedItems = itemsArray.map(i =>
+    const updatedItems = deduplicatedItems.map(i =>
       i.id === item.id ? { ...i, status: newStatus as OrderItemStatus } : i
     );
 
@@ -154,12 +174,32 @@ export function OrderDetailsDialog({
 
   // Convierte los ítems a array de forma segura antes de dividir por categoría
   const itemsArray = liveOrder.items 
-    ? Object.keys(liveOrder.items).map(key => 
-        (liveOrder.items as Record<string, OrderItem>)[key]
+    ? (Array.isArray(liveOrder.items) 
+        ? liveOrder.items 
+        : Object.keys(liveOrder.items).map(key => 
+            (liveOrder.items as Record<string, OrderItem>)[key]
+          )
       )
     : [];
   
-  const { comidas, bebidas } = splitOrderItemsByCategory(itemsArray, categoryTypeMap);
+  // Deduplicate items by itemId (merge quantities)
+  const deduplicatedItems = itemsArray.reduce((acc: OrderItem[], item) => {
+    const existingIndex = acc.findIndex(existing => 
+      existing.itemId === item.itemId || existing.id === item.itemId
+    );
+    if (existingIndex >= 0) {
+      // Merge quantities
+      acc[existingIndex] = {
+        ...acc[existingIndex],
+        quantity: (Number(acc[existingIndex].quantity) || 0) + (Number(item.quantity) || 0)
+      };
+    } else {
+      acc.push(item);
+    }
+    return acc;
+  }, []);
+  
+  const { comidas, bebidas } = splitOrderItemsByCategory(deduplicatedItems, categoryTypeMap);
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -200,10 +240,7 @@ export function OrderDetailsDialog({
           <div className="grid grid-cols-4 items-center gap-4">
             <span className="text-sm font-medium">{t("orders.details.total")}:</span>
             <span className="col-span-3">
-              {new Intl.NumberFormat(i18n.language, { 
-                style: 'currency', 
-                currency: 'BRL' 
-              }).format(liveOrder.total)}
+              ${new Intl.NumberFormat(i18n.language).format(liveOrder.total)}
             </span>
           </div>
           
@@ -214,14 +251,17 @@ export function OrderDetailsDialog({
                 <>
                   <h4 className="font-semibold mb-1">{t("orders.types.food")}</h4>
                   <div className="flex flex-wrap gap-2 items-center">
-                    {comidas.map((item) => (
-                      <span key={item.id} className="text-sm bg-muted rounded-md px-2 py-1">
+                    {comidas.map((item, idx) => (
+                      <span key={`${item.itemId || item.id}-${idx}`} className="text-sm bg-muted rounded-md px-2 py-1">
                         {item.name} x{item.quantity}
                         {item.customDietaryRestrictions && item.customDietaryRestrictions.length > 0 && (
                           <span className="text-xs text-muted-foreground ml-1">
-                            ({item.customDietaryRestrictions.map(restriction => 
-                              t(restriction)
-                            ).join(', ')})
+                            ({item.customDietaryRestrictions.map((restriction, index) => (
+                              <React.Fragment key={`${item.itemId || item.id}-${idx}-restriction-${index}`}>
+                                {index > 0 && ', '}
+                                {t(restriction)}
+                              </React.Fragment>
+                            ))})
                           </span>
                         )}
                       </span>
@@ -233,14 +273,17 @@ export function OrderDetailsDialog({
                 <>
                   <h4 className="font-semibold mb-1 mt-2">{t("orders.types.drinks")}</h4>
                   <div className="flex flex-wrap gap-2 items-center">
-                    {bebidas.map((item) => (
-                      <span key={item.id} className="text-sm bg-muted rounded-md px-2 py-1">
+                    {bebidas.map((item, idx) => (
+                      <span key={`${item.itemId || item.id}-${idx}`} className="text-sm bg-muted rounded-md px-2 py-1">
                         {item.name} x{item.quantity}
                         {item.customDietaryRestrictions && item.customDietaryRestrictions.length > 0 && (
                           <span className="text-xs text-muted-foreground ml-1">
-                            ({item.customDietaryRestrictions.map(restriction => 
-                              t(restriction)
-                            ).join(', ')})
+                            ({item.customDietaryRestrictions.map((restriction, index) => (
+                              <React.Fragment key={`${item.itemId || item.id}-${idx}-restriction-${index}`}>
+                                {index > 0 && ', '}
+                                {t(restriction)}
+                              </React.Fragment>
+                            ))})
                           </span>
                         )}
                       </span>
