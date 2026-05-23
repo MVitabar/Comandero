@@ -68,16 +68,17 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   }, [loading])
 
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(registration => {
-          console.log('SW registered: ', registration);
-        }).catch(registrationError => {
-          console.log('SW registration failed: ', registrationError);
-        });
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then((registration) => {
+        console.log('SW registered: ', registration);
+      })
+      .catch((error) => {
+        console.log('SW registration failed: ', error);
       });
-    }
-  }, []); // Empty dependency array ensures this runs once on mount
+  }
+}, []);
 
   // Esperar a que Firebase se inicialice
   if (!isInitialized || loading) {
