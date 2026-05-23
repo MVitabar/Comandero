@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
+    id: '/login',
     name: 'Comandero',
     short_name: 'Comandero',
     description: 'Restaurant Management App',
