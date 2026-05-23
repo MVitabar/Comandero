@@ -127,7 +127,7 @@ export default function OrdersPage() {
     if (!db || !user?.establishmentId) return;
     const fetchCategories = async () => {
       try {
-        const inventoryRef = collection(db, "restaurants", user.establishmentId, "inventory");
+        const inventoryRef = collection(db, "restaurants", user.establishmentId!, "inventory");
         const categoriesSnapshot = await getDocs(inventoryRef);
         const fetchedCategories = categoriesSnapshot.docs.map((doc) => ({
           id: doc.id,
