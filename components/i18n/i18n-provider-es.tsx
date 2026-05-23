@@ -657,6 +657,12 @@ const esTranslationsBase = {
     "categoryDescription": "Descripción de Categoría",
     "categoryDescPlaceholder": "Descripción de la categoría",
     "categoryColor": "Color",
+    "categoryType": "Tipo de Categoría",
+    "selectType": "Seleccionar tipo",
+    "categoryTypes": {
+      "food": "Comida",
+      "drink": "Bebida"
+    },
     "lowStockThreshold": "Umbral de Stock Bajo",
     "noEstablishmentError": "No se encontró ID de establecimiento",
     "noEstablishmentErrorMsg": "No se encontró ID de establecimiento",
@@ -701,16 +707,14 @@ const esTranslationsBase = {
     "status": "Estado",
     "deleteSuccess": "Usuario eliminado",
     "hasBeenDeleted": "ha sido eliminado",
-    "errors": {
-      "deleteUser": "Error al eliminar usuario"
-    },
     "noUsers": "No se encontraron usuarios",
     "roles": {
       "owner": "Propietario",
-      "admin": "Admin", 
+      "admin": "Admin",
       "manager": "Gerente",
       "staff": "Personal",
       "waiter": "Mesero",
+      "chef": "Cocinero",
       "barman": "Barmán",
       "default": "Usuario"
     },
@@ -722,11 +726,17 @@ const esTranslationsBase = {
     "openMenu": "Abrir menú",
     "copyId": "Copiar ID",
     "editUser": "Editar usuario",
+    "editSuccess": "Usuario actualizado exitosamente",
+    "userNotFound": "Usuario no encontrado",
     "delete": "Eliminar",
     "confirmDelete": "Confirmar eliminación",
     "confirmDeleteDescription": "¿Estás seguro de que quieres eliminar el usuario '{{username}}'?",
     "deleteUser": "Eliminar usuario",
-    "deleted": "Usuario eliminado"
+    "deleted": "Usuario eliminado",
+    "errors": {
+      "deleteUser": "Error al eliminar usuario",
+      "updateUser": "Error al actualizar usuario"
+    }
   },
 
   "login": {
@@ -1127,6 +1137,15 @@ const esTranslationsBase = {
       "barman": "Bartender",
       "default": "Usuario"
     },
+  "invitation": {
+    "invalid": "Invitación inválida",
+    "expired": "La invitación ha expirado",
+    "error": "Error al obtener la invitación",
+    "register": {
+      "title": "Registrarse",
+      "description": "Has sido invitado a unirte a {{establishmentName}}"
+    }
+  },
 
   landing: landingEs,
 };

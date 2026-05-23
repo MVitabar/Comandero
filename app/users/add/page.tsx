@@ -152,7 +152,7 @@ export default function AddTeamMemberPage() {
                 disabled={loading}
               >
                 {Object.values(UserRole).map(role => (
-                  <option key={role} value={role}>{role.charAt(0).toUpperCase() + role.slice(1)}</option>
+                  <option key={role} value={role}>{t(`users.roles.${role.toLowerCase()}`)}</option>
                 ))}
               </select>
             </div>

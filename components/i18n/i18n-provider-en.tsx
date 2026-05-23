@@ -657,6 +657,12 @@ const enTranslationsBase = {
     "categoryDescription": "Category Description",
     "categoryDescPlaceholder": "Category description",
     "categoryColor": "Color",
+    "categoryType": "Category Type",
+    "selectType": "Select type",
+    "categoryTypes": {
+      "food": "Food",
+      "drink": "Drink"
+    },
     "lowStockThreshold": "Low Stock Threshold",
     "noEstablishmentError": "No establishment ID found",
     "noEstablishmentErrorMsg": "No establishment ID found",
@@ -701,16 +707,14 @@ const enTranslationsBase = {
     "status": "Status",
     "deleteSuccess": "User deleted",
     "hasBeenDeleted": "has been deleted",
-    "errors": {
-      "deleteUser": "Failed to delete user"
-    },
     "noUsers": "No users found",
     "roles": {
       "owner": "Owner",
-      "admin": "Admin", 
+      "admin": "Admin",
       "manager": "Manager",
       "staff": "Staff",
       "waiter": "Waiter",
+      "chef": "Chef",
       "barman": "Barman",
       "default": "User"
     },
@@ -722,11 +726,17 @@ const enTranslationsBase = {
     "openMenu": "Open menu",
     "copyId": "Copy ID",
     "editUser": "Edit User",
+    "editSuccess": "User updated successfully",
+    "userNotFound": "User not found",
     "delete": "Delete",
     "confirmDelete": "Confirm Delete",
     "confirmDeleteDescription": "Are you sure you want to delete user '{{username}}'?",
     "deleteUser": "Delete User",
-    "deleted": "User deleted"
+    "deleted": "User deleted",
+    "errors": {
+      "deleteUser": "Failed to delete user",
+      "updateUser": "Failed to update user"
+    }
   },
 
   "login": {
@@ -1127,6 +1137,15 @@ const enTranslationsBase = {
       "barman": "Barman",
       "default": "User"
     },
+  "invitation": {
+    "invalid": "Invalid invitation",
+    "expired": "Invitation has expired",
+    "error": "Error fetching invitation",
+    "register": {
+      "title": "Register",
+      "description": "You have been invited to join {{establishmentName}}"
+    }
+  },
 
   landing: landingEn,
 };

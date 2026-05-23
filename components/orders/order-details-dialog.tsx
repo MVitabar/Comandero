@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation'
 import { useI18n } from '@/components/i18n-provider'
 import { splitOrderItemsByCategory, canViewBothSections, canViewOnlyFood, canViewOnlyDrinks, getOrderStatusFromItems, calculateOrderStatusFromItems } from '@/lib/orderFilters';
 import { useAuth } from '@/components/auth-provider';
-import { doc, updateDoc, onSnapshot, deleteField } from 'firebase/firestore';
+import { doc, updateDoc, onSnapshot, deleteField, collection, getDocs } from 'firebase/firestore';
 import { useFirebase } from '@/components/firebase-provider';
 import { toast } from 'sonner';
 
@@ -30,6 +30,51 @@ export function OrderDetailsDialog({
 
   // Estado local para la orden en vivo
   const [liveOrder, setLiveOrder] = useState(order);
+
+  const [categories, setCategories] = useState<{ id: string; type?: 'food' | 'drink' }[]>([]);
+
+  useEffect(() => {
+    if (!db || !order.restaurantId || !open) return;
+    const fetchCategories = async () => {
+      try {
+        const inventoryRef = collection(db, "restaurants", order.restaurantId, "inventory");
+        const categoriesSnapshot = await getDocs(inventoryRef);
+        const fetchedCategories = categoriesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          type: doc.data().type as 'food' | 'drink' | undefined,
+        }));
+        setCategories(fetchedCategories);
+      } catch (error) {
+        console.error("Error fetching categories in dialog:", error);
+      }
+    };
+    fetchCategories();
+  }, [db, order.restaurantId, open]);
+
+  const categoryTypeMap = React.useMemo(() => {
+    const map: Record<string, 'food' | 'drink'> = {
+      drinks: 'drink',
+      drink: 'drink',
+      beverage: 'drink',
+      beverages: 'drink',
+      appetizers: 'food',
+      appetizer: 'food',
+      main_courses: 'food',
+      main_course: 'food',
+      desserts: 'food',
+      dessert: 'food',
+      salads: 'food',
+      salad: 'food',
+      sides: 'food',
+      side: 'food',
+    };
+    categories.forEach(cat => {
+      if (cat.type) {
+        map[cat.id] = cat.type === 'drink' ? 'drink' : 'food';
+      }
+    });
+    return map;
+  }, [categories]);
 
   // Suscripción en tiempo real al documento de la orden
   useEffect(() => {
@@ -114,7 +159,7 @@ export function OrderDetailsDialog({
       )
     : [];
   
-  const { comidas, bebidas } = splitOrderItemsByCategory(itemsArray);
+  const { comidas, bebidas } = splitOrderItemsByCategory(itemsArray, categoryTypeMap);
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

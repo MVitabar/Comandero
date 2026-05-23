@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { InventoryItem } from "@/types";
+import { InventoryItem, isDrinkCategory } from "@/types";
 
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/components/auth-provider";
@@ -85,7 +85,7 @@ export default function InventoryPage() {
 
   // Category Management State
   const [categories, setCategories] = useState<
-    { id: string; name: string; description?: string; color?: string }[]
+    { id: string; name: string; description?: string; color?: string; type?: "food" | "drink" }[]
   >([]);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [categoryFormData, setCategoryFormData] = useState({
@@ -93,6 +93,7 @@ export default function InventoryPage() {
     name: "",
     description: "",
     color: "#3b82f6",
+    type: "food" as "food" | "drink",
   });
   const [categoryDialogMode, setCategoryDialogMode] = useState<"add" | "edit">(
     "add",
@@ -191,6 +192,7 @@ export default function InventoryPage() {
         name: doc.data().name || doc.id,
         description: doc.data().description || "",
         color: doc.data().color || "#3b82f6",
+        type: doc.data().type || (isDrinkCategory(doc.id) ? "drink" : "food"),
       }));
 
       setCategories(fetchedCategories);
@@ -311,6 +313,7 @@ export default function InventoryPage() {
         name: categoryFormData.name.trim(),
         description: categoryFormData.description.trim(),
         color: categoryFormData.color,
+        type: categoryFormData.type,
         id: categoryId,
       };
 
@@ -336,6 +339,7 @@ export default function InventoryPage() {
         name: "",
         description: "",
         color: "#3b82f6",
+        type: "food",
       });
       setSelectedCategoryForEdit(null);
       fetchInventoryItems();
@@ -780,6 +784,7 @@ export default function InventoryPage() {
                       name: "",
                       description: "",
                       color: "#3b82f6",
+                      type: "food",
                     });
                     setIsCategoryDialogOpen(true);
                   }}
@@ -1357,9 +1362,16 @@ export default function InventoryPage() {
                           style={{ backgroundColor: cat.color || "#3b82f6" }}
                         />
                         <div>
-                          <p className="text-sm font-medium leading-none">
-                            {getCategoryName(cat.id, cat.name)}
-                          </p>
+                          <div className="flex items-center space-x-2">
+                            <p className="text-sm font-medium leading-none">
+                              {getCategoryName(cat.id, cat.name)}
+                            </p>
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 uppercase shrink-0">
+                              {cat.type === 'drink' 
+                                ? (t("inventory.categoryTypes.drink") || "Bebida") 
+                                : (t("inventory.categoryTypes.food") || "Comida")}
+                            </Badge>
+                          </div>
                           {cat.description && (
                             <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
                               {cat.description}
@@ -1380,6 +1392,7 @@ export default function InventoryPage() {
                               name: cat.name,
                               description: cat.description || "",
                               color: cat.color || "#3b82f6",
+                              type: cat.type || (isDrinkCategory(cat.id) ? "drink" : "food"),
                             });
                           }}
                         >
@@ -1453,6 +1466,33 @@ export default function InventoryPage() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="categoryType">
+                  {t("inventory.categoryType") || "Tipo de Categoría"}
+                </Label>
+                <Select
+                  value={categoryFormData.type}
+                  onValueChange={(value: "food" | "drink") =>
+                    setCategoryFormData((prev) => ({
+                      ...prev,
+                      type: value,
+                    }))
+                  }
+                >
+                  <SelectTrigger id="categoryType">
+                    <SelectValue placeholder={t("inventory.selectType") || "Seleccionar tipo"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="food">
+                      {t("inventory.categoryTypes.food") || "Comida"}
+                    </SelectItem>
+                    <SelectItem value="drink">
+                      {t("inventory.categoryTypes.drink") || "Bebida"}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label>{t("inventory.categoryColor") || "Color"}</Label>
                 <div className="flex flex-wrap gap-2 pt-1">
                   {presetColors.map((color) => (
@@ -1490,6 +1530,7 @@ export default function InventoryPage() {
                         name: "",
                         description: "",
                         color: "#3b82f6",
+                        type: "food",
                       });
                     }}
                   >

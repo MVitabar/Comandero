@@ -19,9 +19,19 @@ export function filterOrdersByRole({ orders, role }: FilterOrdersByRoleArgs): Or
 }
 
 // Separa los ítems de una orden en comidas y bebidas
-export function splitOrderItemsByCategory(items: OrderItem[]) {
-  const comidas = items.filter(item => isFoodCategory(item.category));
-  const bebidas = items.filter(item => isDrinkCategory(item.category));
+export function splitOrderItemsByCategory(items: OrderItem[], categoryTypeMap?: Record<string, 'food' | 'drink'>) {
+  const comidas = items.filter(item => {
+    if (categoryTypeMap && item.category in categoryTypeMap) {
+      return categoryTypeMap[item.category] === 'food';
+    }
+    return isFoodCategory(item.category);
+  });
+  const bebidas = items.filter(item => {
+    if (categoryTypeMap && item.category in categoryTypeMap) {
+      return categoryTypeMap[item.category] === 'drink';
+    }
+    return isDrinkCategory(item.category);
+  });
   return { comidas, bebidas };
 }
 

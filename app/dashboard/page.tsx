@@ -368,13 +368,15 @@ export default function DashboardPage() {
           : Object.values(orderData.items)
 
         items.forEach(item => {
-          const existingItem = topSellingItemsMap.get(item.id)
+          const nameKey = item.name?.trim() || '';
+          if (!nameKey) return;
+          const existingItem = topSellingItemsMap.get(nameKey)
           if (existingItem) {
             existingItem.quantity += item.quantity
             existingItem.totalSales += item.price * item.quantity
           } else {
-            topSellingItemsMap.set(item.id, {
-              id: item.id,
+            topSellingItemsMap.set(nameKey, {
+              id: item.id || item.itemId || nameKey,
               name: item.name,
               quantity: item.quantity,
               totalSales: item.price * item.quantity,
@@ -486,6 +488,25 @@ export default function DashboardPage() {
         })
       })
 
+      // Fetch categories dynamically from database for color matching and correct names
+      const inventoryCategoriesSnapshot = await getDocs(
+        collection(db, `restaurants/${user?.establishmentId}/inventory`)
+      )
+      const validCategories = inventoryCategoriesSnapshot.docs.map((doc, index) => ({
+        id: doc.id,
+        name: doc.data().name || doc.id,
+        color: doc.data().color || categoryColorPalette[index % categoryColorPalette.length]
+      }))
+
+      // Build a lookup from fetched categories for colors and names
+      const categoryMeta: Record<string, { name: string; color: string }> = {}
+      validCategories.forEach((cat, index) => {
+        categoryMeta[cat.id] = {
+          name: getCategoryName(cat.id, cat.name),
+          color: cat.color || categoryColorPalette[index % categoryColorPalette.length]
+        }
+      })
+
       // Transform category sales for visualization
       const translatedCategorySales = Array.from(categorySalesMap.entries()).map(([category, data]) => ({
         category,
@@ -493,14 +514,16 @@ export default function DashboardPage() {
         totalSales: data.totalSales
       }))
 
-      // Prepare sales by category with colors
+      // Prepare sales by category with colors and names
       const salesByCategory: SalesByCategory[] = translatedCategorySales.map(category => {
         // Normalize category name for color matching
         const normalizedCategory = category.category.toLowerCase().replace(/\s+/g, '_')
         return {
           ...category,
-          color: categoryColors[normalizedCategory] || 
-                 categoryColors[category.category] || 
+          name: categoryMeta[category.category]?.name ?? getCategoryName(category.category, category.category),
+          color: categoryMeta[category.category]?.color ?? 
+                 categoryColors[normalizedCategory] ?? 
+                 categoryColors[category.category] ?? 
                  categoryColors['other']
         }
       })
@@ -521,13 +544,15 @@ export default function DashboardPage() {
           : Object.values(orderData.items)
 
         items.forEach(item => {
-          const existingItem = topSellingItemsMap.get(item.id)
+          const nameKey = item.name?.trim() || '';
+          if (!nameKey) return;
+          const existingItem = topSellingItemsMap.get(nameKey)
           if (existingItem) {
             existingItem.quantity += item.quantity
             existingItem.totalSales += item.price * item.quantity
           } else {
-            topSellingItemsMap.set(item.id, {
-              id: item.id,
+            topSellingItemsMap.set(nameKey, {
+              id: item.id || item.itemId || nameKey,
               name: item.name,
               quantity: item.quantity,
               totalSales: item.price * item.quantity,
@@ -1014,14 +1039,14 @@ export default function DashboardPage() {
                   <TabsContent value="by_item" className="w-full mt-3 sm:mt-4 md:mt-6">
                     {dashboardData.inventoryItems.details.length > 0 ? (
                       <div className="space-y-3 sm:space-y-4">
-                        {dashboardData.inventoryItems.details.map((item) => (
+                        {dashboardData.inventoryItems.details.map((item, index) => (
                           <Accordion 
                             type="single" 
                             collapsible 
-                            key={item.id || 'unknown-item'} 
+                            key={item.id || `item-${index}`} 
                             className="border rounded-lg bg-white shadow-sm w-full"
                           >
-                            <AccordionItem value={item.id || 'unknown-item'} className="border-b last:border-b-0">
+                            <AccordionItem value={item.id || `item-val-${index}`} className="border-b last:border-b-0">
                               <AccordionTrigger className="px-3 sm:px-4 py-2 sm:py-3 hover:bg-muted/50 transition-colors">
                                 <div className="flex flex-col w-full">
                                   <div className="flex justify-between items-center mb-2">
@@ -1076,7 +1101,7 @@ export default function DashboardPage() {
                                       </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                      <TableRow key={item.id || 'item-row'} className="hover:bg-gray-100 transition-colors">
+                                      <TableRow key={item.id || `item-row-${index}`} className="hover:bg-gray-100 transition-colors">
                                         <TableCell className="text-xs sm:text-sm text-gray-700 px-2 sm:px-4 py-2">
                                           {getCategoryName(item.category, item.categoryName)}
                                         </TableCell>
@@ -1124,9 +1149,9 @@ export default function DashboardPage() {
             <CardDescription>{t('dashboard.topSellingItems.subtitle')}</CardDescription>
           </CardHeader>
           <CardContent>
-            {dashboardData.topSellingItems.map((item) => (
+            {dashboardData.topSellingItems.map((item, index) => (
               <div 
-                key={item.id} 
+                key={item.id || `item-${index}`} 
                 className="flex justify-between items-center py-2 border-b last:border-b-0"
               >
                 <div>
@@ -1222,7 +1247,7 @@ export default function DashboardPage() {
           <CardContent>
             {dashboardData.recentOrders.map((order, index) => (
               <div 
-                key={order.id} 
+                key={order.id || `order-${index}`} 
                 className="flex justify-between items-center py-2 border-b last:border-b-0"
               >
                 <div>
@@ -1273,8 +1298,8 @@ export default function DashboardPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {dashboardData.salesList.map((sale) => (
-                          <tr key={sale.orderId} className="border-b last:border-b-0">
+                        {dashboardData.salesList.map((sale, index) => (
+                          <tr key={sale.orderId || `sale-${index}`} className="border-b last:border-b-0">
                             <td className="px-1 sm:px-2 md:px-4 py-2 text-xs sm:text-sm">
                               {new Date(sale.date).toLocaleDateString(i18n.language, {
                                 year: 'numeric',

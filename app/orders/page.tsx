@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useI18n } from "@/components/i18n-provider"
 import { safeTranslate } from '@/components/i18n-provider';
 import { useFirebase } from "@/components/firebase-provider"
@@ -120,6 +120,51 @@ export default function OrdersPage() {
   // Estados separados para filtro global y status dialog
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
   const [selectedStatus, setSelectedStatus] = useState<BaseOrderStatus>('pending');
+
+  const [categories, setCategories] = useState<{ id: string; type?: 'food' | 'drink' }[]>([]);
+
+  useEffect(() => {
+    if (!db || !user?.establishmentId) return;
+    const fetchCategories = async () => {
+      try {
+        const inventoryRef = collection(db, "restaurants", user.establishmentId, "inventory");
+        const categoriesSnapshot = await getDocs(inventoryRef);
+        const fetchedCategories = categoriesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          type: doc.data().type as 'food' | 'drink' | undefined,
+        }));
+        setCategories(fetchedCategories);
+      } catch (error) {
+        console.error("Error fetching categories in orders page:", error);
+      }
+    };
+    fetchCategories();
+  }, [db, user?.establishmentId]);
+
+  const categoryTypeMap = useMemo(() => {
+    const map: Record<string, 'food' | 'drink'> = {
+      drinks: 'drink',
+      drink: 'drink',
+      beverage: 'drink',
+      beverages: 'drink',
+      appetizers: 'food',
+      appetizer: 'food',
+      main_courses: 'food',
+      main_course: 'food',
+      desserts: 'food',
+      dessert: 'food',
+      salads: 'food',
+      salad: 'food',
+      sides: 'food',
+      side: 'food',
+    };
+    categories.forEach(cat => {
+      if (cat.type) {
+        map[cat.id] = cat.type === 'drink' ? 'drink' : 'food';
+      }
+    });
+    return map;
+  }, [categories]);
 
   useEffect(() => {
     if (!db || !user) return;
@@ -423,7 +468,7 @@ export default function OrdersPage() {
               {filteredOrders.map((order) => {
                 // Normalizar items para splitOrderItemsByCategory
                 const normalizedItems = normalizeOrderItems(order.items);
-                const { comidas, bebidas } = splitOrderItemsByCategory(normalizedItems);
+                const { comidas, bebidas } = splitOrderItemsByCategory(normalizedItems, categoryTypeMap);
                 
                 return (
                   <Card key={order.id} className="w-full">

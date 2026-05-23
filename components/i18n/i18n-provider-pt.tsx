@@ -657,6 +657,12 @@ const ptTranslationsBase = {
     "categoryDescription": "Descrição da Categoria",
     "categoryDescPlaceholder": "Descrição da categoria",
     "categoryColor": "Cor",
+    "categoryType": "Tipo de Categoria",
+    "selectType": "Selecionar tipo",
+    "categoryTypes": {
+      "food": "Comida",
+      "drink": "Bebida"
+    },
     "lowStockThreshold": "Limite de Estoque Baixo",
     "noEstablishmentError": "ID de estabelecimento não encontrado",
     "noEstablishmentErrorMsg": "ID de estabelecimento não encontrado",
@@ -701,15 +707,13 @@ const ptTranslationsBase = {
     "status": "Status",
     "deleteSuccess": "Usuario excluído",
     "hasBeenDeleted": "Usuario excluído",
-    "errors": {
-      "deleteUser": "Falha ao excluir usuario"
-    },
     "noUsers": "Nenhum usuario encontrado",
     "roles": {
       "owner": "Proprietario",
-      "admin": "Admin", 
+      "admin": "Admin",
       "manager": "Gerente",
       "staff": "Staff",
+      "chef": "Cozinheiro",
       "waiter": "Garçom",
       "barman": "Barmen",
       "default": "Usuario"
@@ -722,11 +726,17 @@ const ptTranslationsBase = {
     "openMenu": "Abrir menu",
     "copyId": "Copiar ID",
     "editUser": "Editar Usuario",
+    "editSuccess": "Usuario atualizado com sucesso",
+    "userNotFound": "Usuario não encontrado",
     "delete": "Excluir",
     "confirmDelete": "Confirmar Exclusao",
     "confirmDeleteDescription": "Tem certeza de que deseja excluir o usuario '{{username}}'?",
     "deleteUser": "Excluir Usuario",
-    "deleted": "Usuario excluído"
+    "deleted": "Usuario excluído",
+    "errors": {
+      "deleteUser": "Falha ao excluir usuario",
+      "updateUser": "Falha ao atualizar usuario"
+    }
   },
 
   "login": {
@@ -1126,6 +1136,15 @@ const ptTranslationsBase = {
       "barman": "Barman",
       "default": "Usuário"
     },
+  "invitation": {
+    "invalid": "Convite inválido",
+    "expired": "O convite expirou",
+    "error": "Erro ao buscar convite",
+    "register": {
+      "title": "Registrar",
+      "description": "Você foi convidado a se juntar a {{establishmentName}}"
+    }
+  },
 
   landing: landingPt,
 };
