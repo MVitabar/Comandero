@@ -17,6 +17,7 @@ import Link from "next/link"
 import { User } from "@/types"
 import { usePermissions } from "@/components/permissions-provider"
 import { UnauthorizedAccess } from "@/components/unauthorized-access"
+import { canAddMoreUsers, getMaxUsers } from "@/lib/subscription-utils"
 import { 
   Dialog, 
   DialogContent, 
@@ -136,12 +137,19 @@ export default function UsersPage() {
       <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
         <h1 className="text-2xl md:text-3xl font-bold">{t("users.pageTitle")}</h1>
         {canCreate('users-management') && (
-          <Button className="w-full sm:w-auto" asChild>
-            <Link href="/users/add">
+          canAddMoreUsers(currentUser?.subscriptionPlan, users.length) ? (
+            <Button className="w-full sm:w-auto" asChild>
+              <Link href="/users/add">
+                <UserPlus className="mr-2 h-4 w-4" />
+                {t("users.addUser")}
+              </Link>
+            </Button>
+          ) : (
+            <Button className="w-full sm:w-auto" disabled>
               <UserPlus className="mr-2 h-4 w-4" />
-              {t("users.addUser")}
-            </Link>
-          </Button>
+              {t("users.addUser")} ({users.length}/{getMaxUsers(currentUser?.subscriptionPlan) === -1 ? '∞' : getMaxUsers(currentUser?.subscriptionPlan)})
+            </Button>
+          )
         )}
       </div>
 

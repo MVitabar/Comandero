@@ -143,6 +143,7 @@ export const landingEn = {
           basicReports: "Basic reports",
           emailSupport: "Email support",
           mobileApp: "Mobile app",
+          inventory50: "Up to 50 inventory items",
         },
       },
       pro: {
@@ -153,7 +154,7 @@ export const landingEn = {
         features: {
           users10: "Up to 10 users",
           allBasic: "Everything in Basic",
-          inventory: "Inventory management",
+          inventory200: "Up to 200 inventory items",
           advancedReports: "Advanced reports",
           delivery: "Delivery integrations",
           chatSupport: "Chat support",
@@ -167,6 +168,7 @@ export const landingEn = {
         features: {
           unlimitedUsers: "Unlimited users",
           allPro: "Everything in Professional",
+          inventoryUnlimited: "Unlimited inventory",
           multiUnit: "Multiple locations",
           advancedApi: "Advanced API & integrations",
           prioritySupport: "Priority 24/7 support",
@@ -442,7 +444,7 @@ export const landingEs = {
       basic: {
         name: "Básico",
         description: "Para restaurantes pequeños",
-        price: "$15",
+        price: "$19",
         badge: "",
         features: {
           users3: "Hasta 3 usuarios",
@@ -450,17 +452,18 @@ export const landingEs = {
           basicReports: "Informes básicos",
           emailSupport: "Soporte por email",
           mobileApp: "Aplicación móvil",
+          inventory50: "Hasta 50 items de inventario",
         },
       },
       pro: {
         name: "Profesional",
         description: "Para restaurantes en crecimiento",
-        price: "$39",
+        price: "$49",
         badge: "Más popular",
         features: {
           users10: "Hasta 10 usuarios",
           allBasic: "Todo lo del plan Básico",
-          inventory: "Gestión de inventario",
+          inventory200: "Hasta 200 items de inventario",
           advancedReports: "Informes avanzados",
           delivery: "Integración con delivery",
           chatSupport: "Soporte por chat",
@@ -470,10 +473,11 @@ export const landingEs = {
       enterprise: {
         name: "Empresarial",
         description: "Para cadenas de restaurantes",
-        price: "$79",
+        price: "$99",
         features: {
           unlimitedUsers: "Usuarios ilimitados",
           allPro: "Todo lo del plan Profesional",
+          inventoryUnlimited: "Inventario ilimitado",
           multiUnit: "Múltiples unidades",
           advancedApi: "API e integraciones avanzadas",
           prioritySupport: "Soporte prioritario 24/7",
@@ -749,7 +753,7 @@ export const landingPt = {
       basic: {
         name: "Básico",
         description: "Para pequenos restaurantes",
-        price: "R$29",
+        price: "$19",
         badge: "",
         features: {
           users3: "Até 3 usuários",
@@ -757,17 +761,18 @@ export const landingPt = {
           basicReports: "Relatórios básicos",
           emailSupport: "Suporte por email",
           mobileApp: "Aplicativo móvel",
+          inventory50: "Até 50 itens de estoque",
         },
       },
       pro: {
         name: "Profissional",
         description: "Para restaurantes em crescimento",
-        price: "R$79",
+        price: "$49",
         badge: "Mais popular",
         features: {
           users10: "Até 10 usuários",
           allBasic: "Todos os recursos do Básico",
-          inventory: "Gestão de estoque",
+          inventory200: "Até 200 itens de estoque",
           advancedReports: "Relatórios avançados",
           delivery: "Integração com delivery",
           chatSupport: "Suporte por chat",
@@ -777,10 +782,11 @@ export const landingPt = {
       enterprise: {
         name: "Empresarial",
         description: "Para redes de restaurantes",
-        price: "R$179",
+        price: "$99",
         features: {
           unlimitedUsers: "Usuários ilimitados",
           allPro: "Todos os recursos do Profissional",
+          inventoryUnlimited: "Estoque ilimitado",
           multiUnit: "Múltiplas unidades",
           advancedApi: "API e integrações avançadas",
           prioritySupport: "Suporte prioritário 24/7",

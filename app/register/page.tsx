@@ -15,8 +15,15 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { PasswordStrengthIndicator } from "@/components/password-strength-indicator"
-import { Eye, EyeOff, Loader2 } from "lucide-react"
-import { UserRole } from "@/types"
+import { Eye, EyeOff, Loader2, CheckCircle2 } from "lucide-react"
+import { UserRole, SubscriptionPlan } from "@/types"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -25,6 +32,7 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     establishmentName: "",
+    subscriptionPlan: "basic" as SubscriptionPlan,
   })
   const [acceptTerms, setAcceptTerms] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -92,6 +100,10 @@ export default function RegisterPage() {
     }
 
     try {
+      const trialStartDate = new Date()
+      const trialEndDate = new Date()
+      trialEndDate.setDate(trialEndDate.getDate() + 14) // 14 days trial
+
       const result = await signUp(
         formData.email, 
         formData.password, 
@@ -99,6 +111,10 @@ export default function RegisterPage() {
           username: formData.username,
           establishmentName: formData.establishmentName,
           role: UserRole.OWNER, // Asegura que el usuario inicial sea OWNER
+          subscriptionPlan: formData.subscriptionPlan,
+          trialStartDate,
+          trialEndDate,
+          isTrialActive: true,
         }
       )
 
@@ -215,6 +231,44 @@ export default function RegisterPage() {
               {errors.establishmentName && (
                 <p className="text-red-500 text-sm">{errors.establishmentName}</p>
               )}
+            </div>
+
+            {/* Subscription Plan Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="subscriptionPlan">{t("register.subscriptionPlanLabel")}</Label>
+              <Select
+                value={formData.subscriptionPlan}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, subscriptionPlan: value as SubscriptionPlan }))}
+                disabled={loading}
+              >
+                <SelectTrigger id="subscriptionPlan">
+                  <SelectValue placeholder={t("register.selectPlan")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="basic">
+                    <div className="flex flex-col">
+                      <span className="font-medium">Basic - $19/mes</span>
+                      <span className="text-xs text-muted-foreground">Para restaurantes pequeños (3 usuarios)</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="professional">
+                    <div className="flex flex-col">
+                      <span className="font-medium">Professional - $49/mes</span>
+                      <span className="text-xs text-muted-foreground">Para restaurantes en crecimiento (10 usuarios)</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="enterprise">
+                    <div className="flex flex-col">
+                      <span className="font-medium">Enterprise - $99/mes</span>
+                      <span className="text-xs text-muted-foreground">Para cadenas de restaurantes (usuarios ilimitados)</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 p-2 rounded-md">
+                <CheckCircle2 className="h-4 w-4" />
+                <span>{t("register.trialInfo")}</span>
+              </div>
             </div>
 
             {/* Password Input */}

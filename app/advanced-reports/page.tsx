@@ -21,11 +21,18 @@ import {
   User,
   SalesDataAdvanced
 } from "@/types"
+import { hasAdvancedReports } from "@/lib/subscription-utils"
+import { UnauthorizedAccess } from "@/components/unauthorized-access"
 
 const AdvancedReportsPage = () => {
   const { db } = useFirebase()
   const { user } = useAuth()
   const { t } = useI18n()
+
+  // Check if user has access to advanced reports based on subscription plan
+  if (!hasAdvancedReports(user?.subscriptionPlan)) {
+    return <UnauthorizedAccess />
+  }
 
   const generateDefaultFinancialData = (): FinancialData => ({
     summary: [

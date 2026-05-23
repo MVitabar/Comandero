@@ -53,8 +53,9 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@r
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { toast } from "sonner"
 import * as XLSX from "xlsx"
-import { Download } from "lucide-react"
+import { Download, Clock, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function DashboardPage() {
   const { t, i18n } = useI18n()
@@ -786,6 +787,50 @@ export default function DashboardPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+      {/* Trial Period Banner */}
+      {(() => {
+        // Debug logging
+        console.log('Trial data:', {
+          isTrialActive: user?.isTrialActive,
+          trialEndDate: user?.trialEndDate,
+          trialStartDate: user?.trialStartDate,
+          subscriptionPlan: user?.subscriptionPlan
+        });
+
+        if (!user?.isTrialActive || !user?.trialEndDate) return null;
+
+        let daysLeft = 0;
+        try {
+          const endDate = new Date(user.trialEndDate);
+          const now = new Date();
+          
+          // Check if date is valid
+          if (isNaN(endDate.getTime())) {
+            console.error('Invalid trialEndDate:', user.trialEndDate);
+            daysLeft = 0;
+          } else {
+            const diffTime = endDate.getTime() - now.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            daysLeft = Math.max(0, diffDays);
+          }
+        } catch (error) {
+          console.error('Error calculating days left:', error);
+          daysLeft = 0;
+        }
+
+        return (
+          <Alert className="bg-blue-50 border-blue-200">
+            <Clock className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-900">
+              <span className="font-semibold">{t("dashboard.trial.title")}</span> {t("dashboard.trial.message", { 
+                daysLeft,
+                plan: user.subscriptionPlan || 'basic'
+              })}
+            </AlertDescription>
+          </Alert>
+        );
+      })()}
+
       {/* Personalized Welcome Section */}
       <div className="mb-4 md:mb-8">
         <h1 className="text-2xl md:text-3xl font-bold">

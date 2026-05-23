@@ -4,6 +4,97 @@ import type React from "react"
 import type { User as FirebaseUser } from 'firebase/auth'
 import { UserRole } from './permissions';
 
+// Subscription Plan Types
+export type SubscriptionPlan = 'basic' | 'professional' | 'enterprise';
+
+export interface SubscriptionPlanLimits {
+  maxUsers: number;
+  maxInventoryItems: number;
+  features: {
+    orderManagement: boolean;
+    tableManagement: boolean;
+    basicReports: boolean;
+    advancedReports: boolean;
+    inventoryManagement: boolean;
+    deliveryIntegrations: boolean;
+    emailSupport: boolean;
+    chatSupport: boolean;
+    prioritySupport: boolean;
+    mobileApp: boolean;
+    basicApi: boolean;
+    advancedApi: boolean;
+    multipleLocations: boolean;
+    accountManager: boolean;
+    fullCustomization: boolean;
+  };
+}
+
+export const SUBSCRIPTION_PLANS: Record<SubscriptionPlan, SubscriptionPlanLimits> = {
+  basic: {
+    maxUsers: 3,
+    maxInventoryItems: 50,
+    features: {
+      orderManagement: true,
+      tableManagement: true,
+      basicReports: true,
+      advancedReports: false,
+      inventoryManagement: true,
+      deliveryIntegrations: false,
+      emailSupport: true,
+      chatSupport: false,
+      prioritySupport: false,
+      mobileApp: true,
+      basicApi: false,
+      advancedApi: false,
+      multipleLocations: false,
+      accountManager: false,
+      fullCustomization: false,
+    },
+  },
+  professional: {
+    maxUsers: 10,
+    maxInventoryItems: 200,
+    features: {
+      orderManagement: true,
+      tableManagement: true,
+      basicReports: true,
+      advancedReports: true,
+      inventoryManagement: true,
+      deliveryIntegrations: true,
+      emailSupport: true,
+      chatSupport: true,
+      prioritySupport: false,
+      mobileApp: true,
+      basicApi: true,
+      advancedApi: false,
+      multipleLocations: false,
+      accountManager: false,
+      fullCustomization: false,
+    },
+  },
+  enterprise: {
+    maxUsers: -1, // -1 means unlimited
+    maxInventoryItems: -1, // -1 means unlimited
+    features: {
+      orderManagement: true,
+      tableManagement: true,
+      basicReports: true,
+      advancedReports: true,
+      inventoryManagement: true,
+      deliveryIntegrations: true,
+      emailSupport: true,
+      chatSupport: true,
+      prioritySupport: true,
+      mobileApp: true,
+      basicApi: true,
+      advancedApi: true,
+      multipleLocations: true,
+      accountManager: true,
+      fullCustomization: true,
+    },
+  },
+};
+
 // Tipos de enumeración y métodos de pago
 export type PaymentMethod = 'cash' | 'card' | 'transfer' | 'credit' | 'debit' | 'other';
 
@@ -48,6 +139,14 @@ export interface User {
   restaurantName?: string
   currency?: string
   
+  // Subscription plan
+  subscriptionPlan?: SubscriptionPlan
+  
+  // Trial period
+  trialStartDate?: Date
+  trialEndDate?: Date
+  isTrialActive?: boolean
+  
   // Enhanced authentication and status properties
   status: 'active' | 'inactive' | 'suspended' | 'pending'
   emailVerified: boolean
@@ -77,13 +176,18 @@ export interface User {
       username?: string
       establishmentName?: string
       role?: UserRole
+      subscriptionPlan?: string
+      trialStartDate?: Date
+      trialEndDate?: Date
+      isTrialActive?: boolean
     }
   ) => Promise<{
     success: boolean
     error?: string
     userId?: string
+    needsPasswordChange?: boolean
   }>
-  
+
   // Enhanced activity tracking
   activity?: UserActivity
   
@@ -606,11 +710,16 @@ export interface AuthContextType {
       username?: string
       establishmentName?: string
       role?: UserRole
+      subscriptionPlan?: string
+      trialStartDate?: Date
+      trialEndDate?: Date
+      isTrialActive?: boolean
     }
   ) => Promise<{
     success: boolean
     error?: string
     userId?: string
+    needsPasswordChange?: boolean
   }>
 }
 

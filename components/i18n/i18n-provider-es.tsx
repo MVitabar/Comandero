@@ -237,6 +237,10 @@ const esTranslationsBase = {
     "goodEvening": "Buenas noches",
     "user": "Usuario",
     "welcomeMessage": "Bienvenido a tu dashboard, donde puedes gestionar las operaciones de tu restaurante y rastrear el desempeño.",
+    "trial": {
+      "title": "Período de prueba activo",
+      "message": "Tienes {{daysLeft}} días restantes en tu prueba. Tu plan: {{plan}}"
+    },
     
     "totalSales": {
       "title": "Ventas totales",
@@ -793,6 +797,9 @@ const esTranslationsBase = {
     "establishmentName": "Nombre del establecimiento",
     "establishmentNameLabel": "Nombre del establecimiento",
     "establishmentNamePlaceholder": "Introduce el nombre del establecimiento",
+    "subscriptionPlanLabel": "Plan de suscripción",
+    "selectPlan": "Seleccionar un plan",
+    "trialInfo": "Comienza con una prueba gratuita de 14 días en cualquier plan",
     "submit": "Registrar",
     "acceptTerms": "Aceptar términos",
     "termsLink": "Términos de Uso",

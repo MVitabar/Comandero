@@ -45,10 +45,11 @@ const AuthContext = createContext<AuthContextType>({
   logout: async () => ({ success: false }),
   signUp: async (email, password, options) => {
     console.warn('Default signUp method called');
-    return { 
-      success: false, 
-      error: 'Sign up method not implemented', 
-      needsPasswordChange: false 
+    return {
+      success: false,
+      error: 'Sign up method not implemented',
+      userId: undefined,
+      needsPasswordChange: false
     };
   }
 })
@@ -144,6 +145,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       establishmentName?: string;
       role?: UserRole;
       username?: string;
+      subscriptionPlan?: string;
+      trialStartDate?: Date;
+      trialEndDate?: Date;
+      isTrialActive?: boolean;
     }
   ): Promise<{ success: boolean, error?: string, userId?: string, needsPasswordChange?: boolean }> => {
     try {
@@ -318,11 +323,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (establishmentUserDoc.exists()) {
         const establishmentUserData = establishmentUserDoc.data() as User;
+        // Helper to convert Firestore Timestamp or string to Date
+        const convertToDate = (value: any): Date | undefined => {
+          if (!value) return undefined;
+          if (value.toDate && typeof value.toDate === 'function') {
+            return value.toDate();
+          }
+          if (typeof value === 'string') {
+            return new Date(value);
+          }
+          if (value instanceof Date) {
+            return value;
+          }
+          return new Date(value);
+        };
+
         userDetails = {
           ...establishmentUserData,
           uid: firebaseUser.uid,
           email: firebaseUser.email || '',
-          emailVerified: firebaseUser.emailVerified
+          emailVerified: firebaseUser.emailVerified,
+          // Convert Firestore Timestamps to Dates
+          trialStartDate: convertToDate(establishmentUserData.trialStartDate),
+          trialEndDate: convertToDate(establishmentUserData.trialEndDate),
         };
       } else {
         // Fallback to global users collection
@@ -331,11 +354,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (globalUserDoc.exists()) {
           const globalUserData = globalUserDoc.data() as User;
+          // Helper to convert Firestore Timestamp or string to Date
+          const convertToDate = (value: any): Date | undefined => {
+            if (!value) return undefined;
+            if (value.toDate && typeof value.toDate === 'function') {
+              return value.toDate();
+            }
+            if (typeof value === 'string') {
+              return new Date(value);
+            }
+            if (value instanceof Date) {
+              return value;
+            }
+            return new Date(value);
+          };
+
           userDetails = {
             ...globalUserData,
             uid: firebaseUser.uid,
             email: firebaseUser.email || '',
-            emailVerified: firebaseUser.emailVerified
+            emailVerified: firebaseUser.emailVerified,
+            // Convert Firestore Timestamps to Dates
+            trialStartDate: convertToDate(globalUserData.trialStartDate),
+            trialEndDate: convertToDate(globalUserData.trialEndDate),
           };
         } else {
           return null;
@@ -438,6 +479,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     options?: {
       role?: UserRole;
       username?: string;
+      subscriptionPlan?: string;
+      trialStartDate?: Date;
+      trialEndDate?: Date;
+      isTrialActive?: boolean;
     }
   ) => {
     try {
@@ -500,7 +545,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             currentEstablishmentName: baseSlug,
             establishmentId: establishmentId,
             createdAt: serverTimestamp(),
-            status: 'active'
+            status: 'active',
+            subscriptionPlan: options?.subscriptionPlan || 'basic',
+            trialStartDate: options?.trialStartDate || null,
+            trialEndDate: options?.trialEndDate || null,
+            isTrialActive: options?.isTrialActive || false
           }, { merge: true });
         }
 
@@ -510,7 +559,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           name: baseSlug,
           ownerId: firebaseUser.uid,
           createdAt: serverTimestamp(),
-          status: 'active'
+          status: 'active',
+          subscriptionPlan: options?.subscriptionPlan || 'basic',
+          trialStartDate: options?.trialStartDate || null,
+          trialEndDate: options?.trialEndDate || null,
+          isTrialActive: options?.isTrialActive || false
         }, { merge: true });
 
         // Create user document in establishment's users subcollection only if it doesn't exist
@@ -521,7 +574,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             username: username,
             role: userRole, // Use the passed role
             createdAt: serverTimestamp(),
-            status: 'active'
+            status: 'active',
+            subscriptionPlan: options?.subscriptionPlan || 'basic',
+            trialStartDate: options?.trialStartDate || null,
+            trialEndDate: options?.trialEndDate || null,
+            isTrialActive: options?.isTrialActive || false
           }, { merge: true });
         }
 

@@ -619,7 +619,7 @@ export default function LandingPage() {
                   </p>
                   <p className="text-sm text-gray-500 mb-8">{t("landing.pricing.billedMonthly")}</p>
                   <ul className="space-y-4 mb-8 text-left">
-                    {(["users3", "ordersTables", "basicReports", "emailSupport", "mobileApp"] as const).map((feature) => (
+                    {(["users3", "ordersTables", "basicReports", "emailSupport", "mobileApp", "inventory50"] as const).map((feature) => (
                       <li key={feature} className="flex items-center">
                         <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
                         <span>{t(`landing.pricing.plans.basic.features.${feature}`)}</span>
@@ -646,7 +646,7 @@ export default function LandingPage() {
                   </p>
                   <p className="text-sm text-gray-500 mb-8">{t("landing.pricing.billedMonthly")}</p>
                   <ul className="space-y-4 mb-8 text-left">
-                    {(["users10", "allBasic", "inventory", "advancedReports", "delivery", "chatSupport", "basicApi"] as const).map((feature) => (
+                    {(["users10", "allBasic", "inventory200", "advancedReports", "delivery", "chatSupport", "basicApi"] as const).map((feature) => (
                       <li key={feature} className="flex items-center">
                         <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
                         <span>{t(`landing.pricing.plans.pro.features.${feature}`)}</span>
@@ -670,7 +670,7 @@ export default function LandingPage() {
                   </p>
                   <p className="text-sm text-gray-500 mb-8">{t("landing.pricing.billedMonthly")}</p>
                   <ul className="space-y-4 mb-8 text-left">
-                    {(["unlimitedUsers", "allPro", "multiUnit", "advancedApi", "prioritySupport", "accountManager", "fullCustomization"] as const).map((feature) => (
+                    {(["unlimitedUsers", "allPro", "inventoryUnlimited", "multiUnit", "advancedApi", "prioritySupport", "accountManager", "fullCustomization"] as const).map((feature) => (
                       <li key={feature} className="flex items-center">
                         <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
                         <span>{t(`landing.pricing.plans.enterprise.features.${feature}`)}</span>
@@ -1045,12 +1045,12 @@ export default function LandingPage() {
                 <Rocket className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Link href="#features">
-              <Button variant="outline" size="lg" className="border-white/40 text-white hover:bg-white/10 hover:border-white/60 backdrop-blur-sm px-8 transition-all duration-300">
+            {/* <Link href="#features">
+              <Button variant="outline" size="lg" className="border-white/40 text-blue-40 hover:bg-white/10 hover:border-white/60 backdrop-blur-sm px-8 transition-all duration-300">
                 {t("landing.cta.secondary")}
                 <ChevronRight className="ml-1 h-5 w-5" />
               </Button>
-            </Link>
+            </Link> */}
           </div>
         </div>
       </section>

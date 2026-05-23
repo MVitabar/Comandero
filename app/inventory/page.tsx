@@ -23,6 +23,7 @@ import {
 import { db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { canAddMoreInventoryItems, getMaxInventoryItems } from "@/lib/subscription-utils";
 import {
   Card,
   CardContent,
@@ -79,6 +80,7 @@ export default function InventoryPage() {
   const { user } = useAuth();
   const { canView, canCreate, canUpdate, canDelete } = usePermissions();
   const { t } = useI18n();
+
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -797,15 +799,24 @@ export default function InventoryPage() {
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   {canCreate("inventory") && (
-                    <Button
-                      onClick={() => {
-                        setDialogMode("add");
-                        setFormData({});
-                      }}
-                      className="flex-1 sm:flex-none"
-                    >
-                      <Plus className="mr-2 h-4 w-4" /> {t("inventory.addItem")}
-                    </Button>
+                    canAddMoreInventoryItems(user?.subscriptionPlan, inventoryItems.length) ? (
+                      <Button
+                        onClick={() => {
+                          setDialogMode("add");
+                          setFormData({});
+                        }}
+                        className="flex-1 sm:flex-none"
+                      >
+                        <Plus className="mr-2 h-4 w-4" /> {t("inventory.addItem")}
+                      </Button>
+                    ) : (
+                      <Button
+                        disabled
+                        className="flex-1 sm:flex-none"
+                      >
+                        <Plus className="mr-2 h-4 w-4" /> {t("inventory.addItem")} ({inventoryItems.length}/{getMaxInventoryItems(user?.subscriptionPlan) === -1 ? '∞' : getMaxInventoryItems(user?.subscriptionPlan)})
+                      </Button>
+                    )
                   )}
                 </DialogTrigger>
                 <DialogContent>
