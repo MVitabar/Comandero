@@ -1,4 +1,4 @@
-const CACHE_NAME = 'comandero-v2';
+const CACHE_NAME = 'comandero';
 
 const STATIC_ASSETS = [
   '/manifest.json',
