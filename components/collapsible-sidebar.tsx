@@ -3,7 +3,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useI18n } from "./i18n-provider"
 import { useAuth } from "./auth-provider"
-import { signOut } from "firebase/auth"
 import { useFirebase } from "./firebase-provider"
 import {toast} from "sonner"
 import { usePermissions } from "@/hooks/usePermissions"
@@ -36,7 +35,7 @@ import { ModulePermissions } from "@/types/permissions";
 
 export function CollapsibleSidebar() {
   const { t, language, setLanguage } = useI18n()
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const { auth } = useFirebase()
   const { canView } = usePermissions()
   const pathname = usePathname()
@@ -151,17 +150,9 @@ export function CollapsibleSidebar() {
   }
 
   const handleLogout = async () => {
-    if (!auth) return
-
-    try {
-      await signOut(auth)
-      toast.success(t("sidebar.logoutSuccess"))
-    } catch (error: any) {
-      if (error.code === "auth/popup-closed-by-user") {
-        toast.error(t("sidebar.logoutCancelled"))
-      } else {
-        toast.error(t("sidebar.logoutError"))
-      }
+    const result = await logout()
+    if (!result.success) {
+      toast.error(t("sidebar.logoutError"))
     }
   }
 

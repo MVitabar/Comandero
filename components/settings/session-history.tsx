@@ -8,9 +8,11 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Clock, Calendar, User, Filter, Loader2, LogIn, LogOut } from "lucide-react"
+import { Label } from "@/components/ui/label"
+import { Clock, Calendar, User, Filter, Loader2, LogIn, LogOut, X } from "lucide-react"
 import { collection, query, where, orderBy, getDocs, Timestamp } from "firebase/firestore"
 import { UserRole } from "@/types/permissions"
+import { Input } from "@/components/ui/input"
 
 interface Session {
   sessionId: string
@@ -41,6 +43,8 @@ export function SessionHistory() {
   const [sessions, setSessions] = useState<Session[]>([])
   const [filterUser, setFilterUser] = useState<string>("all")
   const [filterStatus, setFilterStatus] = useState<string>("all")
+  const [filterStartDate, setFilterStartDate] = useState<string>("")
+  const [filterEndDate, setFilterEndDate] = useState<string>("")
 
   const canViewSessionHistory = user?.role === UserRole.OWNER || 
                                  user?.role === UserRole.ADMIN || 
@@ -97,12 +101,41 @@ export function SessionHistory() {
   const filteredSessions = sessions.filter(session => {
     // Exclude owner sessions
     if (session.role === UserRole.OWNER) return false
+    
+    // Filter by user
     if (filterUser !== "all" && session.userId !== filterUser) return false
+    
+    // Filter by status
     if (filterStatus !== "all" && session.status !== filterStatus) return false
+    
+    // Filter by date range
+    if (filterStartDate) {
+      const startDate = new Date(filterStartDate)
+      startDate.setHours(0, 0, 0, 0)
+      const loginDate = session.loginTime.toDate()
+      if (loginDate < startDate) return false
+    }
+    
+    if (filterEndDate) {
+      const endDate = new Date(filterEndDate)
+      endDate.setHours(23, 59, 59, 999)
+      const loginDate = session.loginTime.toDate()
+      if (loginDate > endDate) return false
+    }
+    
     return true
   })
 
   const uniqueUsers = Array.from(new Set(sessions.map(s => s.userId)))
+
+  const clearFilters = () => {
+    setFilterUser("all")
+    setFilterStatus("all")
+    setFilterStartDate("")
+    setFilterEndDate("")
+  }
+
+  const hasActiveFilters = filterUser !== "all" || filterStatus !== "all" || filterStartDate || filterEndDate
 
   if (!canViewSessionHistory) {
     return (
@@ -129,39 +162,71 @@ export function SessionHistory() {
 
       {/* Filters */}
       <Card className="p-4">
-        <div className="flex flex-wrap gap-4 items-center">
+        <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
             <span className="font-medium">{t("settings.sessionHistory.filters")}:</span>
+            {hasActiveFilters && (
+              <Button onClick={clearFilters} variant="ghost" size="sm" className="h-6 text-xs">
+                <X className="h-3 w-3 mr-1" />
+                {t("settings.sessionHistory.clearFilters")}
+              </Button>
+            )}
           </div>
           
-          <Select value={filterUser} onValueChange={setFilterUser}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder={t("settings.sessionHistory.filterByUser")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("settings.sessionHistory.allUsers")}</SelectItem>
-              {uniqueUsers.map(userId => {
-                const userSession = sessions.find(s => s.userId === userId)
-                return (
-                  <SelectItem key={userId} value={userId}>
-                    {userSession?.username || userId}
-                  </SelectItem>
-                )
-              })}
-            </SelectContent>
-          </Select>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label>{t("settings.sessionHistory.filterByUser")}</Label>
+              <Select value={filterUser} onValueChange={setFilterUser}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t("settings.sessionHistory.allUsers")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("settings.sessionHistory.allUsers")}</SelectItem>
+                  {uniqueUsers.map(userId => {
+                    const userSession = sessions.find(s => s.userId === userId)
+                    return (
+                      <SelectItem key={userId} value={userId}>
+                        {userSession?.username || userId}
+                      </SelectItem>
+                    )
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder={t("settings.sessionHistory.filterByStatus")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("settings.sessionHistory.allStatuses")}</SelectItem>
-              <SelectItem value="active">{t("settings.sessionHistory.active")}</SelectItem>
-              <SelectItem value="completed">{t("settings.sessionHistory.completed")}</SelectItem>
-            </SelectContent>
-          </Select>
+            <div className="space-y-2">
+              <Label>{t("settings.sessionHistory.filterByStatus")}</Label>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t("settings.sessionHistory.allStatuses")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("settings.sessionHistory.allStatuses")}</SelectItem>
+                  <SelectItem value="active">{t("settings.sessionHistory.active")}</SelectItem>
+                  <SelectItem value="completed">{t("settings.sessionHistory.completed")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>{t("settings.sessionHistory.startDate")}</Label>
+              <Input
+                type="date"
+                value={filterStartDate}
+                onChange={(e) => setFilterStartDate(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>{t("settings.sessionHistory.endDate")}</Label>
+              <Input
+                type="date"
+                value={filterEndDate}
+                onChange={(e) => setFilterEndDate(e.target.value)}
+              />
+            </div>
+          </div>
 
           <Button onClick={loadSessions} variant="outline" size="sm">
             {t("settings.sessionHistory.refresh")}

@@ -650,19 +650,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden' && user && user.establishmentId) {
-        // Update status when tab becomes hidden
-        updateUserStatusToInactive();
+    const handlePageHide = () => {
+      if (user && user.establishmentId) {
+        // Use sendBeacon on pagehide as well (more reliable than beforeunload)
+        const data = JSON.stringify({
+          uid: user.uid,
+          establishmentId: user.establishmentId,
+          status: 'inactive'
+        });
+        
+        const blob = new Blob([data], { type: 'application/json' });
+        navigator.sendBeacon('/api/auth/update-status', blob);
       }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', handlePageHide);
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', handlePageHide);
     };
   }, [user]);
 
@@ -861,6 +868,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateUserStatusToInactive = async () => {
     if (db && user && user.establishmentId) {
       try {
+        console.log('Updating user status to inactive:', user.uid);
         const userRef = doc(db, 'restaurants', user.establishmentId, 'users', user.uid)
         const userDoc = await getDoc(userRef);
         
@@ -868,11 +876,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const userData = userDoc.data();
           const currentSessionId = userData.currentSessionId;
           
+          console.log('Current session ID:', currentSessionId);
+          
           // Update user document
           await updateDoc(userRef, {
             status: 'inactive',
             currentSessionId: null
           });
+
+          console.log('User status updated to inactive');
 
           // Update session record if exists
           if (currentSessionId) {
@@ -899,29 +911,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 status: 'completed',
                 duration
               });
+
+              console.log('Session updated to completed');
             }
           }
+        } else {
+          console.error('User document does not exist');
         }
       } catch (error) {
         console.error('Error updating user status to inactive:', error);
       }
+    } else {
+      console.log('Cannot update status: missing db, user, or establishmentId', { db: !!db, user: !!user, establishmentId: user?.establishmentId });
     }
   };
 
   // Enhanced logout method
   const logout = async (): Promise<{ success: boolean, error?: string }> => {
     try {
+      console.log('Starting logout process for user:', user?.uid);
       await updateUserStatusToInactive();
+      console.log('User status updated to inactive, proceeding with signOut');
 
       await signOut(auth);
       setUser(null);
       
       toast.success(t("auth.logout.success", { username: user?.username || "Guest" }))
 
+      console.log('Logout completed successfully');
+
       return {
         success: true
       };
     } catch (error) {
+      console.error('Error during logout:', error);
       let errorMessage = t('auth.errors.logoutUnexpected');
       if (error && typeof error === 'object' && 'message' in error) {
         errorMessage = String((error as { message: unknown }).message);
