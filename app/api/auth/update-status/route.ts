@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getFirestore, doc, updateDoc } from 'firebase/firestore'
-import { initializeFirebase } from '@/lib/firebase'
+import { doc, updateDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,8 +9,6 @@ export async function POST(request: NextRequest) {
     if (!uid || !establishmentId || !status) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
-
-    const { db } = initializeFirebase()
 
     if (!db) {
       return NextResponse.json({ error: 'Database not initialized' }, { status: 500 })
