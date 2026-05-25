@@ -7,6 +7,39 @@ import { UserRole } from './permissions';
 // Subscription Plan Types
 export type SubscriptionPlan = 'basic' | 'professional' | 'enterprise';
 
+// Payment Types
+export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
+export type SubscriptionPaymentMethod = 'stripe' | 'paypal' | 'mercadopago' | 'manual';
+export type SubscriptionStatus = 'active' | 'inactive' | 'cancelled' | 'past_due';
+
+export interface Payment {
+  id?: string;
+  userId: string;
+  establishmentId: string;
+  amount: number;
+  currency: string;
+  plan: SubscriptionPlan;
+  status: PaymentStatus;
+  paymentMethod: SubscriptionPaymentMethod;
+  paymentId?: string;
+  createdAt?: any; // Firestore Timestamp or Date
+  updatedAt?: any; // Firestore Timestamp or Date
+}
+
+export interface Subscription {
+  userId: string;
+  establishmentId: string;
+  plan: SubscriptionPlan;
+  status: SubscriptionStatus;
+  startDate?: any; // Firestore Timestamp or Date
+  endDate?: any; // Firestore Timestamp or Date
+  trialEndDate?: any; // Firestore Timestamp or Date
+  autoRenew: boolean;
+  paymentMethod?: string;
+  createdAt?: any; // Firestore Timestamp or Date
+  updatedAt?: any; // Firestore Timestamp or Date
+}
+
 export interface SubscriptionPlanLimits {
   maxUsers: number;
   maxInventoryItems: number;

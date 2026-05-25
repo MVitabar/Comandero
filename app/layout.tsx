@@ -21,6 +21,7 @@ import { PermissionsProvider } from "@/components/permissions-provider"
 import { Metadata } from "next"
 import { InstallPromptProvider } from "@/contexts/InstallPromptContext";
 import { Analytics } from '@vercel/analytics/next';
+import { InstallBanner } from "@/components/install-banner";
 const inter = Inter({ subsets: ["latin"] })
 
 export default function RootLayout({
@@ -40,6 +41,7 @@ export default function RootLayout({
                   <PermissionsProvider>
                     <NotificationProvider>
                       <InstallPromptProvider>
+                        <InstallBanner />
                         <LayoutContent>{children}</LayoutContent>
                         <Toaster />
                       </InstallPromptProvider>

@@ -87,7 +87,7 @@ export function Sidebar() {
 
   // Establishment name from user's profile or restaurant settings
   const establishmentName = user?.username || user?.restaurantName || user?.currentEstablishmentName || "Comandero"
-  
+  const userRole = user?.role
   const navItems = [
     {
       name: pathname === "/dashboard" 

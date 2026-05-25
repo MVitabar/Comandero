@@ -853,9 +853,15 @@ const enTranslationsBase = {
 
   "settings": {
     "title": "Settings",
+    "selectTab": "Select a tab",
     "system": {
       "title": "System",
       "description": "Manage system settings and advanced system adjustments"
+    },
+    "installBanner": {
+      "title": "Install our app",
+      "description": "Get the full experience with our app",
+      "install": "Install"
     },
     "profile": {
       "title": "Profile",
@@ -884,6 +890,7 @@ const enTranslationsBase = {
           "label": "Role",
           "placeholder": "Select your role",
           "options": {
+            "owner": "Owner",
             "admin": "Admin",
             "manager": "Manager", 
             "chef": "Chef",

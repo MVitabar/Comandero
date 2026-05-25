@@ -853,9 +853,15 @@ const esTranslationsBase = {
 
   "settings": {
     "title": "Configuración",
+    "selectTab": "Selecciona una pestaña",
     "system": {
       "title": "Sistema",
       "description": "Gestiona los ajustes del sistema y las configuraciones avanzadas del sistema"
+    },
+    "installBanner": {
+      "title": "Instala nuestra app",
+      "description": "Obtén la experiencia completa con nuestra app",
+      "install": "Instalar"
     },
     "profile": {
       "title": "Perfil",
@@ -884,6 +890,7 @@ const esTranslationsBase = {
           "label": "Rol",
           "placeholder": "Selecciona tu rol",
           "options": {
+            "owner": "Propietario",
             "admin": "Admin",
             "manager": "Manager", 
             "chef": "Chef",

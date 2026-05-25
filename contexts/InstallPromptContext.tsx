@@ -15,6 +15,7 @@ interface BeforeInstallPromptEvent extends Event {
 interface InstallPromptContextType {
   deferredPrompt: BeforeInstallPromptEvent | null;
   triggerInstallPrompt: () => void;
+  dismissInstallPrompt: () => void;
 }
 
 const InstallPromptContext = createContext<InstallPromptContextType | undefined>(undefined);
@@ -64,8 +65,12 @@ export const InstallPromptProvider = ({ children }: { children: ReactNode }) => 
     }
   };
 
+  const dismissInstallPrompt = () => {
+    setDeferredPrompt(null);
+  };
+
   return (
-    <InstallPromptContext.Provider value={{ deferredPrompt, triggerInstallPrompt }}>
+    <InstallPromptContext.Provider value={{ deferredPrompt, triggerInstallPrompt, dismissInstallPrompt }}>
       {children}
     </InstallPromptContext.Provider>
   );

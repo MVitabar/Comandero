@@ -853,9 +853,15 @@ const ptTranslationsBase = {
 
   "settings": {
     "title": "Configurações",
+    "selectTab": "Selecione uma aba",
     "system": {
       "title": "Sistema",
       "description": "Gerencie as configurações do sistema e ajustes avançados do sistema"
+    },
+    "installBanner": {
+      "title": "Instale nosso aplicativo",
+      "description": "Obtenha a experiência completa com nosso aplicativo",
+      "install": "Instalar"
     },
     "profile": {
       "title": "Perfil",
@@ -884,6 +890,7 @@ const ptTranslationsBase = {
           "label": "Função",
           "placeholder": "Selecione sua função",
           "options": {
+            "owner": "Proprietário",
             "admin": "Admin",
             "manager": "Manager", 
             "chef": "Chef",
@@ -1041,8 +1048,8 @@ const ptTranslationsBase = {
       "businessInfo": "Informações do Estabelecimento",
       "paymentMethod": "Método de Pagamento",
       "billingHistory": "Historico de Pagamentos",
-      "cardNumber": "Card Number",
-      "expirationDate": "Expiration Date",
+      "cardNumber": "Número do Cartão",
+      "expirationDate": "Data de Expiração",
       "cvv": "CVV",
       "actions": {
         "submit": "Salvar Alterações",
