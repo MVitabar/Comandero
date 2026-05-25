@@ -634,6 +634,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe()
   }, [auth, isInitialized, pathname, router, toast])
 
+  // Update user status to inactive when closing browser/tab
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (user && user.establishmentId) {
+        // Use sendBeacon to ensure the request is sent even when the page is closing
+        const data = JSON.stringify({
+          uid: user.uid,
+          establishmentId: user.establishmentId,
+          status: 'inactive'
+        });
+        
+        const blob = new Blob([data], { type: 'application/json' });
+        navigator.sendBeacon('/api/auth/update-status', blob);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && user && user.establishmentId) {
+        // Update status when tab becomes hidden
+        updateUserStatusToInactive();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user]);
+
   // Helper function to get device and location information
   const getUserActivityContext = () => {
     return {
@@ -825,11 +857,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Enhanced logout method
-  const logout = async (): Promise<{ success: boolean, error?: string }> => {
-    try {
-      // Update user status and session before logout
-      if (db && user && user.establishmentId) {
+  // Function to update user status to inactive
+  const updateUserStatusToInactive = async () => {
+    if (db && user && user.establishmentId) {
+      try {
         const userRef = doc(db, 'restaurants', user.establishmentId, 'users', user.uid)
         const userDoc = await getDoc(userRef);
         
@@ -857,8 +888,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               let duration = null;
               
               if (loginTime) {
-                // Duration will be calculated on the client or using a Cloud Function
-                // For now, we'll store both timestamps and calculate duration later
                 duration = {
                   loginTime,
                   logoutTime
@@ -873,7 +902,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           }
         }
+      } catch (error) {
+        console.error('Error updating user status to inactive:', error);
       }
+    }
+  };
+
+  // Enhanced logout method
+  const logout = async (): Promise<{ success: boolean, error?: string }> => {
+    try {
+      await updateUserStatusToInactive();
 
       await signOut(auth);
       setUser(null);

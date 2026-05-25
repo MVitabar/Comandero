@@ -95,6 +95,8 @@ export function SessionHistory() {
   }
 
   const filteredSessions = sessions.filter(session => {
+    // Exclude owner sessions
+    if (session.role === UserRole.OWNER) return false
     if (filterUser !== "all" && session.userId !== filterUser) return false
     if (filterStatus !== "all" && session.status !== filterStatus) return false
     return true
@@ -210,12 +212,6 @@ export function SessionHistory() {
                       <span className="font-medium">{formatDate(session.logoutTime)}</span>
                     </div>
                   )}
-
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-blue-500" />
-                    <span className="text-muted-foreground">{t("settings.sessionHistory.duration")}:</span>
-                    <span className="font-medium">{calculateDuration(session.loginTime, session.logoutTime)}</span>
-                  </div>
 
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-purple-500" />

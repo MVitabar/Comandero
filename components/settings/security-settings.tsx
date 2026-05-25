@@ -9,15 +9,18 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { Shield, Key, Lock, Loader2, AlertCircle } from "lucide-react"
-import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth"
+import { Shield, Key, Lock, Loader2, AlertCircle, Trash2 } from "lucide-react"
+import { updatePassword, reauthenticateWithCredential, EmailAuthProvider, deleteUser } from "firebase/auth"
 import { toast } from "sonner"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { deleteDoc, doc } from "firebase/firestore"
+import { useRouter } from "next/navigation"
 
 export function SecuritySettings() {
   const { t } = useI18n()
   const { user } = useAuth()
-  const { auth } = useFirebase()
+  const { auth, db } = useFirebase()
+  const router = useRouter()
 
   const [loading, setLoading] = useState(false)
   const [passwordData, setPasswordData] = useState({
@@ -25,8 +28,10 @@ export function SecuritySettings() {
     newPassword: "",
     confirmPassword: "",
   })
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
+  const [deletePassword, setDeletePassword] = useState("")
   const [showPasswordForm, setShowPasswordForm] = useState(false)
+  const [showDeleteForm, setShowDeleteForm] = useState(false)
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -71,6 +76,48 @@ export function SecuritySettings() {
     } catch (error) {
       console.error("Error updating password:", error)
       toast.error(t("settings.security.passwordUpdateError"))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDeleteAccount = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!auth.currentUser || !user) return
+
+    if (!deletePassword) {
+      toast.error(t("settings.security.passwordRequired"))
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      // Reauthenticate user first
+      const credential = EmailAuthProvider.credential(
+        auth.currentUser.email!,
+        deletePassword
+      )
+      await reauthenticateWithCredential(auth.currentUser, credential)
+
+      // Delete user data from Firestore
+      if (db && user.establishmentId) {
+        try {
+          await deleteDoc(doc(db, "restaurants", user.establishmentId, "users", user.uid))
+        } catch (error) {
+          console.error("Error deleting user data from Firestore:", error)
+        }
+      }
+
+      // Delete user from Firebase Auth
+      await deleteUser(auth.currentUser)
+
+      toast.success(t("settings.security.accountDeleted"))
+      router.push("/login")
+    } catch (error) {
+      console.error("Error deleting account:", error)
+      toast.error(t("settings.security.deleteAccountError"))
     } finally {
       setLoading(false)
     }
@@ -200,20 +247,65 @@ export function SecuritySettings() {
           </div>
         </Card>
 
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">
+        <Card className="p-6 border-destructive">
+          <h3 className="text-lg font-semibold mb-4 text-destructive">
             <span className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              {t("settings.security.loginHistory")}
+              <Trash2 className="h-5 w-5" />
+              {t("settings.security.deleteAccount")}
             </span>
           </h3>
 
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              {t("settings.security.loginHistoryComingSoon")}
+          <Alert className="mb-4 border-destructive">
+            <AlertCircle className="h-4 w-4 text-destructive" />
+            <AlertDescription className="text-destructive">
+              {t("settings.security.deleteAccountWarning")}
             </AlertDescription>
           </Alert>
+
+          {!showDeleteForm ? (
+            <Button onClick={() => setShowDeleteForm(true)} variant="destructive">
+              {t("settings.security.deleteAccountButton")}
+            </Button>
+          ) : (
+            <form onSubmit={handleDeleteAccount} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="deletePassword">{t("settings.security.confirmPassword")}</Label>
+                <Input
+                  id="deletePassword"
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  disabled={loading}
+                  required
+                  placeholder={t("settings.security.enterPassword")}
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Button type="submit" variant="destructive" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {t("settings.security.deleting")}
+                    </>
+                  ) : (
+                    t("settings.security.confirmDelete")
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowDeleteForm(false)
+                    setDeletePassword("")
+                  }}
+                  disabled={loading}
+                >
+                  {t("settings.security.cancel")}
+                </Button>
+              </div>
+            </form>
+          )}
         </Card>
       </div>
     </div>
