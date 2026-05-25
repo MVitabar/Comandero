@@ -26,6 +26,14 @@ import { SubscriptionPlan, Payment, Subscription } from "@/types"
 import { SUBSCRIPTION_PLANS } from "@/types"
 import { toast } from "sonner"
 
+// Currency conversion rates (USD to BRL)
+const USD_TO_BRL = 5.0 // Approximate rate, should be updated dynamically
+
+const formatPriceInLocalCurrency = (usdPrice: number): string => {
+  const brlPrice = usdPrice * USD_TO_BRL
+  return `R$ ${brlPrice.toFixed(2)}`
+}
+
 export default function SubscriptionPage() {
   const { user } = useAuth()
   const { t } = useI18n()
@@ -58,10 +66,40 @@ export default function SubscriptionPage() {
   }
 
   const handleUpgrade = async (plan: SubscriptionPlan) => {
-    // This would integrate with Stripe checkout
-    // For now, we'll show a message
-    toast.info(`Redirecting to ${plan} plan checkout...`)
-    // TODO: Implement Stripe checkout integration
+    if (!user?.uid || !user?.establishmentId) {
+      toast.error("User information not available")
+      return
+    }
+
+    try {
+      const response = await fetch('/api/stripe/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          plan,
+          userId: user.uid,
+          establishmentId: user.establishmentId,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create checkout session')
+      }
+
+      // Redirect to Stripe checkout URL
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        throw new Error('No checkout URL returned')
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error)
+      toast.error(String(error))
+    }
   }
 
   const handleCancel = async () => {
@@ -125,7 +163,8 @@ export default function SubscriptionPage() {
             <div className="flex items-center justify-between py-3 border-b">
               <span className="text-gray-600">Monthly Price</span>
               <span className="font-semibold">
-                {currentPlan === 'basic' ? '$19' : currentPlan === 'professional' ? '$49' : '$99'}
+                {formatPriceInLocalCurrency(currentPlan === 'basic' ? 19 : currentPlan === 'professional' ? 49 : 99)}
+                <span className="text-xs text-gray-500 ml-1">(~${currentPlan === 'basic' ? '$19' : currentPlan === 'professional' ? '$49' : '$99'} USD)</span>
               </span>
             </div>
             <div className="flex items-center justify-between py-3 border-b">
@@ -187,9 +226,10 @@ export default function SubscriptionPage() {
                 <CardContent>
                   <div className="mb-4">
                     <span className="text-3xl font-bold">
-                      {plan === 'basic' ? '$19' : plan === 'professional' ? '$49' : '$99'}
+                      {formatPriceInLocalCurrency(plan === 'basic' ? 19 : plan === 'professional' ? 49 : 99)}
                     </span>
                     <span className="text-gray-600">/month</span>
+                    <div className="text-xs text-gray-500">(~${plan === 'basic' ? '$19' : plan === 'professional' ? '$49' : '$99'} USD)</div>
                   </div>
                   <ul className="space-y-2 mb-4 text-sm">
                     <li className="flex items-center">
