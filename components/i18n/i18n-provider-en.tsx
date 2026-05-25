@@ -295,6 +295,7 @@ const enTranslationsBase = {
       "total": "Total Items",
       "inStock": "In Stock",
       "lowStock": "Low Stock",
+      "noItems": "No items found",
       "itemName": "Item Name",
       "category": "Category",
       "status": {
@@ -310,6 +311,29 @@ const enTranslationsBase = {
       "excel": "Excel",
       "pdf": "PDF",
       "fileDescription": "The file will include sales by day, best selling products, inventory and more, according to the data currently visible in the dashboard.",
+    },
+    "reports": {
+      "title": "Download Reports",
+      "description": "Download detailed reports for inventory, sales, user activity and more.",
+      "inventory": "Inventory Report",
+      "inventoryDescription": "Download complete inventory report with all categories and items, including quantities, minimum stock levels, and prices.",
+      "sales": "Sales Report",
+      "salesDescription": "Download complete sales report with all orders, including order details, payment methods, status, and items sold.",
+      "userActivity": "User Activity Report",
+      "userActivityDescription": "Download user activity report with all sessions, including login/logout times, devices, operating systems, and user roles.",
+      "general": "General Report",
+      "generalDescription": "Download comprehensive general report including sales by day, top selling products, inventory overview, complete inventory, all sales, and user activity."
+    },
+    "toast": {
+      "salesAlert": "Sales decreased compared to last month",
+      "goalReached": "Sales goal reached!",
+      "excelDownloaded": "Excel report downloaded successfully",
+      "pdfDownloaded": "PDF report downloaded successfully",
+      "inventoryDownloaded": "Inventory report downloaded successfully",
+      "salesDownloaded": "Sales report downloaded successfully",
+      "userActivityDownloaded": "User activity report downloaded successfully",
+      "exportError": "Error exporting report",
+      "noInventoryData": "No inventory data available to export"
     },
     
     "errors": {

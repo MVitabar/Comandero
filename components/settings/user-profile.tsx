@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { doc, getDoc, updateDoc } from "firebase/firestore"
+import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore"
 import { updateProfile, User as FirebaseUser } from "firebase/auth"
 import { Loader2 } from "lucide-react"
 import { UserRole } from "@/types/permissions"
@@ -82,20 +82,26 @@ export function UserProfile() {
     setLoading(true)
 
     try {
-      await updateDoc(doc(db, "users", user.uid), {
+      await setDoc(doc(db, "users", user.uid), {
         username: userData.username,
         phoneNumber: userData.phoneNumber,
         position: userData.position,
         role: userData.role,
+        email: userData.email,
         updatedAt: new Date(),
-      })
+      }, { merge: true })
 
-      await updateProfile(user, {
-        displayName: userData.username,
-      })
+      // Use auth.currentUser instead of custom user object for updateProfile
+      const firebaseUser = auth.currentUser
+      if (firebaseUser) {
+        await updateProfile(firebaseUser, {
+          displayName: userData.username,
+        })
+      }
 
       toast.success(t("settings.profile.actions.profileUpdated"))
     } catch (error) {
+      console.error("Error updating user profile:", error)
       toast.error(t("settings.profile.actions.errorUpdatingProfile"))
     } finally {
       setLoading(false) 

@@ -68,7 +68,6 @@ import {
 import { usePermissions } from "@/components/permissions-provider";
 import { UnauthorizedAccess } from "@/components/unauthorized-access";
 import { toast } from "sonner";
-import { Switch } from "@/components/ui/switch";
 import {
   TooltipProvider,
   Tooltip,
@@ -148,7 +147,6 @@ export default function InventoryPage() {
     minQuantity: 0,
     description: "",
     supplier: "",
-    controlsStock: false,
     lowStockThreshold: 0,
   });
 
@@ -235,7 +233,6 @@ export default function InventoryPage() {
               minQuantity: itemData.minQuantity || 0,
               description: itemData.description || "",
               supplier: itemData.supplier || "",
-              controlsStock: itemData.controlsStock || false,
               lowStockThreshold: itemData.lowStockThreshold || 0,
               createdAt: itemData.createdAt || new Date(),
               updatedAt: itemData.updatedAt || new Date(),
@@ -533,7 +530,6 @@ export default function InventoryPage() {
         minQuantity: 0,
         description: "",
         supplier: "",
-        controlsStock: false,
         lowStockThreshold: 0,
       });
       setIsDialogOpen(false);
@@ -589,7 +585,6 @@ export default function InventoryPage() {
   const lowStockItems = useMemo(() => {
     return inventoryItems.filter(
       (item) =>
-        item.controlsStock && // Solo considerar si controla stock
         item.quantity <=
           (item.lowStockThreshold !== undefined
             ? item.lowStockThreshold
@@ -638,17 +633,11 @@ export default function InventoryPage() {
       price: Number(formData.price) || 0, // Ensure price is a number, default to 0
     };
 
-    if (formData.controlsStock) {
-      dataToSave.quantity = Number(formData.quantity) || 0;
-      dataToSave.minQuantity = Number(formData.minQuantity) || 0;
-      dataToSave.unit = formData.unit || undefined; // Keep as is or set to undefined if empty
-      dataToSave.lowStockThreshold = Number(formData.lowStockThreshold) || 0;
-    } else {
-      dataToSave.quantity = 0;
-      dataToSave.minQuantity = 0;
-      dataToSave.unit = undefined; // Explicitly set to undefined if not controlling stock
-      dataToSave.lowStockThreshold = 0; // Or undefined
-    }
+    // Always save stock values
+    dataToSave.quantity = Number(formData.quantity) || 0;
+    dataToSave.minQuantity = Number(formData.minQuantity) || 0;
+    dataToSave.unit = formData.unit || undefined;
+    dataToSave.lowStockThreshold = Number(formData.lowStockThreshold) || 0;
 
     // Remove id if it exists to avoid issues with addDoc, or ensure it's used for updateDoc correctly
     if (dialogMode === "add") {
@@ -881,96 +870,65 @@ export default function InventoryPage() {
                         </Select>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2 py-2">
-                      <Switch
-                        id="controlsStock"
-                        checked={!!formData.controlsStock} // Asegura que sea booleano
-                        onCheckedChange={(
-                          checked, // Switch pasa un booleano directamente
-                        ) =>
-                          setFormData((prev) => {
-                            if (!checked) {
-                              // Si el control de stock se desactiva
-                              return {
-                                ...prev,
-                                controlsStock: false,
-                                quantity: 0,
-                                minQuantity: 0,
-                                unit: undefined,
-                                lowStockThreshold: 0,
-                              };
-                            } // Si se activa
-                            return { ...prev, controlsStock: true };
-                          })
-                        }
-                      />
-                      <Label htmlFor="controlsStock">
-                        {t("inventory.controlsStockLabel")}
-                      </Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>{t("inventory.quantity")}</Label>
+                        <Input
+                          value={formData.quantity || 0}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              quantity: Number(e.target.value),
+                            }))
+                          }
+                          type="number"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>{t("inventory.unit")}</Label>
+                        <Input
+                          value={formData.unit || ""}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              unit: e.target.value,
+                            }))
+                          }
+                          required
+                        />
+                      </div>
                     </div>
-                    {formData.controlsStock && (
-                      <>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>{t("inventory.quantity")}</Label>
-                            <Input
-                              value={formData.quantity || 0}
-                              onChange={(e) =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  quantity: Number(e.target.value),
-                                }))
-                              }
-                              type="number"
-                              required
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>{t("inventory.unit")}</Label>
-                            <Input
-                              value={formData.unit || ""}
-                              onChange={(e) =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  unit: e.target.value,
-                                }))
-                              }
-                              required
-                            />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>{t("inventory.minQuantity")}</Label>
-                            <Input
-                              value={formData.minQuantity || 0}
-                              onChange={(e) =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  minQuantity: Number(e.target.value),
-                                }))
-                              }
-                              type="number"
-                              required
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>{t("inventory.lowStockThreshold")}</Label>
-                            <Input
-                              value={formData.lowStockThreshold || 0}
-                              onChange={(e) =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  lowStockThreshold: Number(e.target.value),
-                                }))
-                              }
-                              type="number"
-                              required
-                            />
-                          </div>
-                        </div>
-                      </>
-                    )}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>{t("inventory.minQuantity")}</Label>
+                        <Input
+                          value={formData.minQuantity || 0}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              minQuantity: Number(e.target.value),
+                            }))
+                          }
+                          type="number"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>{t("inventory.lowStockThreshold")}</Label>
+                        <Input
+                          value={formData.lowStockThreshold || 0}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              lowStockThreshold: Number(e.target.value),
+                            }))
+                          }
+                          type="number"
+                          required
+                        />
+                      </div>
+                    </div>
                     <div className="space-y-2">
                       <Label>{t("inventory.price")}</Label>
                       <Input
@@ -1073,7 +1031,6 @@ export default function InventoryPage() {
                   <TableRow
                     key={item.uid}
                     className={
-                      item.controlsStock &&
                       typeof item.lowStockThreshold === "number" &&
                       item.quantity < item.lowStockThreshold
                         ? "bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800"
@@ -1090,7 +1047,6 @@ export default function InventoryPage() {
                     <TableCell>
                       <Badge
                         variant={
-                          item.controlsStock && // Solo considerar si controla stock
                           item.quantity <=
                             (item.lowStockThreshold !== undefined
                               ? item.lowStockThreshold
@@ -1135,7 +1091,7 @@ export default function InventoryPage() {
                               </Tooltip>
                             </TooltipProvider>
                           )}
-                          {item.controlsStock && canUpdate("inventory") && (
+                          {canUpdate("inventory") && (
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -1205,7 +1161,6 @@ export default function InventoryPage() {
                       </div>
                       <Badge
                         variant={
-                          item.controlsStock &&
                           item.quantity <=
                             (item.lowStockThreshold !== undefined
                               ? item.lowStockThreshold
@@ -1214,26 +1169,21 @@ export default function InventoryPage() {
                             ? item.lowStockThreshold
                             : item.minQuantity) > 0
                             ? "destructive"
-                            : item.controlsStock &&
-                              item.quantity <=
-                                (item.lowStockThreshold !== undefined
-                                  ? item.lowStockThreshold
-                                  : item.minQuantity) * 1.5
+                            : item.quantity <=
+                              (item.lowStockThreshold !== undefined
+                                ? item.lowStockThreshold
+                                : item.minQuantity) * 1.5
                             ? "default"
                             : "secondary"
                         }
                         className="text-xs"
                       >
-                        {item.controlsStock
-                          ? `${item.quantity} ${item.unit || ""}`
-                          : "N/A"}
+                        {`${item.quantity} ${item.unit || ""}`}
                       </Badge>
                     </div>
-                    {item.controlsStock && (
-                      <div className="text-xs text-muted-foreground mb-2">
-                        Min: {item.lowStockThreshold !== undefined ? item.lowStockThreshold : item.minQuantity} {item.unit || ""}
-                      </div>
-                    )}
+                    <div className="text-xs text-muted-foreground mb-2">
+                      Min: {item.lowStockThreshold !== undefined ? item.lowStockThreshold : item.minQuantity} {item.unit || ""}
+                    </div>
                     {canPerformActions && (
                       <div className="flex gap-1 mt-2">
                         {canUpdate("inventory") && (
@@ -1251,7 +1201,7 @@ export default function InventoryPage() {
                             <Edit className="h-4 w-4 mr-1" /> Edit
                           </Button>
                         )}
-                        {canUpdate("inventory") && item.controlsStock && (
+                        {canUpdate("inventory") && (
                           <Button
                             variant="ghost"
                             size="sm"

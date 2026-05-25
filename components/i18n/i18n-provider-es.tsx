@@ -295,6 +295,7 @@ const esTranslationsBase = {
       "total": "Total de items",
       "inStock": "En stock",
       "lowStock": "Bajo stock",
+      "noItems": "No se encontraron items",
       "itemName": "Nombre del item",
       "category": "Categoría",
       "status": {
@@ -310,6 +311,29 @@ const esTranslationsBase = {
       "excel": "Excel",
       "pdf": "PDF",
       "fileDescription": "El archivo incluirá ventas por día, productos más vendidos, inventario y más, según los datos actualmente visibles en el dashboard.",
+    },
+    "reports": {
+      "title": "Descargar Reportes",
+      "description": "Descargar reportes detallados de inventario, ventas, actividad de usuarios y más.",
+      "inventory": "Reporte de Inventario",
+      "inventoryDescription": "Descargar reporte completo de inventario con todas las categorías y items, incluyendo cantidades, niveles de stock mínimo y precios.",
+      "sales": "Reporte de Ventas",
+      "salesDescription": "Descargar reporte completo de ventas con todas las órdenes, incluyendo detalles de orden, métodos de pago, estado e items vendidos.",
+      "userActivity": "Reporte de Actividad de Usuarios",
+      "userActivityDescription": "Descargar reporte de actividad de usuarios con todas las sesiones, incluyendo tiempos de login/logout, dispositivos, sistemas operativos y roles de usuario.",
+      "general": "Reporte General",
+      "generalDescription": "Descargar reporte general completo incluyendo ventas por día, productos principales, resumen de inventario, inventario completo, todas las ventas y actividad de usuarios."
+    },
+    "toast": {
+      "salesAlert": "Las ventas disminuyeron en comparación con el mes anterior",
+      "goalReached": "¡Meta de ventas alcanzada!",
+      "excelDownloaded": "Reporte de Excel descargado exitosamente",
+      "pdfDownloaded": "Reporte PDF descargado exitosamente",
+      "inventoryDownloaded": "Reporte de inventario descargado exitosamente",
+      "salesDownloaded": "Reporte de ventas descargado exitosamente",
+      "userActivityDownloaded": "Reporte de actividad de usuarios descargado exitosamente",
+      "exportError": "Error al exportar reporte",
+      "noInventoryData": "No hay datos de inventario disponibles para exportar"
     },
     
     "errors": {

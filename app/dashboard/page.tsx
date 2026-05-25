@@ -53,9 +53,10 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@r
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { toast } from "sonner"
 import * as XLSX from "xlsx"
-import { Download, Clock, AlertCircle } from "lucide-react"
+import { Download, Clock, AlertCircle, FileSpreadsheet, FileText, Users, Package, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { UserRole } from "@/types/permissions"
 
 export default function DashboardPage() {
   const { t, i18n } = useI18n()
@@ -745,45 +746,484 @@ export default function DashboardPage() {
     return 'healthy'
   }
 
-  const handleExportGeneralExcel = () => {
-    const wb = XLSX.utils.book_new();
-    const wsSales = XLSX.utils.json_to_sheet(dashboardData.dailySalesData || []);
-    XLSX.utils.book_append_sheet(wb, wsSales, t("dashboard.export.salesByDay"));
-    const wsProducts = XLSX.utils.json_to_sheet(dashboardData.topSellingItems || []);
-    XLSX.utils.book_append_sheet(wb, wsProducts, t("dashboard.export.topProducts"));
-    const wsInventory = XLSX.utils.json_to_sheet(dashboardData.inventoryItems.details || []);
-    XLSX.utils.book_append_sheet(wb, wsInventory, t("dashboard.export.inventory"));
-    XLSX.writeFile(wb, `${t("dashboard.export.generalReport")}-${new Date().toISOString().slice(0,10)}.xlsx`);
-    toast.success(t("dashboard.toast.excelDownloaded"));
+  const handleExportGeneralExcel = async () => {
+    try {
+      const wb = XLSX.utils.book_new();
+      
+      // Sales by day
+      const wsSales = XLSX.utils.json_to_sheet(dashboardData.dailySalesData?.length > 0 ? dashboardData.dailySalesData : [{ date: '', sales: '' }]);
+      XLSX.utils.book_append_sheet(wb, wsSales, t("dashboard.export.salesByDay"));
+      
+      // Top selling products
+      const wsProducts = XLSX.utils.json_to_sheet(dashboardData.topSellingItems?.length > 0 ? dashboardData.topSellingItems : [{ name: '', quantity: '' }]);
+      XLSX.utils.book_append_sheet(wb, wsProducts, t("dashboard.export.topProducts"));
+      
+      // Inventory from dashboard data
+      const wsInventory = XLSX.utils.json_to_sheet(dashboardData.inventoryItems.details?.length > 0 ? dashboardData.inventoryItems.details : [{ name: '', inStock: '' }]);
+      XLSX.utils.book_append_sheet(wb, wsInventory, t("dashboard.export.inventory"));
+      
+      // Complete inventory with all categories
+      const inventoryRef = collection(db, `restaurants/${user?.establishmentId}/inventory`)
+      const categoriesSnapshot = await getDocs(inventoryRef)
+      
+      for (const categoryDoc of categoriesSnapshot.docs) {
+        const categoryId = categoryDoc.id
+        const categoryName = categoryDoc.data().name || categoryId
+        const itemsRef = collection(db, `restaurants/${user?.establishmentId}/inventory/${categoryId}/items`)
+        const itemsSnapshot = await getDocs(itemsRef)
+        
+        const items = itemsSnapshot.docs.map(doc => ({
+          name: doc.data().name,
+          quantity: doc.data().quantity,
+          minQuantity: doc.data().minQuantity,
+          price: doc.data().price,
+          category: categoryName
+        }))
+        
+        // Always create sheet with headers, even if no data
+        const ws = XLSX.utils.json_to_sheet(items.length > 0 ? items : [
+          { name: '', quantity: '', minQuantity: '', price: '', category: categoryName }
+        ])
+        XLSX.utils.book_append_sheet(wb, ws, `Inventory - ${categoryName.substring(0, 25)}`)
+      }
+      
+      // Complete sales data
+      const ordersRef = collection(db, `restaurants/${user?.establishmentId}/orders`)
+      const ordersQuery = query(ordersRef, orderBy('createdAt', 'desc'))
+      const ordersSnapshot = await getDocs(ordersQuery)
+      
+      const salesData = ordersSnapshot.docs.map(doc => {
+        const order = doc.data() as Order
+        return {
+          orderId: doc.id,
+          date: order.createdAt ? new Date(order.createdAt instanceof Date ? order.createdAt : (order.createdAt as any).toDate()).toLocaleDateString() : '',
+          total: order.total || 0,
+          status: order.status,
+          paymentMethod: order.paymentMethod,
+          tableNumber: order.tableNumber,
+          items: Object.values(order.items || {}).map((item: OrderItem) => `${item.name} (${item.quantity})`).join(', ')
+        }
+      })
+      
+      // Always create sheet with headers, even if no data
+      const wsSalesComplete = XLSX.utils.json_to_sheet(salesData.length > 0 ? salesData : [
+        { orderId: '', date: '', total: '', status: '', paymentMethod: '', tableNumber: '', items: '' }
+      ])
+      XLSX.utils.book_append_sheet(wb, wsSalesComplete, 'Complete Sales')
+      
+      // User activity data
+      const sessionsRef = collection(db, `restaurants/${user?.establishmentId}/sessions`)
+      const sessionsQuery = query(sessionsRef, orderBy('loginTime', 'desc'))
+      const sessionsSnapshot = await getDocs(sessionsQuery)
+      
+      const sessionsData = sessionsSnapshot.docs.map(doc => {
+        const session = doc.data()
+        return {
+          sessionId: doc.id,
+          username: session.username,
+          email: session.email,
+          role: session.role,
+          loginTime: session.loginTime ? new Date(session.loginTime instanceof Date ? session.loginTime : (session.loginTime as any).toDate()).toLocaleString() : '',
+          logoutTime: session.logoutTime ? new Date(session.logoutTime instanceof Date ? session.logoutTime : (session.logoutTime as any).toDate()).toLocaleString() : '',
+          status: session.status,
+          device: session.device?.type,
+          os: session.device?.os
+        }
+      })
+      
+      // Always create sheet with headers, even if no data
+      const wsUserActivity = XLSX.utils.json_to_sheet(sessionsData.length > 0 ? sessionsData : [
+        { sessionId: '', username: '', email: '', role: '', loginTime: '', logoutTime: '', status: '', device: '', os: '' }
+      ])
+      XLSX.utils.book_append_sheet(wb, wsUserActivity, 'User Activity')
+      
+      XLSX.writeFile(wb, `${t("dashboard.export.generalReport")}-${new Date().toISOString().slice(0,10)}.xlsx`);
+      toast.success(t("dashboard.toast.excelDownloaded"));
+    } catch (error) {
+      console.error('Error exporting general report:', error)
+      toast.error(t("dashboard.toast.exportError"))
+    }
+  }
+
+  const handleExportInventoryExcel = async () => {
+    try {
+      const inventoryRef = collection(db, `restaurants/${user?.establishmentId}/inventory`)
+      const categoriesSnapshot = await getDocs(inventoryRef)
+      
+      const wb = XLSX.utils.book_new()
+      let hasData = false
+      
+      for (const categoryDoc of categoriesSnapshot.docs) {
+        const categoryId = categoryDoc.id
+        const categoryName = categoryDoc.data().name || categoryId
+        const itemsRef = collection(db, `restaurants/${user?.establishmentId}/inventory/${categoryId}/items`)
+        const itemsSnapshot = await getDocs(itemsRef)
+        
+        const items = itemsSnapshot.docs.map(doc => ({
+          name: doc.data().name,
+          quantity: doc.data().quantity,
+          minQuantity: doc.data().minQuantity,
+          price: doc.data().price,
+          category: categoryName
+        }))
+        
+        // Always create sheet with headers, even if no data
+        const ws = XLSX.utils.json_to_sheet(items.length > 0 ? items : [
+          { name: '', quantity: '', minQuantity: '', price: '', category: categoryName }
+        ])
+        XLSX.utils.book_append_sheet(wb, ws, categoryName.substring(0, 31))
+        hasData = true
+      }
+      
+      if (!hasData) {
+        // Create empty sheet with headers if no categories
+        const ws = XLSX.utils.json_to_sheet([
+          { name: '', quantity: '', minQuantity: '', price: '', category: '' }
+        ])
+        XLSX.utils.book_append_sheet(wb, ws, 'Inventory')
+      }
+      
+      XLSX.writeFile(wb, `inventory-report-${new Date().toISOString().slice(0,10)}.xlsx`)
+      toast.success(t("dashboard.toast.inventoryDownloaded"))
+    } catch (error) {
+      console.error('Error exporting inventory:', error)
+      toast.error(t("dashboard.toast.exportError"))
+    }
+  }
+
+  const handleExportSalesExcel = async () => {
+    try {
+      const ordersRef = collection(db, `restaurants/${user?.establishmentId}/orders`)
+      const ordersQuery = query(ordersRef, orderBy('createdAt', 'desc'))
+      const ordersSnapshot = await getDocs(ordersQuery)
+      
+      const salesData = ordersSnapshot.docs.map(doc => {
+        const order = doc.data() as Order
+        return {
+          orderId: doc.id,
+          date: order.createdAt ? new Date(order.createdAt instanceof Date ? order.createdAt : (order.createdAt as any).toDate()).toLocaleDateString() : '',
+          total: order.total || 0,
+          status: order.status,
+          paymentMethod: order.paymentMethod,
+          tableNumber: order.tableNumber,
+          items: Object.values(order.items || {}).map((item: OrderItem) => `${item.name} (${item.quantity})`).join(', ')
+        }
+      })
+      
+      const wb = XLSX.utils.book_new()
+      // Always create sheet with headers, even if no data
+      const ws = XLSX.utils.json_to_sheet(salesData.length > 0 ? salesData : [
+        { orderId: '', date: '', total: '', status: '', paymentMethod: '', tableNumber: '', items: '' }
+      ])
+      XLSX.utils.book_append_sheet(wb, ws, 'Sales')
+      XLSX.writeFile(wb, `sales-report-${new Date().toISOString().slice(0,10)}.xlsx`)
+      toast.success(t("dashboard.toast.salesDownloaded"))
+    } catch (error) {
+      console.error('Error exporting sales:', error)
+      toast.error(t("dashboard.toast.exportError"))
+    }
+  }
+
+  const handleExportUserActivityExcel = async () => {
+    try {
+      const sessionsRef = collection(db, `restaurants/${user?.establishmentId}/sessions`)
+      const sessionsQuery = query(sessionsRef, orderBy('loginTime', 'desc'))
+      const sessionsSnapshot = await getDocs(sessionsQuery)
+      
+      const sessionsData = sessionsSnapshot.docs.map(doc => {
+        const session = doc.data()
+        return {
+          sessionId: doc.id,
+          username: session.username,
+          email: session.email,
+          role: session.role,
+          loginTime: session.loginTime ? new Date(session.loginTime instanceof Date ? session.loginTime : (session.loginTime as any).toDate()).toLocaleString() : '',
+          logoutTime: session.logoutTime ? new Date(session.logoutTime instanceof Date ? session.logoutTime : (session.logoutTime as any).toDate()).toLocaleString() : '',
+          status: session.status,
+          device: session.device?.type,
+          os: session.device?.os
+        }
+      })
+      
+      const wb = XLSX.utils.book_new()
+      // Always create sheet with headers, even if no data
+      const ws = XLSX.utils.json_to_sheet(sessionsData.length > 0 ? sessionsData : [
+        { sessionId: '', username: '', email: '', role: '', loginTime: '', logoutTime: '', status: '', device: '', os: '' }
+      ])
+      XLSX.utils.book_append_sheet(wb, ws, 'User Activity')
+      XLSX.writeFile(wb, `user-activity-report-${new Date().toISOString().slice(0,10)}.xlsx`)
+      toast.success(t("dashboard.toast.userActivityDownloaded"))
+    } catch (error) {
+      console.error('Error exporting user activity:', error)
+      toast.error(t("dashboard.toast.exportError"))
+    }
   }
 
   const handleExportGeneralPDF = async () => {
-    const jsPDF = (await import("jspdf")).default;
-    const autoTable = (await import("jspdf-autotable")).default;
-    const doc = new jsPDF();
-    doc.text(t("dashboard.export.salesByDay"), 14, 14);
-    autoTable(doc, {
-      startY: 20,
-      head: [[t("dashboard.export.date"), t("dashboard.export.sales")]],
-      body: (dashboardData.dailySalesData || []).map(row => [row.date, row.sales]),
-    });
-    let y = (doc as any).lastAutoTable?.finalY + 10 || 30;
-    doc.text(t("dashboard.export.topProducts"), 14, y);
-    autoTable(doc, {
-      startY: y + 6,
-      head: [[t("dashboard.export.product"), t("dashboard.export.quantity")]],
-      body: (dashboardData.topSellingItems || []).map(row => [row.name, row.quantity]),
-    });
-    y = (doc as any).lastAutoTable?.finalY + 10 || y + 30;
-    doc.text(t("dashboard.export.inventory"), 14, y);
-    autoTable(doc, {
-      startY: y + 6,
-      head: [[t("dashboard.export.product"), t("dashboard.export.stock")]],
-      body: (dashboardData.inventoryItems.details || []).map(row => [row.name, row.inStock]),
-    });
-    doc.save(`${t("dashboard.export.generalReport")}-${new Date().toISOString().slice(0,10)}.pdf`);
-    toast.success(t("dashboard.toast.pdfDownloaded"));
+    try {
+      const jsPDF = (await import("jspdf")).default;
+      const autoTable = (await import("jspdf-autotable")).default;
+      const doc = new jsPDF();
+      
+      // Sales by day
+      doc.text(t("dashboard.export.salesByDay"), 14, 14);
+      autoTable(doc, {
+        startY: 20,
+        head: [[t("dashboard.export.date"), t("dashboard.export.sales")]],
+        body: (dashboardData.dailySalesData || []).map(row => [row.date, row.sales]),
+      });
+      let y = (doc as any).lastAutoTable?.finalY + 10 || 30;
+      
+      // Top selling products
+      doc.text(t("dashboard.export.topProducts"), 14, y);
+      autoTable(doc, {
+        startY: y + 6,
+        head: [[t("dashboard.export.product"), t("dashboard.export.quantity")]],
+        body: (dashboardData.topSellingItems || []).map(row => [row.name, row.quantity]),
+      });
+      y = (doc as any).lastAutoTable?.finalY + 10 || y + 30;
+      
+      // Inventory from dashboard data
+      doc.text(t("dashboard.export.inventory"), 14, y);
+      autoTable(doc, {
+        startY: y + 6,
+        head: [[t("dashboard.export.product"), t("dashboard.export.stock")]],
+        body: (dashboardData.inventoryItems.details || []).map(row => [row.name, row.inStock]),
+      });
+      y = (doc as any).lastAutoTable?.finalY + 10 || y + 30;
+      
+      // Complete inventory with all categories
+      const inventoryRef = collection(db, `restaurants/${user?.establishmentId}/inventory`)
+      const categoriesSnapshot = await getDocs(inventoryRef)
+      
+      for (const categoryDoc of categoriesSnapshot.docs) {
+        const categoryId = categoryDoc.id
+        const categoryName = categoryDoc.data().name || categoryId
+        const itemsRef = collection(db, `restaurants/${user?.establishmentId}/inventory/${categoryId}/items`)
+        const itemsSnapshot = await getDocs(itemsRef)
+        
+        const items = itemsSnapshot.docs.map(doc => ({
+          name: doc.data().name,
+          quantity: doc.data().quantity,
+          minQuantity: doc.data().minQuantity,
+          price: doc.data().price,
+          category: categoryName
+        }))
+        
+        if (items.length > 0) {
+          doc.text(`Inventory - ${categoryName.substring(0, 25)}`, 14, y);
+          autoTable(doc, {
+            startY: y + 6,
+            head: [['Name', 'Quantity', 'Min Quantity', 'Price', 'Category']],
+            body: items.map(row => [row.name, row.quantity, row.minQuantity, row.price, row.category]),
+          });
+          y = (doc as any).lastAutoTable?.finalY + 10 || y + 30;
+        }
+      }
+      
+      // Complete sales data
+      const ordersRef = collection(db, `restaurants/${user?.establishmentId}/orders`)
+      const ordersQuery = query(ordersRef, orderBy('createdAt', 'desc'))
+      const ordersSnapshot = await getDocs(ordersQuery)
+      
+      const salesData = ordersSnapshot.docs.map(doc => {
+        const order = doc.data() as Order
+        return {
+          orderId: doc.id,
+          date: order.createdAt ? new Date(order.createdAt instanceof Date ? order.createdAt : (order.createdAt as any).toDate()).toLocaleDateString() : '',
+          total: order.total || 0,
+          status: order.status,
+          paymentMethod: order.paymentMethod,
+          tableNumber: order.tableNumber,
+          items: Object.values(order.items || {}).map((item: OrderItem) => `${item.name} (${item.quantity})`).join(', ')
+        }
+      })
+      
+      if (salesData.length > 0) {
+        doc.text('Complete Sales', 14, y);
+        autoTable(doc, {
+          startY: y + 6,
+          head: [['Order ID', 'Date', 'Total', 'Status', 'Payment Method', 'Table', 'Items']],
+          body: salesData.map(row => [row.orderId || '', row.date || '', row.total || 0, row.status || '', row.paymentMethod || '', row.tableNumber || '', row.items || '']),
+        });
+        y = (doc as any).lastAutoTable?.finalY + 10 || y + 30;
+      }
+      
+      // User activity data
+      const sessionsRef = collection(db, `restaurants/${user?.establishmentId}/sessions`)
+      const sessionsQuery = query(sessionsRef, orderBy('loginTime', 'desc'))
+      const sessionsSnapshot = await getDocs(sessionsQuery)
+      
+      const sessionsData = sessionsSnapshot.docs.map(doc => {
+        const session = doc.data()
+        return {
+          sessionId: doc.id,
+          username: session.username,
+          email: session.email,
+          role: session.role,
+          loginTime: session.loginTime ? new Date(session.loginTime instanceof Date ? session.loginTime : (session.loginTime as any).toDate()).toLocaleString() : '',
+          logoutTime: session.logoutTime ? new Date(session.logoutTime instanceof Date ? session.logoutTime : (session.logoutTime as any).toDate()).toLocaleString() : '',
+          status: session.status,
+          device: session.device?.type,
+          os: session.device?.os
+        }
+      })
+      
+      if (sessionsData.length > 0) {
+        doc.text('User Activity', 14, y);
+        autoTable(doc, {
+          startY: y + 6,
+          head: [['Session ID', 'Username', 'Email', 'Role', 'Login Time', 'Logout Time', 'Status', 'Device', 'OS']],
+          body: sessionsData.map(row => [row.sessionId, row.username, row.email, row.role, row.loginTime, row.logoutTime, row.status, row.device, row.os]),
+        });
+      }
+      
+      doc.save(`${t("dashboard.export.generalReport")}-${new Date().toISOString().slice(0,10)}.pdf`);
+      toast.success(t("dashboard.toast.pdfDownloaded"));
+    } catch (error) {
+      console.error('Error exporting general PDF:', error)
+      toast.error(t("dashboard.toast.exportError"))
+    }
   }
+
+  const handleExportInventoryPDF = async () => {
+    try {
+      const jsPDF = (await import("jspdf")).default;
+      const autoTable = (await import("jspdf-autotable")).default;
+      const doc = new jsPDF();
+      
+      const inventoryRef = collection(db, `restaurants/${user?.establishmentId}/inventory`)
+      const categoriesSnapshot = await getDocs(inventoryRef)
+      
+      let y = 14;
+      
+      for (const categoryDoc of categoriesSnapshot.docs) {
+        const categoryId = categoryDoc.id
+        const categoryName = categoryDoc.data().name || categoryId
+        const itemsRef = collection(db, `restaurants/${user?.establishmentId}/inventory/${categoryId}/items`)
+        const itemsSnapshot = await getDocs(itemsRef)
+        
+        const items = itemsSnapshot.docs.map(doc => ({
+          name: doc.data().name,
+          quantity: doc.data().quantity,
+          minQuantity: doc.data().minQuantity,
+          price: doc.data().price,
+          category: categoryName
+        }))
+        
+        doc.text(`Inventory - ${categoryName.substring(0, 25)}`, 14, y);
+        autoTable(doc, {
+          startY: y + 6,
+          head: [['Name', 'Quantity', 'Min Quantity', 'Price', 'Category']],
+          body: items.length > 0 ? items.map(row => [row.name, row.quantity, row.minQuantity, row.price, row.category]) : [['', '', '', '', categoryName]],
+        });
+        y = (doc as any).lastAutoTable?.finalY + 10 || y + 30;
+        
+        // Add new page if needed
+        if (y > 270) {
+          doc.addPage();
+          y = 14;
+        }
+      }
+      
+      if (categoriesSnapshot.docs.length === 0) {
+        doc.text('Inventory', 14, y);
+        autoTable(doc, {
+          startY: y + 6,
+          head: [['Name', 'Quantity', 'Min Quantity', 'Price', 'Category']],
+          body: [['', '', '', '', '']],
+        });
+      }
+      
+      doc.save(`inventory-report-${new Date().toISOString().slice(0,10)}.pdf`);
+      toast.success(t("dashboard.toast.inventoryDownloaded"));
+    } catch (error) {
+      console.error('Error exporting inventory PDF:', error)
+      toast.error(t("dashboard.toast.exportError"))
+    }
+  }
+
+  const handleExportSalesPDF = async () => {
+    try {
+      const jsPDF = (await import("jspdf")).default;
+      const autoTable = (await import("jspdf-autotable")).default;
+      const doc = new jsPDF();
+      
+      const ordersRef = collection(db, `restaurants/${user?.establishmentId}/orders`)
+      const ordersQuery = query(ordersRef, orderBy('createdAt', 'desc'))
+      const ordersSnapshot = await getDocs(ordersQuery)
+      
+      const salesData = ordersSnapshot.docs.map(doc => {
+        const order = doc.data() as Order
+        return {
+          orderId: doc.id,
+          date: order.createdAt ? new Date(order.createdAt instanceof Date ? order.createdAt : (order.createdAt as any).toDate()).toLocaleDateString() : '',
+          total: order.total || 0,
+          status: order.status,
+          paymentMethod: order.paymentMethod,
+          tableNumber: order.tableNumber,
+          items: Object.values(order.items || {}).map((item: OrderItem) => `${item.name} (${item.quantity})`).join(', ')
+        }
+      })
+      
+      doc.text('Sales Report', 14, 14);
+      autoTable(doc, {
+        startY: 20,
+        head: [['Order ID', 'Date', 'Total', 'Status', 'Payment Method', 'Table', 'Items']],
+        body: salesData.length > 0 ? salesData.map(row => [row.orderId || '', row.date || '', row.total || 0, row.status || '', row.paymentMethod || '', row.tableNumber || '', row.items || '']) as any : [['', '', '', '', '', '', '']],
+      });
+      
+      doc.save(`sales-report-${new Date().toISOString().slice(0,10)}.pdf`);
+      toast.success(t("dashboard.toast.salesDownloaded"));
+    } catch (error) {
+      console.error('Error exporting sales PDF:', error)
+      toast.error(t("dashboard.toast.exportError"))
+    }
+  }
+
+  const handleExportUserActivityPDF = async () => {
+    try {
+      const jsPDF = (await import("jspdf")).default;
+      const autoTable = (await import("jspdf-autotable")).default;
+      const doc = new jsPDF();
+      
+      const sessionsRef = collection(db, `restaurants/${user?.establishmentId}/sessions`)
+      const sessionsQuery = query(sessionsRef, orderBy('loginTime', 'desc'))
+      const sessionsSnapshot = await getDocs(sessionsQuery)
+      
+      const sessionsData = sessionsSnapshot.docs.map(doc => {
+        const session = doc.data()
+        return {
+          sessionId: doc.id,
+          username: session.username,
+          email: session.email,
+          role: session.role,
+          loginTime: session.loginTime ? new Date(session.loginTime instanceof Date ? session.loginTime : (session.loginTime as any).toDate()).toLocaleString() : '',
+          logoutTime: session.logoutTime ? new Date(session.logoutTime instanceof Date ? session.logoutTime : (session.logoutTime as any).toDate()).toLocaleString() : '',
+          status: session.status,
+          device: session.device?.type,
+          os: session.device?.os
+        }
+      })
+      
+      doc.text('User Activity Report', 14, 14);
+      autoTable(doc, {
+        startY: 20,
+        head: [['Session ID', 'Username', 'Email', 'Role', 'Login Time', 'Logout Time', 'Status', 'Device', 'OS']],
+        body: sessionsData.length > 0 ? sessionsData.map(row => [row.sessionId, row.username, row.email, row.role, row.loginTime, row.logoutTime, row.status, row.device, row.os]) : [['', '', '', '', '', '', '', '', '']],
+      });
+      
+      doc.save(`user-activity-report-${new Date().toISOString().slice(0,10)}.pdf`);
+      toast.success(t("dashboard.toast.userActivityDownloaded"));
+    } catch (error) {
+      console.error('Error exporting user activity PDF:', error)
+      toast.error(t("dashboard.toast.exportError"))
+    }
+  }
+
+  const canDownloadReports = user?.role === UserRole.OWNER || 
+                               user?.role === UserRole.ADMIN || 
+                               user?.role === UserRole.MANAGER
 
   return (
     <div className="p-4 md:p-6 space-y-4 md:space-y-6">
@@ -862,7 +1302,7 @@ export default function DashboardPage() {
             <div className="text-xs text-green-600">
               {dashboardData.salesByCategory && dashboardData.salesByCategory.length > 0
                 ? `+${dashboardData.monthlyGrowth}% ${t("dashboard.totalSales.comparedToLastMonth")}`
-                : t("dashboard.noSalesData")
+                : t("dashboard.salesByCategory.noSalesData")
               }
             </div>
           </CardContent>
@@ -1404,25 +1844,108 @@ export default function DashboardPage() {
       </div>
 
       {/* Reporte General como Footer */}
-      <Card className="mt-12">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>{t('dashboard.report.title')}</CardTitle>
-            <CardDescription>{t('dashboard.report.description')}</CardDescription>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={handleExportGeneralExcel} variant="outline">
-              <Download className="w-4 h-4 mr-2" /> {t('dashboard.report.excel')}
-            </Button>
-            <Button onClick={handleExportGeneralPDF} variant="outline">
-              <Download className="w-4 h-4 mr-2" /> {t('dashboard.report.pdf')}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <p>{t('dashboard.report.fileDescription')}</p>
-        </CardContent>
-      </Card>
+      {canDownloadReports && (
+        <Card className="mt-12">
+          <CardHeader>
+            <CardTitle>{t('dashboard.reports.title')}</CardTitle>
+            <CardDescription>{t('dashboard.reports.description')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="inventory" className="w-full">
+              <TabsList className="grid w-full grid-cols-4 bg-muted p-1 rounded-lg border">
+                <TabsTrigger value="inventory" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                  <Package className="w-4 h-4 mr-2" />
+                  {t('dashboard.reports.inventory')}
+                </TabsTrigger>
+                <TabsTrigger value="sales" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  {t('dashboard.reports.sales')}
+                </TabsTrigger>
+                <TabsTrigger value="userActivity" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                  <Users className="w-4 h-4 mr-2" />
+                  {t('dashboard.reports.userActivity')}
+                </TabsTrigger>
+                <TabsTrigger value="general" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                  <FileText className="w-4 h-4 mr-2" />
+                  {t('dashboard.reports.general')}
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="inventory" className="mt-6 border rounded-lg p-6">
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    {t('dashboard.reports.inventoryDescription')}
+                  </p>
+                  <div className="flex gap-3">
+                    <Button onClick={handleExportInventoryExcel} variant="outline" className="flex items-center gap-2">
+                      <FileSpreadsheet className="w-4 h-4" />
+                      <span>Excel</span>
+                    </Button>
+                    <Button onClick={handleExportInventoryPDF} variant="outline" className="flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      <span>PDF</span>
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="sales" className="mt-6 border rounded-lg p-6">
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    {t('dashboard.reports.salesDescription')}
+                  </p>
+                  <div className="flex gap-3">
+                    <Button onClick={handleExportSalesExcel} variant="outline" className="flex items-center gap-2">
+                      <FileSpreadsheet className="w-4 h-4" />
+                      <span>Excel</span>
+                    </Button>
+                    <Button onClick={handleExportSalesPDF} variant="outline" className="flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      <span>PDF</span>
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="userActivity" className="mt-6 border rounded-lg p-6">
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    {t('dashboard.reports.userActivityDescription')}
+                  </p>
+                  <div className="flex gap-3">
+                    <Button onClick={handleExportUserActivityExcel} variant="outline" className="flex items-center gap-2">
+                      <FileSpreadsheet className="w-4 h-4" />
+                      <span>Excel</span>
+                    </Button>
+                    <Button onClick={handleExportUserActivityPDF} variant="outline" className="flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      <span>PDF</span>
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="general" className="mt-6 border rounded-lg p-6">
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    {t('dashboard.reports.generalDescription')}
+                  </p>
+                  <div className="flex gap-3">
+                    <Button onClick={handleExportGeneralExcel} variant="outline" className="flex items-center gap-2">
+                      <FileSpreadsheet className="w-4 h-4" />
+                      <span>Excel</span>
+                    </Button>
+                    <Button onClick={handleExportGeneralPDF} variant="outline" className="flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      <span>PDF</span>
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

@@ -69,13 +69,14 @@ export function EstablishmentSettings() {
     setSaving(true)
 
     try {
-      await updateDoc(doc(db, "establishments", user.establishmentId), {
+      await updateDoc(doc(db, "restaurants", user.establishmentId), {
         ...establishmentData,
         updatedAt: new Date(),
       })
 
       toast.success(t("settings.establishment.actions.saved"))
     } catch (error) {
+      console.error("Error saving establishment data:", error)
       toast.error(t("settings.establishment.actions.error"))
     } finally {
       setSaving(false)
