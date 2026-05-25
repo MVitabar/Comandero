@@ -32,10 +32,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Determine payment methods based on location or default to all available
-    const paymentMethodTypes = ['card', 'paypal', 'pix'] as const
-
-    // Create checkout session
+    // Create checkout session with card payment only
+    // PayPal and PIX require additional configuration in Stripe Dashboard
     const session = await stripe.checkout.sessions.create({
       line_items: [
         {
@@ -44,7 +42,7 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'subscription',
-      payment_method_types: paymentMethodTypes as any,
+      payment_method_types: ['card'],
       success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/subscription?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/settings`,
       metadata: {
