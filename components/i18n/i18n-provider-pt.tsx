@@ -28,7 +28,8 @@ const ptTranslationsBase = {
       "submit": "Enviar",
       "sending": "Enviando...",
       "create": "Criar",
-      "created": "Created"
+      "created": "Criado",
+      "loading": "Carregando..."
     },
     "status": {
       "lowStock": "Baixo Estoque",
@@ -212,6 +213,7 @@ const ptTranslationsBase = {
     "orders": "Pedidos",
     "tables": "Mesas",
     "inventory": "Inventário",
+    "purchases": "Compras",
     "users": "Usuários",
     "settings": "Configurações",
     "advancedReports": "Relatórios Avançados",
@@ -323,38 +325,141 @@ const ptTranslationsBase = {
       "userActivityDescription": "Baixar relatório de atividade de usuários com todas as sessões, incluindo tempos de login/logout, dispositivos, sistemas operacionais e funções de usuário.",
       "general": "Relatório Geral",
       "generalDescription": "Baixar relatório geral completo incluindo vendas por dia, produtos principais, visão geral do inventário, inventário completo, todas as vendas e atividade de usuários."
-    },
-    "toast": {
-      "salesAlert": "As vendas diminuíram em comparação com o mês anterior",
-      "goalReached": "Meta de vendas alcançada!",
-      "excelDownloaded": "Relatório Excel baixado com sucesso",
-      "pdfDownloaded": "Relatório PDF baixado com sucesso",
-      "inventoryDownloaded": "Relatório de inventário baixado com sucesso",
-      "salesDownloaded": "Relatório de vendas baixado com sucesso",
-      "userActivityDownloaded": "Relatório de atividade de usuários baixado com sucesso",
-      "exportError": "Erro ao exportar relatório",
-      "noInventoryData": "Não há dados de inventário disponíveis para exportar"
-    },
-    
-    "errors": {
-      "fetchFailed": "Erro ao carregar dados do dashboard. Por favor, tente novamente mais tarde."
-    },
-    "salesList": {
-      "title": "Histórico de Vendas",
-      "noSales": "Nenhuma venda registrada",
-      "columns": {
-        "date": "Data",
-        "orderId": "ID do Pedido",
-        "total": "Total",
-        "paymentMethod": "Método de Pagamento"
+    }
+  },
+
+  "purchases": {
+    "title": "Compras",
+    "suppliers": {
+      "title": "Fornecedores",
+      "add": "Adicionar Fornecedor",
+      "edit": "Editar Fornecedor",
+      "delete": "Excluir Fornecedor",
+      "deleteConfirm": "Tem certeza de que deseja excluir este fornecedor?",
+      "loading": "Carregando fornecedores...",
+      "noSuppliers": "Nenhum fornecedor ainda. Adicione seu primeiro fornecedor.",
+      "searchPlaceholder": "Buscar fornecedores...",
+      "name": "Nome",
+      "contactPerson": "Pessoa de Contato",
+      "email": "Email",
+      "phone": "Telefone",
+      "address": "Endereço",
+      "city": "Cidade",
+      "state": "Estado",
+      "country": "País",
+      "zipCode": "CEP",
+      "taxId": "ID Fiscal",
+      "notes": "Notas",
+      "paymentTerms": "Condições de Pagamento",
+      "deliveryTime": "Tempo de Entrega",
+      "paymentTermsPlaceholder": "ex., Net 30, Net 60",
+      "deliveryTimePlaceholder": "ex., 2-3 dias",
+      "active": "Ativo",
+      "inactive": "Inativo",
+      "contact": "Contato",
+      "payment": "Pagamento",
+      "delivery": "Entrega",
+      "success": {
+        "added": "Fornecedor adicionado com sucesso",
+        "updated": "Fornecedor atualizado com sucesso",
+        "deleted": "Fornecedor excluído com sucesso"
       },
-      "paymentMethods": {
-        "cash": "Dinheiro",
-        "credit": "Cartão de Crédito",
-        "debit": "Cartão de Débito",
-        "transfer": "Transferência Bancária",
-        "other": "Outro"
+      "error": {
+        "loading": "Erro ao carregar fornecedores",
+        "saving": "Erro ao salvar fornecedor",
+        "deleting": "Erro ao excluir fornecedor"
       }
+    },
+    "purchases": {
+      "title": "Compras",
+      "add": "Adicionar Compra",
+      "edit": "Editar Compra",
+      "delete": "Excluir Compra",
+      "deleteConfirm": "Tem certeza de que deseja excluir esta compra?",
+      "loading": "Carregando compras...",
+      "noPurchases": "Nenhuma compra ainda. Adicione sua primeira compra.",
+      "searchPlaceholder": "Buscar compras...",
+      "purchaseNumber": "Número da Compra",
+      "supplier": "Fornecedor",
+      "orderDate": "Data do Pedido",
+      "expectedDeliveryDate": "Data de Entrega Esperada",
+      "status": "Status",
+      "paymentMethod": "Método de Pagamento",
+      "paymentStatus": "Status do Pagamento",
+      "payment": "Pagamento",
+      "notes": "Notas",
+      "items": "Itens",
+      "total": "Total",
+      "addItem": "Adicionar Item",
+      "itemName": "Nome do Item",
+      "quantity": "Quantidade",
+      "unit": "Unidade",
+      "unitPrice": "Preço Unitário",
+      "itemNotes": "Notas",
+      "category": "Categoria",
+      "selectCategory": "Selecionar Categoria",
+      "unitPlaceholder": "ex., kg, unidades, litros",
+      "paymentMethodPlaceholder": "ex., Transferência Bancária, Dinheiro, Crédito",
+      "autoGenerated": "Gerado automaticamente se vazio",
+      "atLeastOneItem": "Por favor adicione pelo menos um item",
+      "fillAllItemFields": "Por favor preencha todos os campos do item",
+      "statuses": {
+        "pending": "Pendente",
+        "ordered": "Pedido",
+        "received": "Recebido",
+        "cancelled": "Cancelado",
+        "partial": "Parcial"
+      },
+      "paymentStatuses": {
+        "pending": "Pendente",
+        "paid": "Pago",
+        "partial": "Parcial",
+        "overdue": "Atrasado"
+      },
+      "success": {
+        "added": "Compra adicionada com sucesso",
+        "updated": "Compra atualizada com sucesso",
+        "deleted": "Compra excluída com sucesso"
+      },
+      "error": {
+        "loading": "Erro ao carregar compras",
+        "saving": "Erro ao salvar compra",
+        "deleting": "Erro ao excluir compra"
+      }
+    }
+  },
+
+  "toast": {
+    "salesAlert": "As vendas diminuíram em comparação com o mês anterior",
+    "goalReached": "Meta de vendas alcançada!",
+    "excelDownloaded": "Relatório Excel baixado com sucesso",
+    "pdfDownloaded": "Relatório PDF baixado com sucesso",
+    "inventoryDownloaded": "Relatório de inventário baixado com sucesso",
+    "salesDownloaded": "Relatório de vendas baixado com sucesso",
+    "userActivityDownloaded": "Relatório de atividade de usuários baixado com sucesso",
+    "exportError": "Erro ao exportar relatório",
+    "noInventoryData": "Não há dados de inventário disponíveis para exportar"
+  },
+
+  "errors": {
+    "fetchFailed": "Erro ao carregar dados do dashboard. Por favor, tente novamente mais tarde."
+  },
+
+  "salesList": {
+    "title": "Histórico de Vendas",
+    "noSales": "Nenhuma venda registrada",
+    "columns": {
+      "date": "Data",
+      "orderId": "ID do Pedido",
+      "total": "Total",
+      "paymentMethod": "Método de Pagamento"
+    },
+    "paymentMethods": {
+      "cash": "Dinheiro",
+      "credit": "Cartão de Crédito",
+      "debit": "Cartão de Débito",
+      "transfer": "Transferência Bancária",
+      "other": "Outro"
     }
   },
 
@@ -379,7 +484,7 @@ const ptTranslationsBase = {
     "counter": "Balcão",
     "waiter": "Garçom",
     "takeaway": "Delivery",
-    "details":{
+    "details": {
       "title": "Detalhes do Pedido",
       "description": "Detalhes do Pedido",
       "id": "ID do Pedido",
@@ -389,7 +494,7 @@ const ptTranslationsBase = {
       "items": "Itens",
       "total": "Total",
       "status": "Status",
-      "actions": "Actions"
+      "actions": "Ações"
     },
     "search": {
       "placeholder": "Procurar pedidos por ID, mesa ou garçom"
@@ -397,7 +502,7 @@ const ptTranslationsBase = {
     "filter": {
       "allStatuses": "Todos os Status"
     },
-    
+
     "actions": {
       "view": "Ver",
       "updateStatus": "Atualizar Status",
@@ -417,7 +522,6 @@ const ptTranslationsBase = {
       "deleteOrderFailed": "Erro ao excluir pedido"
     },
     "orderType": "Tipo de Pedido",
-    
     "tableNumber": "Número da Mesa",
     "selectCategory": "Selecione a Categoria",
     "selectItem": "Selecione o Item",
@@ -536,7 +640,6 @@ const ptTranslationsBase = {
       "statusUpdated": "Status do pedido atualizado",
       "orderDeleted": "Pedido excluído"
     },
-    
   },
 
   "newOrder": {
@@ -568,7 +671,6 @@ const ptTranslationsBase = {
       "noItems": "Por favor, adicione pelo menos um item ao pedido",
       "orderCreationFailed": "Erro ao criar pedido"
     },
-    
     "success": {
       "orderCreated": "Pedido Criado",
       "orderCreatedDescription": "O pedido para a Mesa {{tableNumber}} foi criado com sucesso"
@@ -1221,10 +1323,6 @@ const ptTranslationsBase = {
     },
     "loading": "Carregando pedidos..."
   },
-  "errors": {
-    "onlyOwnersCanCreate": "Apenas proprietários podem criar contas de proprietário",
-    "noEstablishmentId": "Nenhum ID de estabelecimento encontrado para o usuário"
-  },
   "categories": {
     "appetizers": "Aperitivos",
     "desserts": "Doces",
@@ -1234,14 +1332,14 @@ const ptTranslationsBase = {
     "sides": "Lanches"
   },
   "roles": {
-      "owner": "Proprietário",
-      "admin": "Administrador", 
-      "manager": "Gerente",
-      "staff": "Staff",
-      "waiter": "Garçom",
-      "barman": "Barman",
-      "default": "Usuário"
-    },
+    "owner": "Proprietário",
+    "admin": "Administrador", 
+    "manager": "Gerente",
+    "staff": "Staff",
+    "waiter": "Garçom",
+    "barman": "Barman",
+    "default": "Usuário"
+  },
   "invitation": {
     "invalid": "Convite inválido",
     "expired": "O convite expirou",

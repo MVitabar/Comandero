@@ -1111,3 +1111,66 @@ export interface OrderDetailsDialogProps {
 
 export { UserRole };
 // --- END PATCH ---
+
+// Purchases Management
+export interface Supplier {
+  id?: string;
+  uid: string;
+  name: string;
+  contactPerson?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  zipCode?: string;
+  taxId?: string;
+  notes?: string;
+  paymentTerms?: string;
+  deliveryTime?: string;
+  rating?: number;
+  isActive: boolean;
+  restaurantId: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface PurchaseItem {
+  id?: string;
+  uid: string;
+  purchaseId: string;
+  inventoryItemId?: string;
+  inventoryItemName?: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  totalPrice: number;
+  receivedQuantity?: number;
+  notes?: string;
+  category?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface Purchase {
+  id?: string;
+  uid: string;
+  supplierId: string;
+  supplierName?: string;
+  purchaseNumber: string;
+  status: 'pending' | 'ordered' | 'received' | 'cancelled' | 'partial';
+  orderDate: Date;
+  expectedDeliveryDate?: Date;
+  receivedDate?: Date;
+  totalAmount: number;
+  currency?: string;
+  paymentMethod?: string;
+  paymentStatus?: 'pending' | 'paid' | 'partial' | 'overdue';
+  notes?: string;
+  items: PurchaseItem[];
+  restaurantId: string;
+  createdBy?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}

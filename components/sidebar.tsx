@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   ClipboardList,
   Package,
+  ShoppingCart,
   Users,
   Settings,
   LogOut,
@@ -116,6 +117,12 @@ export function Sidebar() {
       requiredPermission: 'inventory'
     },
     {
+      name: t("sidebar.purchases"),
+      href: "/purchases",
+      icon: ShoppingCart,
+      requiredPermission: 'purchases'
+    },
+    {
       name: t("sidebar.users"),
       href: "/users",
       icon: Users,
@@ -136,9 +143,14 @@ export function Sidebar() {
   ]
 
   // Filter navigation items based on user permissions
-  const filteredNavItems = navItems.filter(item => 
-    canView(item.requiredPermission as keyof ModulePermissions)
-  )
+  const filteredNavItems = navItems.filter(item => {
+    const hasAccess = canView(item.requiredPermission as keyof ModulePermissions)
+    console.log('Nav item:', item.name, 'Permission:', item.requiredPermission, 'Has access:', hasAccess)
+    return hasAccess
+  })
+
+  console.log('User role:', user?.role)
+  console.log('Filtered nav items:', filteredNavItems.map(i => i.name))
 
   if (!user) return null
 

@@ -24,6 +24,7 @@ export interface ModulePermissions {
   orders: Permission;
   tables: Permission;
   inventory: Permission;
+  purchases: Permission;
   settings: {
     view: boolean;
     create: boolean;
@@ -54,6 +55,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     orders: { view: true, create: true, update: true, delete: true },
     tables: { view: true, create: true, update: true, delete: true },
     inventory: { view: true, create: true, update: true, delete: true },
+    purchases: { view: true, create: true, update: true, delete: true },
     settings: {
       view: true,
       create: true,
@@ -77,11 +79,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     language: { view: true, create: true, update: true, delete: true },
     appearance: { view: true, create: true, update: true, delete: true },
     notifications: { view: true, create: true, update: true, delete: true },
-    'users-management': { view: true, create: true, update: true, delete: false }, // No puede eliminar usuarios
+    'users-management': { view: true, create: true, update: true, delete: false },
     dashboard: { view: true, create: true, update: true, delete: true },
     orders: { view: true, create: true, update: true, delete: true },
     tables: { view: true, create: true, update: true, delete: true },
     inventory: { view: true, create: true, update: true, delete: false },
+    purchases: { view: true, create: true, update: true, delete: false },
     reports: { view: true, create: true, update: false, delete: false },
     settings: {
       view: true,
@@ -111,6 +114,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     orders: { view: true, create: true, update: true, delete: true },
     tables: { view: true, create: true, update: true, delete: true },
     inventory: { view: true, create: true, update: true, delete: false },
+    purchases: { view: true, create: true, update: true, delete: false },
     reports: { view: true, create: true, update: false, delete: false },
     settings: {
       view: true,
@@ -140,6 +144,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     orders: { view: true, create: false, update: true, delete: false },
     tables: { view: true, create: false, update: false, delete: false },
     inventory: { view: true, create: false, update: true, delete: false },
+    purchases: { view: false, create: false, update: false, delete: false },
     reports: { view: false, create: false, update: false, delete: false },
     settings: {
       view: true,
@@ -168,6 +173,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     orders: { view: true, create: false, update: false, delete: false },
     tables: { view: true, create: false, update: false, delete: false },
     inventory: { view: true, create: false, update: false, delete: false },
+    purchases: { view: false, create: false, update: false, delete: false },
     reports: { view: false, create: false, update: false, delete: false },
     settings: {
       view: false,
@@ -197,6 +203,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     orders: { view: true, create: true, update: true, delete: false },
     tables: { view: true, create: true, update: true, delete: false },
     inventory: { view: false, create: false, update: false, delete: false },
+    purchases: { view: false, create: false, update: false, delete: false },
     reports: { view: false, create: false, update: false, delete: false },
     settings: {
       view: true,

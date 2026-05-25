@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   ClipboardList,
   Package,
+  ShoppingCart,
   Users,
   Settings,
   LogOut,
@@ -229,6 +230,13 @@ export function CollapsibleSidebar() {
       icon: Package,
       mobileIcon: Layers,
       requiredPermission: 'inventory'
+    },
+    {
+      name: t("sidebar.purchases"),
+      href: "/purchases",
+      icon: ShoppingCart,
+      mobileIcon: ShoppingCart,
+      requiredPermission: 'purchases'
     },
     {
       name: t("sidebar.users"),

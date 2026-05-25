@@ -1756,29 +1756,19 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 gap-3 sm:gap-4">
             <Card className="w-full">
               <CardHeader className="p-2 sm:p-3 md:p-4">
-                <CardTitle className="text-xs sm:text-sm md:text-base">{t('dashboard.salesList.title')}</CardTitle>
+                <CardTitle className="text-xs sm:text-sm md:text-base">{t('salesList.title')}</CardTitle>
               </CardHeader>
               <CardContent className="p-2 sm:p-3 md:p-4">
                 {dashboardData.salesList.length > 0 ? (
                   <div className="overflow-x-auto max-h-[300px] sm:max-h-[400px]">
                     <table className="w-full text-xs sm:text-sm">
-                      <thead className="sticky top-0 bg-white z-10">
+                      <thead className="sticky top-0 bg-background z-10">
                         <tr className="border-b">
-                          <th className="px-1 sm:px-2 md:px-4 py-2 text-left text-xs sm:text-sm">{t('dashboard.salesList.columns.date')}</th>
-                          <th className="px-1 sm:px-2 md:px-4 py-2 text-left text-xs sm:text-sm hidden sm:table-cell">{t('dashboard.salesList.columns.orderId')}</th>
-                          <th className="px-1 sm:px-2 md:px-4 py-2 text-right text-xs sm:text-sm">{t('dashboard.salesList.columns.total')}</th>
+                          <th className="px-1 sm:px-2 md:px-4 py-2 text-left text-xs sm:text-sm">{t('salesList.columns.date')}</th>
+                          <th className="px-1 sm:px-2 md:px-4 py-2 text-left text-xs sm:text-sm hidden sm:table-cell">{t('salesList.columns.orderId')}</th>
+                          <th className="px-1 sm:px-2 md:px-4 py-2 text-right text-xs sm:text-sm">{t('salesList.columns.total')}</th>
                           <th className="px-1 sm:px-2 md:px-4 py-2 text-left text-xs sm:text-sm hidden md:table-cell">
-                            <Badge 
-                              variant={
-                                'cash' === 'cash' ? 'default' :
-                                'credit' === 'credit' ? 'secondary' :
-                                'debit' === 'debit' ? 'outline' :
-                                'destructive'
-                              }
-                              className="capitalize"
-                            >
-                              {t(`dashboard.salesList.paymentMethods.${'cash'}`)}
-                            </Badge>
+                            {t('salesList.columns.paymentMethod')}
                           </th>
                         </tr>
                       </thead>
@@ -1810,7 +1800,7 @@ export default function DashboardPage() {
                                 }
                                 className="capitalize"
                               >
-                                {t(`dashboard.salesList.paymentMethods.${sale.paymentMethod}`)}
+                                {t(`salesList.paymentMethods.${sale.paymentMethod}`)}
                               </Badge>
                             </td>
                           </tr>
@@ -1820,7 +1810,7 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <div className="text-center text-muted-foreground p-4 text-xs sm:text-sm">
-                    {t('dashboard.salesList.noSales')}
+                    {t('salesList.noSales')}
                   </div>
                 )}
               </CardContent>

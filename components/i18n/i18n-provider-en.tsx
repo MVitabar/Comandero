@@ -28,7 +28,8 @@ const enTranslationsBase = {
       "submit": "Submit",
       "sending": "Sending...",
       "create": "Create",
-      "created": "Created"
+      "created": "Created",
+      "loading": "Loading..."
     },
     "status": {
       "lowStock": "Low Stock",
@@ -71,14 +72,14 @@ const enTranslationsBase = {
       }
     },
     "deleted": "Deleted",
-    "nextSlide": "Próximo slide",
-    "previousSlide": "Slide anterior",
-   
-    "noResults": "Nenhum resultado encontrado",
-    "next": "Próximo",
-    "previous": "Anterior",
-    "accept": "Aceitar",
-    "retry": "Tentar novamente"
+    "nextSlide": "Next slide",
+    "previousSlide": "Previous slide",
+
+    "noResults": "No results found",
+    "next": "Next",
+    "previous": "Previous",
+    "accept": "Accept",
+    "retry": "Retry"
   },
 
   "tableMaps": {
@@ -212,6 +213,7 @@ const enTranslationsBase = {
     "orders": "Orders",
     "tables": "Tables",
     "inventory": "Inventory",
+    "purchases": "Purchases",
     "users": "Users",
     "settings": "Settings",
     "advancedReports": "Advanced Reports",
@@ -323,38 +325,141 @@ const enTranslationsBase = {
       "userActivityDescription": "Download user activity report with all sessions, including login/logout times, devices, operating systems, and user roles.",
       "general": "General Report",
       "generalDescription": "Download comprehensive general report including sales by day, top selling products, inventory overview, complete inventory, all sales, and user activity."
-    },
-    "toast": {
-      "salesAlert": "Sales decreased compared to last month",
-      "goalReached": "Sales goal reached!",
-      "excelDownloaded": "Excel report downloaded successfully",
-      "pdfDownloaded": "PDF report downloaded successfully",
-      "inventoryDownloaded": "Inventory report downloaded successfully",
-      "salesDownloaded": "Sales report downloaded successfully",
-      "userActivityDownloaded": "User activity report downloaded successfully",
-      "exportError": "Error exporting report",
-      "noInventoryData": "No inventory data available to export"
-    },
-    
-    "errors": {
-      "fetchFailed": "Failed to load dashboard data. Please try again later."
-    },
-    "salesList": {
-      "title": "Sales History",
-      "noSales": "No sales recorded",
-      "columns": {
-        "date": "Date",
-        "orderId": "Order ID",
-        "total": "Total",
-        "paymentMethod": "Payment Method"
+    }
+  },
+
+  "purchases": {
+    "title": "Purchases",
+    "suppliers": {
+      "title": "Suppliers",
+      "add": "Add Supplier",
+      "edit": "Edit Supplier",
+      "delete": "Delete Supplier",
+      "deleteConfirm": "Are you sure you want to delete this supplier?",
+      "loading": "Loading suppliers...",
+      "noSuppliers": "No suppliers yet. Add your first supplier.",
+      "searchPlaceholder": "Search suppliers...",
+      "name": "Name",
+      "contactPerson": "Contact Person",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "city": "City",
+      "state": "State",
+      "country": "Country",
+      "zipCode": "Zip Code",
+      "taxId": "Tax ID",
+      "notes": "Notes",
+      "paymentTerms": "Payment Terms",
+      "deliveryTime": "Delivery Time",
+      "paymentTermsPlaceholder": "e.g., Net 30, Net 60",
+      "deliveryTimePlaceholder": "e.g., 2-3 days",
+      "active": "Active",
+      "inactive": "Inactive",
+      "contact": "Contact",
+      "payment": "Payment",
+      "delivery": "Delivery",
+      "success": {
+        "added": "Supplier added successfully",
+        "updated": "Supplier updated successfully",
+        "deleted": "Supplier deleted successfully"
       },
-      "paymentMethods": {
-        "cash": "Cash",
-        "credit": "Credit Card",
-        "debit": "Debit Card",
-        "transfer": "Bank Transfer",
-        "other": "Other"
+      "error": {
+        "loading": "Error loading suppliers",
+        "saving": "Error saving supplier",
+        "deleting": "Error deleting supplier"
       }
+    },
+    "purchases": {
+      "title": "Purchases",
+      "add": "Add Purchase",
+      "edit": "Edit Purchase",
+      "delete": "Delete Purchase",
+      "deleteConfirm": "Are you sure you want to delete this purchase?",
+      "loading": "Loading purchases...",
+      "noPurchases": "No purchases yet. Add your first purchase.",
+      "searchPlaceholder": "Search purchases...",
+      "purchaseNumber": "Purchase Number",
+      "supplier": "Supplier",
+      "orderDate": "Order Date",
+      "expectedDeliveryDate": "Expected Delivery Date",
+      "status": "Status",
+      "paymentMethod": "Payment Method",
+      "paymentStatus": "Payment Status",
+      "payment": "Payment",
+      "notes": "Notes",
+      "items": "Items",
+      "total": "Total",
+      "addItem": "Add Item",
+      "itemName": "Item Name",
+      "quantity": "Quantity",
+      "unit": "Unit",
+      "unitPrice": "Unit Price",
+      "itemNotes": "Notes",
+      "category": "Category",
+      "selectCategory": "Select Category",
+      "unitPlaceholder": "e.g., kg, units, liters",
+      "paymentMethodPlaceholder": "e.g., Bank Transfer, Cash, Credit",
+      "autoGenerated": "Auto-generated if empty",
+      "atLeastOneItem": "Please add at least one item",
+      "fillAllItemFields": "Please fill in all item fields",
+      "statuses": {
+        "pending": "Pending",
+        "ordered": "Ordered",
+        "received": "Received",
+        "cancelled": "Cancelled",
+        "partial": "Partial"
+      },
+      "paymentStatuses": {
+        "pending": "Pending",
+        "paid": "Paid",
+        "partial": "Partial",
+        "overdue": "Overdue"
+      },
+      "success": {
+        "added": "Purchase added successfully",
+        "updated": "Purchase updated successfully",
+        "deleted": "Purchase deleted successfully"
+      },
+      "error": {
+        "loading": "Error loading purchases",
+        "saving": "Error saving purchase",
+        "deleting": "Error deleting purchase"
+      }
+    }
+  },
+
+  "toast": {
+    "salesAlert": "Sales decreased compared to last month",
+    "goalReached": "Sales goal reached!",
+    "excelDownloaded": "Excel report downloaded successfully",
+    "pdfDownloaded": "PDF report downloaded successfully",
+    "inventoryDownloaded": "Inventory report downloaded successfully",
+    "salesDownloaded": "Sales report downloaded successfully",
+    "userActivityDownloaded": "User activity report downloaded successfully",
+    "exportError": "Error exporting report",
+    "noInventoryData": "No inventory data available to export"
+  },
+
+  "errors": {
+    "fetchFailed": "Failed to load dashboard data. Please try again later."
+  },
+
+  "salesList": {
+    "title": "Sales History",
+    "noSales": "No sales recorded",
+    "columns": {
+      "date": "Date",
+      "orderId": "Order ID",
+      "total": "Total",
+      "paymentMethod": "Payment Method"
+    },
+    "paymentMethods": {
+      "cash": "Cash",
+      "credit": "Credit Card",
+      "debit": "Debit Card",
+      "transfer": "Bank Transfer",
+      "other": "Other"
     }
   },
 
@@ -379,7 +484,7 @@ const enTranslationsBase = {
     "counter": "Counter",
     "waiter": "Waiter",
     "takeaway": "Delivery",
-    "details":{
+    "details": {
       "title": "Order Details",
       "description": "Order Details",
       "id": "Order ID",
@@ -397,7 +502,7 @@ const enTranslationsBase = {
     "filter": {
       "allStatuses": "All Statuses"
     },
-    
+
     "actions": {
       "view": "View",
       "updateStatus": "Update Status",
@@ -417,7 +522,7 @@ const enTranslationsBase = {
       "deleteOrderFailed": "Failed to delete order"
     },
     "orderType": "Order Type",
-    
+
     "tableNumber": "Table Number",
     "selectCategory": "Select Category",
     "selectItem": "Select Item",
@@ -458,8 +563,8 @@ const enTranslationsBase = {
       "transfer": "Bank Transfer",
       "other": "Other"
     },
-    "itemUnavailable": "(Indisponível)",
-    "stockAvailable": "- R$ {{price}} ({{stock}} disponível)",
+    "itemUnavailable": "(Unavailable)",
+    "stockAvailable": "- ${{price}} ({{stock}} available)",
     "changeStatusTitle": "Change Status",
     "changeStatusDescription": "Change order status",
     "changeStatusButton": "Change Status",
@@ -535,8 +640,7 @@ const enTranslationsBase = {
     "success": {
       "statusUpdated": "Order status updated",
       "orderDeleted": "Order deleted"
-    },
-    
+    }
   },
 
   "newOrder": {
@@ -568,7 +672,7 @@ const enTranslationsBase = {
       "noItems": "Please add at least one item to the order",
       "orderCreationFailed": "Failed to create order"
     },
-    
+
     "success": {
       "orderCreated": "Order Created",
       "orderCreatedDescription": "The order for Table {{tableNumber}} was created successfully"
@@ -1222,10 +1326,6 @@ const enTranslationsBase = {
     },
     "loading": "Loading orders..."
   },
-  "errors": {
-    "onlyOwnersCanCreate": "Only owners can create owner accounts",
-    "noEstablishmentId": "No establishment ID found for user"
-  },
   "categories": {
     "appetizers": "Appetizers",
     "desserts": "Desserts",
@@ -1235,14 +1335,14 @@ const enTranslationsBase = {
     "sides": "Sides"
   },
   "roles": {
-      "owner": "Owner",
-      "admin": "Admin", 
-      "manager": "Manager",
-      "staff": "Staff",
-      "waiter": "Waiter",
-      "barman": "Barman",
-      "default": "User"
-    },
+    "owner": "Owner",
+    "admin": "Admin", 
+    "manager": "Manager",
+    "staff": "Staff",
+    "waiter": "Waiter",
+    "barman": "Barman",
+    "default": "User"
+  },
   "invitation": {
     "invalid": "Invalid invitation",
     "expired": "Invitation has expired",
