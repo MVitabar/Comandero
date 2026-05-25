@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'subscription',
+      payment_method_types: ['card'],
       success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/subscription?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/settings`,
       metadata: {

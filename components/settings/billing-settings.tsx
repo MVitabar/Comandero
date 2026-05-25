@@ -29,6 +29,14 @@ import { SUBSCRIPTION_PLANS } from "@/types"
 import { toast } from "sonner"
 import Link from "next/link"
 
+// Currency conversion rates (USD to BRL)
+const USD_TO_BRL = 5.0 // Approximate rate, should be updated dynamically
+
+const formatPriceInLocalCurrency = (usdPrice: number): string => {
+  const brlPrice = usdPrice * USD_TO_BRL
+  return `R$ ${brlPrice.toFixed(2)}`
+}
+
 export function BillingSettings() {
   const { t } = useI18n()
   const { user } = useAuth()
@@ -152,7 +160,8 @@ export function BillingSettings() {
           <div className="flex items-center justify-between py-2 border-b">
             <span className="text-gray-600">Monthly Price</span>
             <span className="font-semibold">
-              {currentPlan === 'basic' ? '$19' : currentPlan === 'professional' ? '$49' : '$99'}
+              {formatPriceInLocalCurrency(currentPlan === 'basic' ? 19 : currentPlan === 'professional' ? 49 : 99)}
+              <span className="text-xs text-gray-500 ml-1">(~${currentPlan === 'basic' ? '$19' : currentPlan === 'professional' ? '$49' : '$99'} USD)</span>
             </span>
           </div>
           <div className="flex items-center justify-between py-2 border-b">
@@ -193,9 +202,10 @@ export function BillingSettings() {
                 <h4 className="font-semibold capitalize mb-2">{plan}</h4>
                 <div className="mb-3">
                   <span className="text-2xl font-bold">
-                    {plan === 'basic' ? '$19' : plan === 'professional' ? '$49' : '$99'}
+                    {formatPriceInLocalCurrency(plan === 'basic' ? 19 : plan === 'professional' ? 49 : 99)}
                   </span>
                   <span className="text-gray-600 text-sm">/month</span>
+                  <div className="text-xs text-gray-500">(~${plan === 'basic' ? '$19' : plan === 'professional' ? '$49' : '$99'} USD)</div>
                 </div>
                 <ul className="space-y-1 mb-4 text-sm">
                   <li className="flex items-center">
