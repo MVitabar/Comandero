@@ -11,7 +11,8 @@ import { UserProfile } from "@/components/settings/user-profile"
 import { NotificationSettings } from "@/components/settings/notification-settings"
 import { LanguageSettings } from "@/components/settings/language-settings"
 import { AppearanceSettings } from "@/components/settings/appearance-settings"
-import { User, Settings, Bell, Globe, Palette, Store, Shield, CreditCard } from "lucide-react"
+import { SessionHistory } from "@/components/settings/session-history"
+import { User, Settings, Bell, Globe, Palette, Store, Shield, CreditCard, Clock } from "lucide-react"
 import { 
   Select, 
   SelectContent, 
@@ -40,7 +41,8 @@ export default function SettingsPage() {
     notifications: true,
     establishment: true,
     security: true,
-    billing: true
+    billing: true,
+    sessionHistory: true
   } : user?.role ? 
     ROLE_PERMISSIONS[user.role].settings.sections : 
     ROLE_PERMISSIONS['waiter'].settings.sections
@@ -95,6 +97,13 @@ export default function SettingsPage() {
       icon: <CreditCard className="h-4 w-4" />,
       content: <BillingSettings />,
       permission: settingsPermissions?.billing
+    },
+    {
+      id: "sessionHistory",
+      label: t("settings.sessionHistory.title"),
+      icon: <Clock className="h-4 w-4" />,
+      content: <SessionHistory />,
+      permission: settingsPermissions?.sessionHistory
     }
   ]
 

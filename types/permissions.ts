@@ -37,6 +37,7 @@ export interface ModulePermissions {
       establishment: boolean;
       security: boolean;
       billing: boolean;
+      sessionHistory: boolean;
     };
   };
   reports: Permission;
@@ -65,7 +66,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
         notifications: true,
         establishment: true,
         security: true,
-        billing: true
+        billing: true,
+        sessionHistory: true
       }
     },
     reports: { view: true, create: true, update: true, delete: true }
@@ -93,7 +95,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
         notifications: true,
         establishment: true,
         security: false,
-        billing: false
+        billing: false,
+        sessionHistory: true
       }
     }
   },
@@ -121,7 +124,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
         notifications: true,
         establishment: false,
         security: false,
-        billing: false
+        billing: false,
+        sessionHistory: true
       }
     }
   },
@@ -149,7 +153,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
         notifications: true,
         establishment: false,
         security: false,
-        billing: false
+        billing: false,
+        sessionHistory: true
       }
     }
   },
@@ -177,6 +182,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
         establishment: false,
         security: false,
         billing: false,
+        sessionHistory: false
       }
     }
   },
@@ -204,7 +210,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
         notifications: true,
         establishment: false,
         security: false,
-        billing: false
+        billing: false,
+        sessionHistory: true
       }
     }
   }

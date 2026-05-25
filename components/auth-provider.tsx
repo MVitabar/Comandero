@@ -708,8 +708,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Update last login timestamp, status, and activity
-      if (db) {
-        const userRef = doc(db, 'users', firebaseUser.email?.toLowerCase().replace(/[^a-z0-9]/g, '_') || '')
+      if (db && customUser.establishmentId) {
+        const userRef = doc(db, 'restaurants', customUser.establishmentId, 'users', firebaseUser.uid)
         
         // Prepare login attempt record
         const loginAttempt: LoginAttempt = {
@@ -720,6 +720,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           location: activityContext.location
         };
 
+        // Create session record for work hours tracking
+        const sessionRef = doc(collection(db, 'restaurants', customUser.establishmentId, 'sessions'));
+        const sessionId = sessionRef.id;
+        
         // Check if document exists before updating
         const userDoc = await getDoc(userRef);
         if (userDoc.exists()) {
@@ -728,9 +732,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             status: 'active',
             'activity.lastSuccessfulLogin': serverTimestamp(),
             'activity.loginAttempts': arrayUnion(loginAttempt),
-            'activity.failedLoginCount': 0 // Reset failed login count on successful login
+            'activity.failedLoginCount': 0, // Reset failed login count on successful login
+            currentSessionId: sessionId
           });
         }
+
+        // Create session record
+        await setDoc(sessionRef, {
+          sessionId,
+          userId: firebaseUser.uid,
+          username: customUser.username,
+          email: firebaseUser.email,
+          role: customUser.role,
+          establishmentId: customUser.establishmentId,
+          loginTime: serverTimestamp(),
+          logoutTime: null,
+          duration: null,
+          device: activityContext.device,
+          ipAddress: activityContext.ipAddress,
+          location: activityContext.location,
+          status: 'active'
+        });
       }
 
       // Update user state
@@ -806,14 +828,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Enhanced logout method
   const logout = async (): Promise<{ success: boolean, error?: string }> => {
     try {
-      // Update user status before logout
-      if (db && user) {
-        const userRef = doc(db, 'users', user.email?.toLowerCase().replace(/[^a-z0-9]/g, '_') || '')
+      // Update user status and session before logout
+      if (db && user && user.establishmentId) {
+        const userRef = doc(db, 'restaurants', user.establishmentId, 'users', user.uid)
         const userDoc = await getDoc(userRef);
+        
         if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const currentSessionId = userData.currentSessionId;
+          
+          // Update user document
           await updateDoc(userRef, {
-            status: 'inactive'
+            status: 'inactive',
+            currentSessionId: null
           });
+
+          // Update session record if exists
+          if (currentSessionId) {
+            const sessionRef = doc(db, 'restaurants', user.establishmentId, 'sessions', currentSessionId);
+            const sessionDoc = await getDoc(sessionRef);
+            
+            if (sessionDoc.exists()) {
+              const sessionData = sessionDoc.data();
+              const loginTime = sessionData.loginTime;
+              
+              // Calculate duration
+              const logoutTime = serverTimestamp();
+              let duration = null;
+              
+              if (loginTime) {
+                // Duration will be calculated on the client or using a Cloud Function
+                // For now, we'll store both timestamps and calculate duration later
+                duration = {
+                  loginTime,
+                  logoutTime
+                };
+              }
+
+              await updateDoc(sessionRef, {
+                logoutTime,
+                status: 'completed',
+                duration
+              });
+            }
+          }
         }
       }
 

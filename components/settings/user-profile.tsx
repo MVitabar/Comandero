@@ -95,9 +95,6 @@ export function UserProfile() {
       })
 
       toast.success(t("settings.profile.actions.profileUpdated"))
-      await new Notification(t("profile.push.profileSavedTitle"), {
-        
-      });
     } catch (error) {
       toast.error(t("settings.profile.actions.errorUpdatingProfile"))
     } finally {

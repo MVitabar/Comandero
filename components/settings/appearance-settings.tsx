@@ -60,10 +60,6 @@ export function AppearanceSettings() {
       toast.success(t("settings.appearance.actions.saved.title"), {
         description: t("settings.appearance.actions.saved.description"),
       })
-
-      await new Notification(t("settings.push.appearanceSavedTitle"), {
-        
-      })
     } catch (error) {
       toast.error(t("settings.appearance.actions.save.error.title"), {
         description: t("settings.appearance.actions.save.error.description"),
