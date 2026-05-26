@@ -10,7 +10,9 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signOut, 
-  sendEmailVerification 
+  sendEmailVerification,
+  GoogleAuthProvider,
+  signInWithPopup
 } from "firebase/auth"
 import { useRouter, usePathname } from "next/navigation"
 import { useFirebase } from "@/components/firebase-provider"
@@ -41,7 +43,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   currentUser: null,
   loading: true,
-  login: async () => ({ success: false, needsPasswordChange: false }),
+  login: async () => ({ success: false, needsPasswordChange: false, user: null }),
   logout: async () => ({ success: false }),
   signUp: async (email, password, options) => {
     console.warn('Default signUp method called');
@@ -51,12 +53,15 @@ const AuthContext = createContext<AuthContextType>({
       userId: undefined,
       needsPasswordChange: false
     };
-  }
+  },
+  signInWithGoogle: async () => ({ success: false, error: 'Google sign-in not implemented', user: null }),
+  completeSetup: async (establishmentName: string) => ({ success: false, error: 'Setup completion not implemented' }),
+  refreshUser: async () => {}
 })
 
 export const useAuth = () => useContext(AuthContext)
 
-const publicRoutes = ["/", "/login", "/register", "/forgot-password", "/invitation/register"]
+const publicRoutes = ["/", "/login", "/register", "/forgot-password", "/invitation/register", "/setup"]
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -176,19 +181,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: options?.role
       });
 
-      // Create user in Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
+      // Check if this email was previously deleted to prevent trial reset
+      let previousTrialInfo = null
+      if (db) {
+        try {
+          const deletedAccountRef = doc(db, 'deletedAccounts', email)
+          const deletedAccountDoc = await getDoc(deletedAccountRef)
+          
+          if (deletedAccountDoc.exists()) {
+            previousTrialInfo = deletedAccountDoc.data()
+            console.log('Found previous trial info for deleted account:', previousTrialInfo)
+          }
+        } catch (error) {
+          console.error('Error checking deleted accounts:', error)
+        }
+      }
+
+      // Check if this is a Google sign-in user completing setup
+      const pendingFirebaseUser = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('pendingFirebaseUser') || 'null') : null
+      let firebaseUser: FirebaseUser
+
+      if (pendingFirebaseUser && pendingFirebaseUser.email === email) {
+        // User is completing setup after Google sign-in - use the existing Firebase user
+        if (!auth.currentUser) {
+          // Need to sign in with Google again to get the Firebase user
+          const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth')
+          const provider = new GoogleAuthProvider()
+          const result = await signInWithPopup(auth, provider)
+          firebaseUser = result.user
+        } else {
+          firebaseUser = auth.currentUser
+        }
+      } else {
+        // Create user in Firebase Authentication
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+        firebaseUser = userCredential.user
+      }
 
       // Default establishment name if not provided
       const baseSlug = options?.establishmentName || 'restaurante-milenio';
+      
+      // Use previous trial info if available, otherwise use provided options or defaults
+      const signUpOptions = {
+        ...options,
+        trialStartDate: previousTrialInfo?.trialStartDate || options?.trialStartDate,
+        trialEndDate: previousTrialInfo?.trialEndDate || options?.trialEndDate,
+        isTrialActive: previousTrialInfo?.isTrialActive || options?.isTrialActive || false,
+        subscriptionPlan: previousTrialInfo?.subscriptionPlan || options?.subscriptionPlan || 'basic'
+      }
       
       // Initialize user profile with the new method
       const newUser = await initializeUserProfile(
         firebaseUser, 
         baseSlug, 
         db,
-        options
+        signUpOptions
       );
 
       if (!newUser) {
@@ -215,7 +262,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Log successful user creation
       console.log('User created successfully:', {
         uid: firebaseUser.uid,
-        email: firebaseUser.email
+        email: firebaseUser.email,
+        previousTrialRestored: !!previousTrialInfo
       });
 
       // Update the user state in the context
@@ -614,6 +662,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(true)
         if (firebaseUser) {
           const customUser = await fetchUserDetails(firebaseUser)
+          
+          // If user is authenticated but has no Firestore profile and is on setup page, allow access
+          if (!customUser && pathname === '/setup') {
+            setUser(null)
+            setLoading(false)
+            return
+          }
+          
           setUser(customUser)
         } else {
           setUser(null)
@@ -690,7 +746,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Enhanced login method with detailed error handling and activity tracking
-  const login = async (email: string, password: string): Promise<{ success: boolean, error?: string, needsPasswordChange: boolean }> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean, error?: string, needsPasswordChange: boolean, user?: User | null }> => {
     const activityContext = getUserActivityContext();
     
     try {
@@ -699,7 +755,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return {
           success: false,
           error: t('auth.errors.invalidEmailFormat'),
-          needsPasswordChange: false
+          needsPasswordChange: false,
+          user: null
         };
       }
 
@@ -708,7 +765,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return {
           success: false,
           error: t('auth.errors.passwordEmpty'),
-          needsPasswordChange: false
+          needsPasswordChange: false,
+          user: null
         };
       }
 
@@ -733,7 +791,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return {
           success: false,
           error: t('auth.errors.userProfileNotFound'),
-          needsPasswordChange: false
+          needsPasswordChange: false,
+          user: null
         };
       }
 
@@ -742,7 +801,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return {
           success: false,
           error: t('auth.errors.accountSuspended'),
-          needsPasswordChange: false
+          needsPasswordChange: false,
+          user: null
         };
       }
 
@@ -801,7 +861,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       return {
         success: true,
-        needsPasswordChange: false
+        needsPasswordChange: false,
+        user: customUser
       };
     } catch (error) {
       let errorMessage = t('auth.errors.unexpectedError');
@@ -859,7 +920,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return {
         success: false,
         error: errorMessage,
-        needsPasswordChange: false
+        needsPasswordChange: false,
+        user: null
       };
     }
   };
@@ -1016,12 +1078,202 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return batch.commit();
   }
 
+  // Google Sign In function
+  const signInWithGoogle = async (): Promise<{ success: boolean, error?: string, userId?: string, isNewUser?: boolean, user?: User | null }> => {
+    try {
+      if (!auth) {
+        return {
+          success: false,
+          error: 'Firebase auth not initialized'
+        };
+      }
+
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const firebaseUser = result.user;
+
+      // Check if this email was previously deleted to prevent trial reset
+      let previousTrialInfo = null
+      if (db && firebaseUser.email) {
+        try {
+          const deletedAccountRef = doc(db, 'deletedAccounts', firebaseUser.email)
+          const deletedAccountDoc = await getDoc(deletedAccountRef)
+          
+          if (deletedAccountDoc.exists()) {
+            previousTrialInfo = deletedAccountDoc.data()
+            console.log('Found previous trial info for deleted account:', previousTrialInfo)
+          }
+        } catch (error) {
+          console.error('Error checking deleted accounts:', error)
+        }
+      }
+
+      // Check if user already exists in Firestore
+      let customUser = await fetchUserDetails(firebaseUser);
+      
+      if (!customUser) {
+        // User doesn't exist - store Firebase user info and redirect to setup
+        localStorage.setItem('pendingFirebaseUser', JSON.stringify({
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName,
+          photoURL: firebaseUser.photoURL
+        }))
+        
+        return {
+          success: true,
+          userId: firebaseUser.uid,
+          isNewUser: true,
+          user: null
+        };
+      }
+
+      setUser(customUser);
+      
+      toast.success(t("auth.login.success", { username: customUser.username || '' }))
+
+      return {
+        success: true,
+        userId: firebaseUser.uid,
+        isNewUser: false,
+        user: customUser
+      };
+    } catch (error) {
+      let errorMessage = t('auth.errors.unexpectedError');
+      let shouldShowError = true;
+      let shouldLogError = true;
+      
+      if (error && typeof error === 'object' && 'message' in error) {
+        const errorMsg = String((error as { message: unknown }).message);
+        
+        switch (errorMsg) {
+          case 'auth/popup-closed-by-user':
+            // User closed the popup - don't show error, don't log to console
+            shouldShowError = false;
+            shouldLogError = false;
+            break;
+          case 'auth/popup-blocked':
+            errorMessage = t('auth.errors.popupBlocked');
+            break;
+          case 'auth/account-exists-with-different-credential':
+            errorMessage = t('auth.errors.accountExistsWithDifferentCredential');
+            break;
+          default:
+            errorMessage = errorMsg;
+        }
+      }
+
+      if (shouldLogError) {
+        console.error('Google sign-in error:', error);
+      }
+
+      if (shouldShowError) {
+        toast.error(t("auth.login.error", { username: errorMessage }))
+      }
+      
+      return {
+        success: false,
+        error: shouldShowError ? errorMessage : undefined
+      };
+    }
+  };
+
+  // Complete Setup function for Google sign-in users
+  const completeSetup = async (establishmentName: string): Promise<{ success: boolean, error?: string, userId?: string }> => {
+    try {
+      if (!auth || !auth.currentUser) {
+        return {
+          success: false,
+          error: 'Firebase auth not initialized or no user logged in'
+        };
+      }
+
+      const firebaseUser = auth.currentUser;
+      
+      // Check if this email was previously deleted to prevent trial reset
+      let previousTrialInfo = null
+      if (db && firebaseUser.email) {
+        try {
+          const deletedAccountRef = doc(db, 'deletedAccounts', firebaseUser.email)
+          const deletedAccountDoc = await getDoc(deletedAccountRef)
+          
+          if (deletedAccountDoc.exists()) {
+            previousTrialInfo = deletedAccountDoc.data()
+            console.log('Found previous trial info for deleted account:', previousTrialInfo)
+          }
+        } catch (error) {
+          console.error('Error checking deleted accounts:', error)
+        }
+      }
+
+      const baseSlug = establishmentName.trim();
+      
+      const signUpOptions = {
+        establishmentName: baseSlug,
+        role: UserRole.OWNER,
+        trialStartDate: previousTrialInfo?.trialStartDate,
+        trialEndDate: previousTrialInfo?.trialEndDate,
+        isTrialActive: previousTrialInfo?.isTrialActive || false,
+        subscriptionPlan: previousTrialInfo?.subscriptionPlan || 'basic'
+      };
+      
+      const newUser = await initializeUserProfile(
+        firebaseUser,
+        baseSlug,
+        db,
+        signUpOptions
+      );
+
+      if (!newUser) {
+        return {
+          success: false,
+          error: t('auth.errors.profileNotFound')
+        };
+      }
+
+      // Clear pending Firebase user from localStorage
+      localStorage.removeItem('pendingFirebaseUser');
+
+      setUser(newUser);
+      
+      toast.success(t("auth.login.success", { username: newUser.username || '' }))
+
+      return {
+        success: true,
+        userId: firebaseUser.uid
+      };
+    } catch (error) {
+      console.error('Complete setup error:', error);
+      let errorMessage = t('auth.errors.unexpectedError');
+      
+      if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = String((error as { message: unknown }).message);
+      }
+
+      return {
+        success: false,
+        error: errorMessage
+      };
+    }
+  };
+
+  // Refresh user data from Firestore
+  const refreshUser = async () => {
+    if (auth && auth.currentUser) {
+      const customUser = await fetchUserDetails(auth.currentUser)
+      setUser(customUser)
+    }
+  };
+
   return <AuthContext.Provider value={{ 
     user, 
     currentUser: user, 
     loading, 
     login, 
     logout, 
-    signUp 
+    signUp,
+    signInWithGoogle,
+    completeSetup,
+    refreshUser
   }}>{children}</AuthContext.Provider>
 }

@@ -13,7 +13,7 @@ import { Shield, Key, Lock, Loader2, AlertCircle, Trash2 } from "lucide-react"
 import { updatePassword, reauthenticateWithCredential, EmailAuthProvider, deleteUser } from "firebase/auth"
 import { toast } from "sonner"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { deleteDoc, doc } from "firebase/firestore"
+import { deleteDoc, doc, collection, getDocs, query, where, writeBatch, setDoc, getDoc } from "firebase/firestore"
 import { useRouter } from "next/navigation"
 
 export function SecuritySettings() {
@@ -101,12 +101,71 @@ export function SecuritySettings() {
       )
       await reauthenticateWithCredential(auth.currentUser, credential)
 
-      // Delete user data from Firestore
+      // Delete all establishment data if user is the owner
+      if (db && user.establishmentId && user.role === 'owner') {
+        try {
+          // Store the email and trial info before deletion for trial reset prevention
+          const establishmentRef = doc(db, "restaurants", user.establishmentId)
+          const establishmentDoc = await getDoc(establishmentRef)
+          
+          if (establishmentDoc.exists()) {
+            const establishmentData = establishmentDoc.data()
+            
+            // Store deleted account info to prevent trial reset
+            const deletedAccountsRef = doc(db, "deletedAccounts", auth.currentUser.email!)
+            await deleteDoc(deletedAccountsRef).catch(() => {}) // Clear any existing record
+            await deleteDoc(deletedAccountsRef).catch(() => {}) // This is intentional to ensure clean slate
+            await setDoc(deletedAccountsRef, {
+              email: auth.currentUser.email,
+              originalEstablishmentId: user.establishmentId,
+              trialStartDate: establishmentData.trialStartDate,
+              trialEndDate: establishmentData.trialEndDate,
+              isTrialActive: establishmentData.isTrialActive,
+              subscriptionPlan: establishmentData.subscriptionPlan,
+              deletedAt: new Date().toISOString()
+            })
+
+            // Delete all subcollections and documents
+            const batch = writeBatch(db)
+            
+            // Delete all users in the establishment
+            const usersRef = collection(db, "restaurants", user.establishmentId, "users")
+            const usersSnapshot = await getDocs(usersRef)
+            usersSnapshot.forEach((userDoc) => {
+              batch.delete(userDoc.ref)
+            })
+
+            // Delete the establishment document
+            batch.delete(establishmentRef)
+
+            // Note: We're not deleting all subcollections (inventory, orders, etc.) 
+            // as this could be a very large operation. In a production environment,
+            // you would want to use a Cloud Function or a more efficient bulk delete method.
+            // For now, we're deleting the core establishment data which is sufficient
+            // to prevent the establishment from being accessible.
+
+            await batch.commit()
+          }
+        } catch (error) {
+          console.error("Error deleting establishment data:", error)
+        }
+      }
+
+      // Delete user from establishment's users subcollection
       if (db && user.establishmentId) {
         try {
           await deleteDoc(doc(db, "restaurants", user.establishmentId, "users", user.uid))
         } catch (error) {
           console.error("Error deleting user data from Firestore:", error)
+        }
+      }
+
+      // Delete global user document
+      if (db) {
+        try {
+          await deleteDoc(doc(db, "users", user.uid))
+        } catch (error) {
+          console.error("Error deleting global user data:", error)
         }
       }
 

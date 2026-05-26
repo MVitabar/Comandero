@@ -26,7 +26,7 @@ export default function EditUserPage() {
   const [userNotFound, setUserNotFound] = useState(false);
 
   const { t } = useI18n()
-  const { user: currentUser } = useAuth()
+  const { user: currentUser, refreshUser } = useAuth()
   const { db } = useFirebase();
   const router = useRouter();
   const params = useParams();
@@ -121,6 +121,11 @@ export default function EditUserPage() {
         role: formData.role,
         updatedAt: new Date()
       });
+
+      // Refresh user data if editing current user
+      if (userId === currentUser?.uid) {
+        await refreshUser();
+      }
 
       toast.success(t("users.editSuccess"));
       router.push("/users");

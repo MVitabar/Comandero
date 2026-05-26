@@ -267,6 +267,7 @@ export interface InventoryItem {
   quantity: number
   unit?: string
   price: number
+  purchasePrice?: number
   minQuantity: number
   description?: string
   supplier?: string
@@ -731,6 +732,7 @@ export interface AuthContextType {
     needsPasswordChange: boolean;
     success: boolean
     error?: string
+    user?: User | null
   }>
   logout: () => Promise<{
     success: boolean
@@ -754,6 +756,19 @@ export interface AuthContextType {
     userId?: string
     needsPasswordChange?: boolean
   }>
+  signInWithGoogle: () => Promise<{
+    success: boolean
+    error?: string
+    userId?: string
+    isNewUser?: boolean
+    user?: User | null
+  }>
+  completeSetup: (establishmentName: string) => Promise<{
+    success: boolean
+    error?: string
+    userId?: string
+  }>
+  refreshUser: () => Promise<void>
 }
 
 // Tipos de utilidad
@@ -1144,11 +1159,14 @@ export interface PurchaseItem {
   inventoryItemName?: string;
   quantity: number;
   unit: string;
-  unitPrice: number;
+  purchasePrice: number;
+  salesPrice: number;
   totalPrice: number;
   receivedQuantity?: number;
   notes?: string;
   category?: string;
+  minQuantity?: number;
+  lowStockThreshold?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }

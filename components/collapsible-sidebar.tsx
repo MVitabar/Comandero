@@ -321,7 +321,7 @@ export function CollapsibleSidebar() {
                 "text-sm text-muted-foreground mb-4 transition-opacity", 
                 (isCollapsed && !isTemporarilyExpanded) ? "opacity-0" : "opacity-100"
               )}>
-                {user.role?.toUpperCase()}
+                {t(`users.roles.${user.role?.toLowerCase()}`) || user.role?.toUpperCase()}
               </div>
             )}
 

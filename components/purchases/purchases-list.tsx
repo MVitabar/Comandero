@@ -46,9 +46,12 @@ export function PurchasesList() {
     inventoryItemName: "",
     quantity: 0,
     unit: "",
-    unitPrice: 0,
+    purchasePrice: 0,
+    salesPrice: 0,
     notes: "",
     category: "",
+    minQuantity: 0,
+    lowStockThreshold: 0,
   })
 
   useEffect(() => {
@@ -123,7 +126,7 @@ export function PurchasesList() {
   }
 
   const addItem = () => {
-    if (!itemForm.inventoryItemName || itemForm.quantity <= 0 || itemForm.unitPrice <= 0) {
+    if (!itemForm.inventoryItemName || itemForm.quantity <= 0 || itemForm.purchasePrice <= 0) {
       toast.error(t("purchases.purchases.fillAllItemFields"))
       return
     }
@@ -134,10 +137,13 @@ export function PurchasesList() {
       inventoryItemName: itemForm.inventoryItemName,
       quantity: itemForm.quantity,
       unit: itemForm.unit,
-      unitPrice: itemForm.unitPrice,
-      totalPrice: itemForm.quantity * itemForm.unitPrice,
+      purchasePrice: itemForm.purchasePrice,
+      salesPrice: itemForm.salesPrice,
+      totalPrice: itemForm.quantity * itemForm.purchasePrice,
       notes: itemForm.notes,
       category: itemForm.category,
+      minQuantity: itemForm.minQuantity,
+      lowStockThreshold: itemForm.lowStockThreshold,
     }
 
     setFormData({
@@ -149,9 +155,12 @@ export function PurchasesList() {
       inventoryItemName: "",
       quantity: 0,
       unit: "",
-      unitPrice: 0,
+      purchasePrice: 0,
+      salesPrice: 0,
       notes: "",
       category: "",
+      minQuantity: 0,
+      lowStockThreshold: 0,
     })
   }
 
@@ -224,7 +233,9 @@ export function PurchasesList() {
               const existingItemRef = doc(db, `restaurants/${user.establishmentId}/inventory/${item.category}/items`, existingItemDoc.id)
               await updateDoc(existingItemRef, {
                 quantity: (existingItemDoc.data().quantity || 0) + item.quantity,
-                price: item.unitPrice, // Update price to latest unit price
+                price: item.salesPrice || item.purchasePrice, // Use sales price if available, otherwise purchase price
+                minQuantity: item.minQuantity !== undefined ? item.minQuantity : existingItemDoc.data().minQuantity,
+                lowStockThreshold: item.lowStockThreshold !== undefined ? item.lowStockThreshold : existingItemDoc.data().lowStockThreshold,
                 updatedAt: new Date()
               })
             } else {
@@ -233,8 +244,9 @@ export function PurchasesList() {
                 category: item.category,
                 quantity: item.quantity,
                 unit: item.unit,
-                price: item.unitPrice,
-                minQuantity: 0,
+                price: item.salesPrice || item.purchasePrice, // Use sales price if available, otherwise purchase price
+                minQuantity: item.minQuantity || 0,
+                lowStockThreshold: item.lowStockThreshold || 0,
                 controlsStock: true,
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -308,9 +320,12 @@ export function PurchasesList() {
       inventoryItemName: "",
       quantity: 0,
       unit: "",
-      unitPrice: 0,
+      purchasePrice: 0,
+      salesPrice: 0,
       notes: "",
       category: "",
+      minQuantity: 0,
+      lowStockThreshold: 0,
     })
   }
 
@@ -496,13 +511,41 @@ export function PurchasesList() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="unitPrice">{t("purchases.purchases.unitPrice")} *</Label>
+                      <Label htmlFor="purchasePrice">{t("purchases.purchases.purchasePrice")} *</Label>
                       <Input
-                        id="unitPrice"
+                        id="purchasePrice"
                         type="number"
                         step="0.01"
-                        value={itemForm.unitPrice}
-                        onChange={(e) => setItemForm({ ...itemForm, unitPrice: Number(e.target.value) })}
+                        value={itemForm.purchasePrice}
+                        onChange={(e) => setItemForm({ ...itemForm, purchasePrice: Number(e.target.value) })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="salesPrice">{t("purchases.purchases.salesPrice")}</Label>
+                      <Input
+                        id="salesPrice"
+                        type="number"
+                        step="0.01"
+                        value={itemForm.salesPrice}
+                        onChange={(e) => setItemForm({ ...itemForm, salesPrice: Number(e.target.value) })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="minQuantity">{t("purchases.purchases.minQuantity")}</Label>
+                      <Input
+                        id="minQuantity"
+                        type="number"
+                        value={itemForm.minQuantity}
+                        onChange={(e) => setItemForm({ ...itemForm, minQuantity: Number(e.target.value) })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lowStockThreshold">{t("purchases.purchases.lowStockThreshold")}</Label>
+                      <Input
+                        id="lowStockThreshold"
+                        type="number"
+                        value={itemForm.lowStockThreshold}
+                        onChange={(e) => setItemForm({ ...itemForm, lowStockThreshold: Number(e.target.value) })}
                       />
                     </div>
                     <div className="space-y-2 col-span-1 md:col-span-2">
@@ -526,7 +569,7 @@ export function PurchasesList() {
                           <div className="flex-1">
                             <div className="font-medium">{item.inventoryItemName}</div>
                             <div className="text-sm text-muted-foreground">
-                              {item.quantity} {item.unit} × ${item.unitPrice.toFixed(2)} = ${item.totalPrice.toFixed(2)}
+                              {item.quantity} {item.unit} × ${item.purchasePrice.toFixed(2)} = ${item.totalPrice.toFixed(2)}
                             </div>
                           </div>
                           <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(item.uid)}>

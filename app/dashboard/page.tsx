@@ -663,7 +663,7 @@ export default function DashboardPage() {
   }
 
   // Get user's display name or first part of email
-  const userName = user?.displayName || user?.email?.split('@')[0] || t("dashboard.user")
+  const userName = user?.username || user?.displayName || user?.email?.split('@')[0] || t("dashboard.user")
 
   // Stock status icon component
   const StockStatusIcon = ({ status }: { status: 'critical' | 'warning' | 'healthy' }) => {

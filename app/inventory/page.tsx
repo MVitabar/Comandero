@@ -144,6 +144,7 @@ export default function InventoryPage() {
     quantity: 0,
     unit: "",
     price: 0,
+    purchasePrice: 0,
     minQuantity: 0,
     description: "",
     supplier: "",
@@ -810,7 +811,7 @@ export default function InventoryPage() {
                     )
                   )}
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>
                       {dialogMode === "add"
@@ -931,20 +932,36 @@ export default function InventoryPage() {
                         />
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label>{t("inventory.price")}</Label>
-                      <Input
-                        value={formData.price || 0}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            price: Number(e.target.value),
-                          }))
-                        }
-                        type="number"
-                        step="0.01"
-                        required
-                      />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>{t("inventory.price")}</Label>
+                        <Input
+                          value={formData.price || 0}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              price: Number(e.target.value),
+                            }))
+                          }
+                          type="number"
+                          step="0.01"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>{t("inventory.purchasePrice")}</Label>
+                        <Input
+                          value={formData.purchasePrice || 0}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              purchasePrice: Number(e.target.value),
+                            }))
+                          }
+                          type="number"
+                          step="0.01"
+                        />
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label>{t("inventory.description")}</Label>

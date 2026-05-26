@@ -104,7 +104,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     )
   }
 
-  const publicPages = ["/", "/login", "/register", "/invitation/register", "/forgot-password"]
+  const publicPages = ["/", "/login", "/register", "/invitation/register", "/forgot-password", "/setup"]
   const isPublicPage = publicPages.some((page) => pathname === page)
 
   if (!user && !isPublicPage) {

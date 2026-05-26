@@ -17,11 +17,10 @@ import { Loader2 } from "lucide-react"
 import { UserRole } from "@/types/permissions"
 import { usePermissions } from "@/components/permissions-provider"
 import { UnauthorizedAccess } from "../unauthorized-access"
-import type { CustomUser } from '@/types';
 
 export function UserProfile() {
   const { canView, canUpdate } = usePermissions();
-  const { user } = useAuth() as { user: CustomUser | null }
+  const { user, refreshUser } = useAuth()
   const { db, auth } = useFirebase()
   const { t } = useI18n()
 
@@ -82,6 +81,7 @@ export function UserProfile() {
     setLoading(true)
 
     try {
+      // Update global user document
       await setDoc(doc(db, "users", user.uid), {
         username: userData.username,
         phoneNumber: userData.phoneNumber,
@@ -91,6 +91,17 @@ export function UserProfile() {
         updatedAt: new Date(),
       }, { merge: true })
 
+      // Update user document in establishment's users subcollection
+      if (user.establishmentId) {
+        await updateDoc(doc(db, "restaurants", user.establishmentId, "users", user.uid), {
+          username: userData.username,
+          phoneNumber: userData.phoneNumber,
+          position: userData.position,
+          role: userData.role,
+          updatedAt: new Date(),
+        })
+      }
+
       // Use auth.currentUser instead of custom user object for updateProfile
       const firebaseUser = auth.currentUser
       if (firebaseUser) {
@@ -98,6 +109,9 @@ export function UserProfile() {
           displayName: userData.username,
         })
       }
+
+      // Refresh user data in auth context
+      await refreshUser()
 
       toast.success(t("settings.profile.actions.profileUpdated"))
     } catch (error) {

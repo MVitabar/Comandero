@@ -7,9 +7,10 @@ import { usePermissions } from "@/components/permissions-provider"
 import { UnauthorizedAccess } from "@/components/unauthorized-access"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
-import { ShoppingBag, Truck, Package } from "lucide-react"
+import { ShoppingBag, Truck, Package, BarChart3 } from "lucide-react"
 import { PurchasesList } from "@/components/purchases/purchases-list"
 import { SuppliersList } from "@/components/purchases/suppliers-list"
+import { PurchaseReports } from "@/components/purchases/purchase-reports"
 
 export default function PurchasesPage() {
   const { t } = useI18n()
@@ -36,6 +37,10 @@ export default function PurchasesPage() {
             <Truck className="h-4 w-4 mr-2" />
             {t("purchases.suppliers.title")}
           </TabsTrigger>
+          <TabsTrigger value="reports">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            {t("purchases.reports.title")}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="purchases">
@@ -47,6 +52,12 @@ export default function PurchasesPage() {
         <TabsContent value="suppliers">
           <Card className="p-4 md:p-6">
             <SuppliersList />
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="reports">
+          <Card className="p-4 md:p-6">
+            <PurchaseReports />
           </Card>
         </TabsContent>
       </Tabs>
