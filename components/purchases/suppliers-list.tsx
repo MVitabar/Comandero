@@ -196,8 +196,8 @@ export function SuppliersList() {
                 <DialogTitle>{editingSupplier ? t("purchases.suppliers.edit") : t("purchases.suppliers.add")}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2 col-span-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2 col-span-1 md:col-span-2">
                     <Label htmlFor="name">{t("purchases.suppliers.name")} *</Label>
                     <Input
                       id="name"
@@ -239,7 +239,7 @@ export function SuppliersList() {
                       onChange={(e) => setFormData({ ...formData, taxId: e.target.value })}
                     />
                   </div>
-                  <div className="space-y-2 col-span-2">
+                  <div className="space-y-2 col-span-1 md:col-span-2">
                     <Label htmlFor="address">{t("purchases.suppliers.address")}</Label>
                     <Input
                       id="address"
@@ -297,7 +297,7 @@ export function SuppliersList() {
                       placeholder={t("purchases.suppliers.deliveryTimePlaceholder")}
                     />
                   </div>
-                  <div className="space-y-2 col-span-2">
+                  <div className="space-y-2 col-span-1 md:col-span-2">
                     <Label htmlFor="notes">{t("purchases.suppliers.notes")}</Label>
                     <Input
                       id="notes"

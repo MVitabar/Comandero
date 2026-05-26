@@ -187,13 +187,15 @@ export default function InventoryPage() {
       );
       const categoriesSnapshot = await getDocs(inventoryRef);
 
-      const fetchedCategories = categoriesSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        name: doc.data().name || doc.id,
-        description: doc.data().description || "",
-        color: doc.data().color || "#3b82f6",
-        type: doc.data().type || (isDrinkCategory(doc.id) ? "drink" : "food"),
-      }));
+      const fetchedCategories = categoriesSnapshot.docs
+        .filter((doc) => !doc.data().hasOwnProperty('category'))
+        .map((doc) => ({
+          id: doc.id,
+          name: doc.data().name || doc.id,
+          description: doc.data().description || "",
+          color: doc.data().color || "#3b82f6",
+          type: doc.data().type || (isDrinkCategory(doc.id) ? "drink" : "food"),
+        }));
 
       setCategories(fetchedCategories);
 
@@ -823,7 +825,7 @@ export default function InventoryPage() {
                   </DialogHeader>
                   <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Form fields for inventory item */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>{t("inventory.name")}</Label>
                         <Input
@@ -870,7 +872,7 @@ export default function InventoryPage() {
                         </Select>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>{t("inventory.quantity")}</Label>
                         <Input
@@ -899,7 +901,7 @@ export default function InventoryPage() {
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>{t("inventory.minQuantity")}</Label>
                         <Input

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { DateRange } from "react-day-picker"
 import { format, subDays, subMonths } from "date-fns"
 import { Download, FileSpreadsheet, Calendar, Table } from "lucide-react"
@@ -328,16 +329,37 @@ export function ExcelReportGenerator({ reportData }: ExcelReportGeneratorProps) 
         </div>
       </Card>
 
+      {/* Mobile Dropdown for Tab Selection */}
+      <div className="md:hidden mb-4">
+        <Select value={activeTab} onValueChange={setActiveTab}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder={t("selectTab")} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="sales">{t("sales")}</SelectItem>
+            <SelectItem value="orders">{t("orders")}</SelectItem>
+            <SelectItem value="inventory">{t("inventory")}</SelectItem>
+            <SelectItem value="financial">{t("financial")}</SelectItem>
+            <SelectItem value="staff">{t("staff")}</SelectItem>
+            <SelectItem value="customers">{t("customers")}</SelectItem>
+            <SelectItem value="reservations">{t("reservations")}</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 mb-4">
-          <TabsTrigger value="sales">{t("sales")}</TabsTrigger>
-          <TabsTrigger value="orders">{t("orders")}</TabsTrigger>
-          <TabsTrigger value="inventory">{t("inventory")}</TabsTrigger>
-          <TabsTrigger value="financial">{t("financial")}</TabsTrigger>
-          <TabsTrigger value="staff">{t("staff")}</TabsTrigger>
-          <TabsTrigger value="customers">{t("customers")}</TabsTrigger>
-          <TabsTrigger value="reservations">{t("reservations")}</TabsTrigger>
-        </TabsList>
+        {/* Desktop Tab List */}
+        <div className="hidden md:block">
+          <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 mb-4">
+            <TabsTrigger value="sales">{t("sales")}</TabsTrigger>
+            <TabsTrigger value="orders">{t("orders")}</TabsTrigger>
+            <TabsTrigger value="inventory">{t("inventory")}</TabsTrigger>
+            <TabsTrigger value="financial">{t("financial")}</TabsTrigger>
+            <TabsTrigger value="staff">{t("staff")}</TabsTrigger>
+            <TabsTrigger value="customers">{t("customers")}</TabsTrigger>
+            <TabsTrigger value="reservations">{t("reservations")}</TabsTrigger>
+          </TabsList>
+        </div>
 
         <div ref={reportRef} className="p-4 bg-white rounded-lg shadow">
           <div className="mb-6 text-center">

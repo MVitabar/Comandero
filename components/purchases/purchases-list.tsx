@@ -66,9 +66,9 @@ export function PurchasesList() {
       const q = query(purchasesRef, orderBy("orderDate", "desc"))
       const snapshot = await getDocs(q)
       const purchasesData = snapshot.docs.map(doc => ({
+        ...doc.data(),
         id: doc.id,
         uid: doc.id,
-        ...doc.data(),
       })) as Purchase[]
       setPurchases(purchasesData)
     } catch (error) {
@@ -86,9 +86,9 @@ export function PurchasesList() {
       const suppliersRef = collection(db, `restaurants/${user.establishmentId}/suppliers`)
       const snapshot = await getDocs(suppliersRef)
       const suppliersData = snapshot.docs.map(doc => ({
+        ...doc.data(),
         id: doc.id,
         uid: doc.id,
-        ...doc.data(),
       })) as Supplier[]
       setSuppliers(suppliersData)
     } catch (error) {
@@ -102,16 +102,20 @@ export function PurchasesList() {
     try {
       const inventoryRef = collection(db, `restaurants/${user.establishmentId}/inventory`)
       const snapshot = await getDocs(inventoryRef)
-      console.log("Inventory snapshot:", snapshot.docs.length)
-      const categoriesData = snapshot.docs.map(doc => {
-        const data = doc.data()
-        console.log("Inventory doc:", data)
-        return {
-          id: doc.id,
-          name: data.name || data.categoryName || data.category || doc.id,
-        }
-      })
-      console.log("Categories data:", categoriesData)
+      const categoriesData = snapshot.docs
+        .filter(doc => {
+          const data = doc.data()
+          // A valid category document has a 'name' field but NO 'category' field
+          // Documents with a 'category' field are items incorrectly saved at the root level
+          return data.name && !data.hasOwnProperty('category')
+        })
+        .map(doc => {
+          const data = doc.data()
+          return {
+            id: doc.id,
+            name: data.name as string,
+          }
+        })
       setCategories(categoriesData)
     } catch (error) {
       console.error("Error fetching categories:", error)
@@ -203,26 +207,39 @@ export function PurchasesList() {
       } else {
         const purchaseRef = await addDoc(collection(db, `restaurants/${user.establishmentId}/purchases`), {
           ...purchaseData,
-          uid: "",
           createdAt: new Date(),
         })
+        // Update the document with its own auto-generated id
+        await updateDoc(purchaseRef, { uid: purchaseRef.id })
         
         // Add items to inventory
         for (const item of formData.items) {
           if (item.category) {
-            const categoryData = categories.find(c => c.id === item.category)
-            await addDoc(collection(db, `restaurants/${user.establishmentId}/inventory`), {
-              name: item.inventoryItemName,
-              category: item.category,
-              categoryName: categoryData?.name || item.category,
-              quantity: item.quantity,
-              unit: item.unit,
-              price: item.unitPrice,
-              minQuantity: 0,
-              controlsStock: true,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            })
+            const itemsRef = collection(db, `restaurants/${user.establishmentId}/inventory/${item.category}/items`)
+            const q = query(itemsRef, where("name", "==", item.inventoryItemName))
+            const querySnapshot = await getDocs(q)
+            
+            if (!querySnapshot.empty) {
+              const existingItemDoc = querySnapshot.docs[0]
+              const existingItemRef = doc(db, `restaurants/${user.establishmentId}/inventory/${item.category}/items`, existingItemDoc.id)
+              await updateDoc(existingItemRef, {
+                quantity: (existingItemDoc.data().quantity || 0) + item.quantity,
+                price: item.unitPrice, // Update price to latest unit price
+                updatedAt: new Date()
+              })
+            } else {
+              await addDoc(itemsRef, {
+                name: item.inventoryItemName,
+                category: item.category,
+                quantity: item.quantity,
+                unit: item.unit,
+                price: item.unitPrice,
+                minQuantity: 0,
+                controlsStock: true,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              })
+            }
           }
         }
         
@@ -342,7 +359,7 @@ export function PurchasesList() {
                 <DialogTitle>{editingPurchase ? t("purchases.purchases.edit") : t("purchases.purchases.add")}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="supplierId">{t("purchases.purchases.supplier")} *</Label>
                     <Select value={formData.supplierId} onValueChange={(value) => setFormData({ ...formData, supplierId: value })} required>
@@ -415,7 +432,7 @@ export function PurchasesList() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2 col-span-2">
+                  <div className="space-y-2 col-span-1 md:col-span-2">
                     <Label htmlFor="paymentMethod">{t("purchases.purchases.paymentMethod")}</Label>
                     <Input
                       id="paymentMethod"
@@ -424,7 +441,7 @@ export function PurchasesList() {
                       placeholder={t("purchases.purchases.paymentMethodPlaceholder")}
                     />
                   </div>
-                  <div className="space-y-2 col-span-2">
+                  <div className="space-y-2 col-span-1 md:col-span-2">
                     <Label htmlFor="notes">{t("purchases.purchases.notes")}</Label>
                     <Input
                       id="notes"
@@ -436,7 +453,7 @@ export function PurchasesList() {
 
                 <div className="border-t pt-4">
                   <h3 className="font-semibold mb-3">{t("purchases.purchases.items")}</h3>
-                  <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div className="space-y-2">
                       <Label htmlFor="itemName">{t("purchases.purchases.itemName")} *</Label>
                       <Input
@@ -488,7 +505,7 @@ export function PurchasesList() {
                         onChange={(e) => setItemForm({ ...itemForm, unitPrice: Number(e.target.value) })}
                       />
                     </div>
-                    <div className="space-y-2 col-span-2">
+                    <div className="space-y-2 col-span-1 md:col-span-2">
                       <Label htmlFor="itemNotes">{t("purchases.purchases.itemNotes")}</Label>
                       <Input
                         id="itemNotes"
@@ -561,8 +578,8 @@ export function PurchasesList() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredPurchases.map((purchase) => (
-            <Card key={purchase.uid} className="p-4">
+          {filteredPurchases.map((purchase, index) => (
+            <Card key={purchase.uid || `purchase-${index}`} className="p-4">
               <div className="space-y-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">

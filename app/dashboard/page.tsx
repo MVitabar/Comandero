@@ -1844,20 +1844,20 @@ export default function DashboardPage() {
             <Tabs defaultValue="inventory" className="w-full">
               <TabsList className="grid w-full grid-cols-4 bg-muted p-1 rounded-lg border">
                 <TabsTrigger value="inventory" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                  <Package className="w-4 h-4 mr-2" />
-                  {t('dashboard.reports.inventory')}
+                  <Package className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">{t('dashboard.reports.inventory')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="sales" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                  <ShoppingCart className="w-4 h-4 mr-2" />
-                  {t('dashboard.reports.sales')}
+                  <ShoppingCart className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">{t('dashboard.reports.sales')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="userActivity" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                  <Users className="w-4 h-4 mr-2" />
-                  {t('dashboard.reports.userActivity')}
+                  <Users className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">{t('dashboard.reports.userActivity')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="general" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                  <FileText className="w-4 h-4 mr-2" />
-                  {t('dashboard.reports.general')}
+                  <FileText className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">{t('dashboard.reports.general')}</span>
                 </TabsTrigger>
               </TabsList>
               
