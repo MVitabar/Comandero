@@ -597,6 +597,44 @@ const enTranslationsBase = {
       "noFood": "No food items in this order",
       "noDrinks": "No drink items in this order"
     },
+    "transfer": {
+      "title": "Transfer Items",
+      "description": "Select items to transfer to another table/order",
+      "selectItems": "Select Items",
+      "selectAll": "Select All",
+      "deselectAll": "Deselect All",
+      "destination": "Destination Table",
+      "selectMap": "Select table map",
+      "selectDestinationTable": "Select destination table",
+      "createNewOrder": "Create new order",
+      "existingOrder": "Existing order",
+      "itemsToTransfer": "Items to transfer",
+      "transferTotal": "Transfer total",
+      "transfer": "Transfer",
+      "transferring": "Transferring...",
+      "cancel": "Cancel",
+      "noItemsSelected": "Please select at least one item",
+      "noDestinationSelected": "Please select a destination table",
+      "success": "Items transferred successfully",
+      "error": "Error transferring items",
+      "errorFetchingData": "Error fetching tables and orders"
+    },
+    "partialPayment": {
+      "title": "Partial Payment",
+      "description": "Select items and quantities to pay for",
+      "selectItems": "Select Items",
+      "unpaid": "Unpaid",
+      "itemsSelected": "Items selected",
+      "paymentAmount": "Payment amount",
+      "pay": "Pay",
+      "processing": "Processing...",
+      "noItemsSelected": "Please select at least one item",
+      "noPaymentMethod": "Please select a payment method",
+      "partialPaymentSuccess": "Partial payment successful",
+      "orderFullyPaid": "Order fully paid and closed",
+      "error": "Error processing payment"
+    },
+    "partialPrice": "Price"
   },
 
   "ordersPage": {

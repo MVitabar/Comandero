@@ -14,9 +14,11 @@ import { useRouter } from 'next/navigation'
 import { useI18n } from '@/components/i18n-provider'
 import { splitOrderItemsByCategory, canViewBothSections, canViewOnlyFood, canViewOnlyDrinks, getOrderStatusFromItems, calculateOrderStatusFromItems } from '@/lib/orderFilters';
 import { useAuth } from '@/components/auth-provider';
-import { doc, updateDoc, onSnapshot, deleteField, collection, getDocs } from 'firebase/firestore';
+import { doc, updateDoc, onSnapshot, deleteField, collection, getDocs, getDoc } from 'firebase/firestore';
 import { useFirebase } from '@/components/firebase-provider';
 import { toast } from 'sonner';
+import { TransferItemsDialog } from './transfer-items-dialog';
+import { PartialPaymentDialog } from './partial-payment-dialog';
 
 export function OrderDetailsDialog({ 
   order, 
@@ -30,6 +32,8 @@ export function OrderDetailsDialog({
 
   // Estado local para la orden en vivo
   const [liveOrder, setLiveOrder] = useState(order);
+  const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
+  const [isPartialPaymentDialogOpen, setIsPartialPaymentDialogOpen] = useState(false);
 
   const [categories, setCategories] = useState<{ id: string; type?: 'food' | 'drink' }[]>([]);
 
@@ -214,15 +218,12 @@ export function OrderDetailsDialog({
         {/* Restricción: Solo roles que NO sean chef ni barman pueden ver acciones globales */}
         {!['chef', 'barman'].includes(user?.role ?? '') && (
           <div className="flex gap-2 mb-4">
-            {/* Ejemplo: Botón para cambiar status global (si existe) */}
-            {/* <Button onClick={handleGlobalStatusUpdate}>
-              {t("orders.changeGlobalStatus")}
-            </Button> */}
-            {/* Ejemplo: Botón para borrar orden (si existe) */}
-            {/* <Button onClick={handleDeleteOrder} variant="destructive">
-              {t("orders.deleteOrder")}
-            </Button> */}
-            {/* Puedes descomentar y adaptar según tus handlers reales */}
+            <Button onClick={() => setIsPartialPaymentDialogOpen(true)} variant="outline">
+              {t("orders.partialPayment.title")}
+            </Button>
+            <Button onClick={() => setIsTransferDialogOpen(true)} variant="outline">
+              {t("orders.transfer.title")}
+            </Button>
           </div>
         )}
         
@@ -304,6 +305,40 @@ export function OrderDetailsDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+      
+      <TransferItemsDialog
+        order={liveOrder}
+        open={isTransferDialogOpen}
+        onOpenChange={setIsTransferDialogOpen}
+        onTransferComplete={() => {
+          // Refresh the order after transfer
+          if (db && order.id && order.restaurantId) {
+            const orderRef = doc(db, `restaurants/${order.restaurantId}/orders/${order.id}`);
+            getDoc(orderRef).then((docSnap: any) => {
+              if (docSnap.exists()) {
+                setLiveOrder({ ...order, ...docSnap.data() });
+              }
+            });
+          }
+        }}
+      />
+      
+      <PartialPaymentDialog
+        order={liveOrder}
+        open={isPartialPaymentDialogOpen}
+        onOpenChange={setIsPartialPaymentDialogOpen}
+        onPaymentComplete={() => {
+          // Refresh the order after payment
+          if (db && order.id && order.restaurantId) {
+            const orderRef = doc(db, `restaurants/${order.restaurantId}/orders/${order.id}`);
+            getDoc(orderRef).then((docSnap: any) => {
+              if (docSnap.exists()) {
+                setLiveOrder({ ...order, ...docSnap.data() });
+              }
+            });
+          }
+        }}
+      />
     </Dialog>
   )
 }

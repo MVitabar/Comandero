@@ -596,6 +596,44 @@ const ptTranslationsBase = {
       "noFood": "Nenhum item de comida nesta ordem",
       "noDrinks": "Nenhum item de bebida nesta ordem"
     },
+    "transfer": {
+      "title": "Transferir Itens",
+      "description": "Selecione itens para transferir para outra mesa/pedido",
+      "selectItems": "Selecionar Itens",
+      "selectAll": "Selecionar Tudo",
+      "deselectAll": "Deselecionar Tudo",
+      "destination": "Mesa de Destino",
+      "selectMap": "Selecionar mapa de mesas",
+      "selectDestinationTable": "Selecionar mesa de destino",
+      "createNewOrder": "Criar novo pedido",
+      "existingOrder": "Pedido existente",
+      "itemsToTransfer": "Itens a transferir",
+      "transferTotal": "Total da transferência",
+      "transfer": "Transferir",
+      "transferring": "Transferindo...",
+      "cancel": "Cancelar",
+      "noItemsSelected": "Por favor selecione pelo menos um item",
+      "noDestinationSelected": "Por favor selecione uma mesa de destino",
+      "success": "Itens transferidos com sucesso",
+      "error": "Erro ao transferir itens",
+      "errorFetchingData": "Erro ao buscar mesas e pedidos"
+    },
+    "partialPayment": {
+      "title": "Pagamento Parcial",
+      "description": "Selecione itens e quantidades a pagar",
+      "selectItems": "Selecionar Itens",
+      "unpaid": "Não pago",
+      "itemsSelected": "Itens selecionados",
+      "paymentAmount": "Valor do pagamento",
+      "pay": "Pagar",
+      "processing": "Processando...",
+      "noItemsSelected": "Por favor selecione pelo menos um item",
+      "noPaymentMethod": "Por favor selecione um método de pagamento",
+      "partialPaymentSuccess": "Pagamento parcial bem-sucedido",
+      "orderFullyPaid": "Pedido pago completamente e fechado",
+      "error": "Erro ao processar pagamento"
+    },
+    "partialPrice": "Preço"
   },
 
   "ordersPage": {

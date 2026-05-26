@@ -344,6 +344,7 @@ export interface OrderItem {
   isGlutenFree?: boolean;
   isLactoseFree?: boolean;
   status?: OrderItemStatus; // Opcional para compatibilidad retroactiva
+  paidQuantity?: number; // Cantidad pagada de este item
 }
 
 export interface PaymentInfo {
