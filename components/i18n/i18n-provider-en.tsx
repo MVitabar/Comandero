@@ -1336,6 +1336,41 @@ const enTranslationsBase = {
     }
   },
 
+  "printers": {
+    "title": "Printers",
+    "description": "Configure thermal printers to print orders",
+    "addPrinter": "Add Printer",
+    "add": "Add",
+    "addPrinterDescription": "Select and connect a thermal printer",
+    "printerName": "Printer Name",
+    "printerNamePlaceholder": "E.g: Cash Register Printer 1",
+    "printerType": "Printer Type",
+    "connectionMethod": "Connection Method",
+    "connectionMethods": {
+      "bluetooth": "Bluetooth",
+      "usb": "USB",
+      "network": "Network (IP)",
+      "manual": "Manual"
+    },
+    "ipAddress": "IP Address",
+    "port": "Port",
+    "types": {
+      "cashier": "Cashier",
+      "kitchen": "Kitchen",
+      "bar": "Bar"
+    },
+    "autoPrint": "Auto Print",
+    "reconnect": "Reconnect",
+    "enableAutoPrint": "Enable Auto",
+    "disableAutoPrint": "Disable Auto",
+    "connecting": "Connecting...",
+    "noPrinters": "No printers configured",
+    "bluetoothNotSupported": "Your browser does not support Bluetooth. Please use a compatible browser like Chrome or Edge.",
+    "usbNotSupported": "Your browser does not support USB. Please use a compatible browser like Chrome or Edge.",
+    "networkPrinterInfo": "For network printers, enter the IP address and port of the printer.",
+    "manualConfigInfo": "Manual configuration: The printer will be saved but not automatically connected."
+  },
+
   "orderForm": {
     "title": "Create Order",
     "selectTable": "Select Table",

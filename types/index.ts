@@ -1193,3 +1193,32 @@ export interface Purchase {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+// Printer Management
+export interface PrinterConfig {
+  id: string;
+  name: string;
+  type: 'cashier' | 'kitchen' | 'bar';
+  connectionMethod: 'bluetooth' | 'usb' | 'network' | 'manual';
+  deviceId?: string;
+  ipAddress?: string;
+  port?: number;
+  connected?: boolean;
+  autoPrint?: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PrintOrder {
+  orderId: string;
+  tableNumber?: number;
+  items: Array<{
+    name: string;
+    quantity: number;
+    notes?: string;
+    category: 'food' | 'drink';
+  }>;
+  total: number;
+  createdAt: Date;
+  waiter?: string;
+}

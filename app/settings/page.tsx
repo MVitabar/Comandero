@@ -12,7 +12,8 @@ import { NotificationSettings } from "@/components/settings/notification-setting
 import { LanguageSettings } from "@/components/settings/language-settings"
 import { AppearanceSettings } from "@/components/settings/appearance-settings"
 import { SessionHistory } from "@/components/settings/session-history"
-import { User, Settings, Bell, Globe, Palette, Store, Shield, CreditCard, Clock } from "lucide-react"
+import { PrinterSettings } from "@/components/settings/printer-settings"
+import { User, Settings, Bell, Globe, Palette, Store, Shield, CreditCard, Clock, Printer } from "lucide-react"
 import { 
   Select, 
   SelectContent, 
@@ -42,7 +43,8 @@ export default function SettingsPage() {
     establishment: true,
     security: true,
     billing: true,
-    sessionHistory: true
+    sessionHistory: true,
+    printers: true
   } : user?.role ? 
     ROLE_PERMISSIONS[user.role].settings.sections : 
     ROLE_PERMISSIONS['waiter'].settings.sections
@@ -104,6 +106,13 @@ export default function SettingsPage() {
       icon: <Clock className="h-4 w-4" />,
       content: <SessionHistory />,
       permission: settingsPermissions?.sessionHistory
+    },
+    {
+      id: "printers",
+      label: t("printers.title"),
+      icon: <Printer className="h-4 w-4" />,
+      content: <PrinterSettings />,
+      permission: settingsPermissions?.printers
     }
   ]
 

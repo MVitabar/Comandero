@@ -18,6 +18,7 @@ import { OrderForm } from "@/components/orders/order-form"
 import { Order } from "@/types"
 import { toast } from "sonner"
 import { hasActiveCashRegister } from "@/lib/cashRegisterHelpers"
+import { printerService, PrintOrder, PrinterConfig } from "@/lib/printerService"
 
 export default function NewOrderPage() {
   const { t } = useI18n()
@@ -134,6 +135,65 @@ export default function NewOrderPage() {
 
       // IMPORTANTE: Guarda el id generado por Firestore en el documento
       await updateDoc(newOrderRef, { id: newOrderRef.id });
+
+      // Imprimir comandas a cocina y bar si hay items correspondientes
+      const itemsArray = cleanedOrder.items 
+        ? (Array.isArray(cleanedOrder.items) 
+            ? cleanedOrder.items 
+            : Object.values(cleanedOrder.items)
+          )
+        : [];
+
+      const printOrder: PrintOrder = {
+        orderId: newOrderRef.id,
+        tableNumber: cleanedOrder.tableNumber,
+        items: itemsArray.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          notes: item.notes,
+          category: item.category === 'drink' ? 'drink' : 'food'
+        })),
+        total: cleanedOrder.total,
+        createdAt: new Date(),
+        waiter: user.displayName || user.email || ''
+      };
+
+      // Obtener impresoras configuradas
+      const printersRef = collection(db, 'restaurants', user.establishmentId || user.uid, 'printers')
+      const printersSnapshot = await getDocs(printersRef)
+      const printers = printersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PrinterConfig))
+
+      // Imprimir a cocina si hay items de comida
+      const hasFoodItems = printOrder.items.some(item => item.category === 'food');
+      if (hasFoodItems) {
+        const kitchenPrinter = printers.find(p => p.type === 'kitchen' && p.connected && p.autoPrint && p.connectionMethod !== 'manual')
+        if (kitchenPrinter) {
+          try {
+            const config = kitchenPrinter.connectionMethod === 'network' 
+              ? { ipAddress: kitchenPrinter.ipAddress, port: kitchenPrinter.port } 
+              : undefined
+            await printerService.printOrder(printOrder, 'kitchen', kitchenPrinter.connectionMethod as 'bluetooth' | 'usb' | 'network', config)
+          } catch (error) {
+            console.error('Error printing to kitchen:', error)
+          }
+        }
+      }
+
+      // Imprimir a bar si hay items de bebida
+      const hasDrinkItems = printOrder.items.some(item => item.category === 'drink');
+      if (hasDrinkItems) {
+        const barPrinter = printers.find(p => p.type === 'bar' && p.connected && p.autoPrint && p.connectionMethod !== 'manual')
+        if (barPrinter) {
+          try {
+            const config = barPrinter.connectionMethod === 'network' 
+              ? { ipAddress: barPrinter.ipAddress, port: barPrinter.port } 
+              : undefined
+            await printerService.printOrder(printOrder, 'bar', barPrinter.connectionMethod as 'bluetooth' | 'usb' | 'network', config)
+          } catch (error) {
+            console.error('Error printing to bar:', error)
+          }
+        }
+      }
 
       // Optional: Navigate back to orders page or show order details
       router.push('/orders')

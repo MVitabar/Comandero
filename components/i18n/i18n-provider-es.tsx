@@ -1334,6 +1334,41 @@ const esTranslationsBase = {
     }
   },
 
+  "printers": {
+    "title": "Impresoras",
+    "description": "Configura las impresoras térmicas para imprimir comandas",
+    "addPrinter": "Agregar Impresora",
+    "add": "Agregar",
+    "addPrinterDescription": "Selecciona y conecta una impresora térmica",
+    "printerName": "Nombre de la impresora",
+    "printerNamePlaceholder": "Ej: Impresora Caja 1",
+    "printerType": "Tipo de impresora",
+    "connectionMethod": "Método de conexión",
+    "connectionMethods": {
+      "bluetooth": "Bluetooth",
+      "usb": "USB",
+      "network": "Red (IP)",
+      "manual": "Manual"
+    },
+    "ipAddress": "Dirección IP",
+    "port": "Puerto",
+    "types": {
+      "cashier": "Caja",
+      "kitchen": "Cocina",
+      "bar": "Bar"
+    },
+    "autoPrint": "Impresión automática",
+    "reconnect": "Reconectar",
+    "enableAutoPrint": "Habilitar auto",
+    "disableAutoPrint": "Deshabilitar auto",
+    "connecting": "Conectando...",
+    "noPrinters": "No hay impresoras configuradas",
+    "bluetoothNotSupported": "Tu navegador no soporta Bluetooth. Por favor usa un navegador compatible como Chrome o Edge.",
+    "usbNotSupported": "Tu navegador no soporta USB. Por favor usa un navegador compatible como Chrome o Edge.",
+    "networkPrinterInfo": "Para impresoras de red, ingresa la dirección IP y puerto de la impresora.",
+    "manualConfigInfo": "Configuración manual: La impresora se guardará pero no se conectará automáticamente."
+  },
+
   "orderForm": {
     "title": "Crear Pedido",
     "selectTable": "Seleccionar Mesa",

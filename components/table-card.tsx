@@ -30,6 +30,7 @@ import { TableItem, Order, PaymentInfo, PaymentMethod, UserRole } from '@/types'
 import { DialogDescription } from "@radix-ui/react-dialog"
 import { toast } from "sonner"
 import { hasActiveCashRegister } from "@/lib/cashRegisterHelpers"
+import { printerService, PrintOrder, PrinterConfig } from "@/lib/printerService"
 
 export interface TableCardProps {
   table: TableItem;
@@ -301,6 +302,46 @@ export function TableCard({
         'paymentInfo.method': selectedPaymentMethod,
         closedAt: serverTimestamp()
       })
+
+      // Imprimir recibo a caja
+      const itemsArray = activeOrder.items 
+        ? (Array.isArray(activeOrder.items) 
+            ? activeOrder.items 
+            : Object.values(activeOrder.items)
+          )
+        : [];
+
+      const printOrder: PrintOrder = {
+        orderId: activeOrder.id,
+        tableNumber: activeOrder.tableNumber,
+        items: itemsArray.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          notes: item.notes,
+          category: item.category === 'drink' ? 'drink' : 'food'
+        })),
+        total: activeOrder.total,
+        createdAt: activeOrder.createdAt || new Date(),
+        waiter: activeOrder.waiter || user.displayName || user.email || ''
+      };
+
+      // Obtener impresoras configuradas
+      const printersRef = collection(db, 'restaurants', restaurantId, 'printers')
+      const printersSnapshot = await getDocs(printersRef)
+      const printers = printersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PrinterConfig))
+
+      // Imprimir recibo a caja
+      const cashierPrinter = printers.find(p => p.type === 'cashier' && p.connected && p.autoPrint && p.connectionMethod !== 'manual')
+      if (cashierPrinter) {
+        try {
+          const config = cashierPrinter.connectionMethod === 'network' 
+            ? { ipAddress: cashierPrinter.ipAddress, port: cashierPrinter.port } 
+            : undefined
+          await printerService.printOrder(printOrder, 'cashier', cashierPrinter.connectionMethod as 'bluetooth' | 'usb' | 'network', config)
+        } catch (error) {
+          console.error('Error printing to cashier:', error)
+        }
+      }
 
       // Referencia robusta al mapa de mesas usando solo mapId
       const mapId = table.mapId || '';
