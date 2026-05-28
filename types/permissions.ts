@@ -23,6 +23,7 @@ export interface ModulePermissions {
   dashboard: Permission;
   orders: Permission;
   tables: Permission;
+  'cash-register': Permission;
   inventory: Permission;
   purchases: Permission;
   settings: {
@@ -54,6 +55,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     dashboard: { view: true, create: true, update: true, delete: true },
     orders: { view: true, create: true, update: true, delete: true },
     tables: { view: true, create: true, update: true, delete: true },
+    'cash-register': { view: true, create: true, update: true, delete: true },
     inventory: { view: true, create: true, update: true, delete: true },
     purchases: { view: true, create: true, update: true, delete: true },
     settings: {
@@ -83,6 +85,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     dashboard: { view: true, create: true, update: true, delete: true },
     orders: { view: true, create: true, update: true, delete: true },
     tables: { view: true, create: true, update: true, delete: true },
+    'cash-register': { view: true, create: true, update: true, delete: true },
     inventory: { view: true, create: true, update: true, delete: false },
     purchases: { view: true, create: true, update: true, delete: false },
     reports: { view: true, create: true, update: false, delete: false },
@@ -113,6 +116,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     dashboard: { view: true, create: false, update: false, delete: false },
     orders: { view: true, create: true, update: true, delete: true },
     tables: { view: true, create: true, update: true, delete: true },
+    'cash-register': { view: true, create: true, update: true, delete: true },
     inventory: { view: true, create: true, update: true, delete: false },
     purchases: { view: true, create: true, update: true, delete: false },
     reports: { view: true, create: true, update: false, delete: false },
@@ -143,6 +147,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     dashboard: { view: false, create: false, update: false, delete: false },
     orders: { view: true, create: false, update: true, delete: false },
     tables: { view: true, create: false, update: false, delete: false },
+    'cash-register': { view: false, create: false, update: false, delete: false },
     inventory: { view: true, create: false, update: true, delete: false },
     purchases: { view: false, create: false, update: false, delete: false },
     reports: { view: false, create: false, update: false, delete: false },
@@ -172,6 +177,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     dashboard: { view: false, create: false, update: false, delete: false },
     orders: { view: true, create: false, update: false, delete: false },
     tables: { view: true, create: false, update: false, delete: false },
+    'cash-register': { view: false, create: false, update: false, delete: false },
     inventory: { view: true, create: false, update: false, delete: false },
     purchases: { view: false, create: false, update: false, delete: false },
     reports: { view: false, create: false, update: false, delete: false },
@@ -202,6 +208,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     dashboard: { view: false, create: false, update: false, delete: false },
     orders: { view: true, create: true, update: true, delete: false },
     tables: { view: true, create: true, update: true, delete: false },
+    'cash-register': { view: false, create: false, update: false, delete: false },
     inventory: { view: false, create: false, update: false, delete: false },
     purchases: { view: false, create: false, update: false, delete: false },
     reports: { view: false, create: false, update: false, delete: false },

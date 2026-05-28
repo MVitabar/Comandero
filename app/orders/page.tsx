@@ -261,7 +261,7 @@ export default function OrdersPage() {
       // Include payment method when closing or finishing an order
       const updateData: any = { status: validStatus, updatedAt: new Date() };
       if (validStatus === "closed" || validStatus === "finished") {
-        updateData.paymentMethod = selectedPaymentMethod;
+        updateData['paymentInfo.method'] = selectedPaymentMethod;
       }
       
       await updateDoc(orderRef, updateData)
@@ -288,7 +288,20 @@ export default function OrdersPage() {
         }
       }
 
-      setOrders(orders => orders.map(order => order.id === selectedOrder.id ? { ...order, status: validStatus, updatedAt: new Date() } : order))
+      setOrders(orders => orders.map(order => order.id === selectedOrder.id ? { 
+        ...order, 
+        status: validStatus, 
+        updatedAt: new Date(),
+        paymentInfo: {
+          method: (validStatus === "closed" || validStatus === "finished" ? selectedPaymentMethod : order.paymentInfo?.method || 'other') as any,
+          amount: order.paymentInfo?.amount || order.total || 0,
+          tip: order.paymentInfo?.tip || 0,
+          lastFourDigits: order.paymentInfo?.lastFourDigits,
+          transactionId: order.paymentInfo?.transactionId,
+          reference: order.paymentInfo?.reference,
+          processedAt: order.paymentInfo?.processedAt
+        }
+      } : order))
       setIsStatusDialogOpen(false)
       toast.success(
         t("orders.success.statusUpdated", {
@@ -432,6 +445,8 @@ export default function OrdersPage() {
   const openStatusDialog = (order: Order) => {
     setSelectedOrder(order);
     setSelectedStatus(order.status as BaseOrderStatus);
+    // Preselect payment method if it exists
+    setSelectedPaymentMethod(order.paymentInfo?.method || order.paymentMethod || 'cash');
     setIsStatusDialogOpen(true);
   };
 
@@ -563,6 +578,12 @@ export default function OrdersPage() {
                           <p className="text-xs text-muted-foreground">{t("commons.table.headers.price")}</p>
                           <p className="text-sm sm:text-base">$ {order.total.toFixed(2)}</p>
                         </div>
+                        {(order.status === 'closed' || order.status === 'finished') && (
+                          <div>
+                            <p className="text-xs text-muted-foreground">{t("orders.paymentMethod")}</p>
+                            <p className="text-sm sm:text-base">{t(`orders.paymentMethods.${order.paymentInfo?.method || 'other'}`)}</p>
+                          </div>
+                        )}
                         <div className="flex items-center justify-end">
                           <div className="flex items-center gap-1 sm:gap-2">
                             <Button variant="ghost" size="icon" onClick={() => handleViewOrder(order)} title={t("orders.actions.viewOrder")}>

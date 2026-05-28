@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { useTranslation } from 'react-i18next' 
+import { useI18n } from '@/components/i18n-provider'
 import { TableMap } from './table-maps-list'
 import { useFirebase } from '@/components/firebase-provider'
 import { doc, getDoc, collection, addDoc, setDoc, serverTimestamp, updateDoc, onSnapshot } from 'firebase/firestore'
@@ -13,6 +13,7 @@ import { useAuth } from '@/components/auth-provider'
 import {toast} from 'sonner'
 import { OrderForm } from '@/components/orders/order-form'
 import { v4 as uuidv4 } from 'uuid'
+import { hasActiveCashRegister } from '@/lib/cashRegisterHelpers'
 
 interface RestaurantTable {
   id?: string
@@ -34,7 +35,7 @@ export default function TableMapViewDialog({
   onClose, 
   tableMap 
 }: TableMapViewDialogProps) {
-  const { t } = useTranslation()
+  const { t } = useI18n()
   const { db } = useFirebase()
   const { user } = useAuth()
   const [tables, setTables] = useState<RestaurantTable[]>([])
@@ -111,6 +112,18 @@ export default function TableMapViewDialog({
   }, [db, user, isOpen]);
 
   const handleCreateOrder = async (table: RestaurantTable) => {
+    if (!db || !user) {
+      toast.error("Database or user not found")
+      return
+    }
+
+    // Check if there's an active cash register
+    const hasActiveRegister = await hasActiveCashRegister(db, user.establishmentId || user.uid)
+    if (!hasActiveRegister) {
+      toast.error(t("orders.errors.noActiveCashRegister"))
+      return
+    }
+
     setSelectedTable(table)
     setIsOrderFormOpen(true)
   }

@@ -29,6 +29,7 @@ import { AddItemsDialog } from "@/components/orders/add-items-dialog";
 import { TableItem, Order, PaymentInfo, PaymentMethod, UserRole } from '@/types'
 import { DialogDescription } from "@radix-ui/react-dialog"
 import { toast } from "sonner"
+import { hasActiveCashRegister } from "@/lib/cashRegisterHelpers"
 
 export interface TableCardProps {
   table: TableItem;
@@ -354,6 +355,23 @@ export function TableCard({
     }
   }
 
+  const handleCreateOrder = async () => {
+    if (!db || !user) {
+      toast.error(t("orders.errors.dbOrUserNotFound"))
+      return
+    }
+
+    // Check if there's an active cash register
+    const hasActiveRegister = await hasActiveCashRegister(db, user.establishmentId || user.uid)
+    if (!hasActiveRegister) {
+      toast.error(t("orders.errors.noActiveCashRegister"))
+      return
+    }
+
+    // Proceed with order creation
+    onCreateOrder && onCreateOrder()
+  }
+
   const handleCloseTableAndOrder = () => {
     setIsPaymentDialogOpen(true)
   }
@@ -401,9 +419,7 @@ export function TableCard({
             <Button 
               variant="default" 
               className="w-full"
-              onClick={() => {
-                onCreateOrder && onCreateOrder()
-              }}
+              onClick={handleCreateOrder}
             >
               <ClipboardList className="h-4 w-4 mr-2" />
               {t("tableCard.actions.createOrder")}

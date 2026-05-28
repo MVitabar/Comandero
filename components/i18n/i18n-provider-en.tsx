@@ -212,6 +212,7 @@ const enTranslationsBase = {
     "dashboard": "Dashboard",
     "orders": "Orders",
     "tables": "Tables",
+    "cashRegister": "Cash Register",
     "inventory": "Inventory",
     "purchases": "Purchases",
     "users": "Users",
@@ -531,7 +532,10 @@ const enTranslationsBase = {
     },
     "success": {
       "statusUpdated": "Status Updated",
-      "orderDeleted": "Order Deleted"
+      "orderDeleted": "Order Deleted",
+      "itemAdded": "Item Added",
+      "itemUpdated": "Item Updated",
+      "itemDeleted": "Item Deleted"
     },
     "error": {
       "fetchFailed": "Failed to fetch orders",
@@ -560,6 +564,7 @@ const enTranslationsBase = {
     "errors": {
       "noItemsInOrder": "Please add items to the order",
       "noTableSelected": "Please select a table",
+      "noActiveCashRegister": "No active cash register found",
       "headers": {
         "id": "Order ID",
         "tableNumber": "Table Number",
@@ -634,7 +639,8 @@ const enTranslationsBase = {
       "orderFullyPaid": "Order fully paid and closed",
       "error": "Error processing payment"
     },
-    "partialPrice": "Price"
+    "partialPrice": "Price",
+    "paymentMethod": "Payment Method"
   },
 
   "ordersPage": {
@@ -690,11 +696,14 @@ const enTranslationsBase = {
     "error": {
       "fetchFailed": "Failed to load orders",
       "updateStatusFailed": "Failed to update order status",
-      "deleteFailed": "Failed to delete order"
+      "deleteFailed": "Failed to delete order",
+      "deleteItemFailed": "Failed to delete item",
+      "noActiveCashRegister": "No cash register is open. You must open the cash register before making sales."
     },
     "success": {
       "statusUpdated": "Order status updated",
-      "orderDeleted": "Order deleted"
+      "orderDeleted": "Order deleted",
+      "itemDeleted": "Item deleted successfully"
     }
   },
 
@@ -1428,6 +1437,41 @@ const enTranslationsBase = {
       "title": "Register",
       "description": "You have been invited to join {{establishmentName}}"
     }
+  },
+  "cashRegister": {
+    "title": "Cash Register",
+    "description": "Manage the opening and closing of your establishment's cash register",
+    "noPermission": "You don't have permission to manage the cash register",
+    "registerOpen": "Register Open",
+    "registerClosed": "Register Closed",
+    "registerClosedDescription": "There is no register currently open",
+    "openRegister": "Open Register",
+    "closeRegister": "Close Register",
+    "openingAmount": "Opening Amount",
+    "totalSales": "Total Sales",
+    "expectedTotal": "Expected Total",
+    "closingAmount": "Closing Amount",
+    "difference": "Difference",
+    "paymentBreakdown": "Payment Breakdown",
+    "expectedTotals": "Expected Totals",
+    "actualAmounts": "Actual Amounts",
+    "differences": "Differences",
+    "cash": "Cash",
+    "credit": "Credit",
+    "debit": "Debit",
+    "transfer": "Transfer",
+    "notes": "Notes",
+    "notesPlaceholder": "Add notes or observations...",
+    "closingNotes": "Closing Notes",
+    "closingNotesPlaceholder": "Add notes about the register closing...",
+    "openedBy": "Opened by",
+    "closedBy": "Closed by",
+    "open": "Open",
+    "closed": "Closed",
+    "history": "Register History",
+    "noHistory": "No register history",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
   },
 
   landing: landingEn,

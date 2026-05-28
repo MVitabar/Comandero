@@ -9,7 +9,7 @@ import {
   DialogFooter
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Order, OrderDetailsDialogProps, OrderItem, OrderItemStatus } from '@/types'
+import { Order, OrderDetailsDialogProps, OrderItem, OrderItemStatus, UserRole } from '@/types'
 import { useRouter } from 'next/navigation'
 import { useI18n } from '@/components/i18n-provider'
 import { splitOrderItemsByCategory, canViewBothSections, canViewOnlyFood, canViewOnlyDrinks, getOrderStatusFromItems, calculateOrderStatusFromItems } from '@/lib/orderFilters';
@@ -19,6 +19,7 @@ import { useFirebase } from '@/components/firebase-provider';
 import { toast } from 'sonner';
 import { TransferItemsDialog } from './transfer-items-dialog';
 import { PartialPaymentDialog } from './partial-payment-dialog';
+import { Trash2 } from 'lucide-react';
 
 export function OrderDetailsDialog({ 
   order, 
@@ -117,6 +118,62 @@ export function OrderDetailsDialog({
     }
     return actions;
   }
+
+  const handleDeleteItem = async (item: OrderItem) => {
+    if (!db || !liveOrder.id || !liveOrder.restaurantId) return;
+
+    try {
+      const itemsArray = liveOrder.items 
+        ? (Array.isArray(liveOrder.items) 
+            ? liveOrder.items 
+            : Object.keys(liveOrder.items).map(key => 
+                (liveOrder.items as Record<string, OrderItem>)[key]
+              )
+          )
+        : [];
+
+      // Find and update the specific item
+      const updatedItems = itemsArray.map(i => {
+        if (i.id === item.id) {
+          if (i.quantity > 1) {
+            // Reduce quantity by 1
+            return { ...i, quantity: i.quantity - 1 };
+          } else {
+            // Remove item if quantity is 1
+            return null;
+          }
+        }
+        return i;
+      }).filter((i): i is OrderItem => i !== null);
+
+      // Recalculate total
+      const newTotal = updatedItems.reduce((sum, i) => {
+        return sum + (i.price * i.quantity);
+      }, 0);
+
+      const orderRef = doc(
+        db,
+        "restaurants",
+        liveOrder.restaurantId,
+        "orders",
+        liveOrder.id
+      );
+
+      await updateDoc(orderRef, { 
+        items: deleteField()
+      });
+      await updateDoc(orderRef, { 
+        items: updatedItems,
+        total: newTotal,
+        subtotal: newTotal
+      });
+
+      toast.success(t("orders.success.itemDeleted"));
+    } catch (error) {
+      console.error("Error deleting item:", error);
+      toast.error(t("orders.error.deleteItemFailed"));
+    }
+  };
 
   const handleUpdateItemStatus = async (item: OrderItem, newStatus: string) => {
     // Normaliza items a array y tipa correctamente
@@ -253,8 +310,8 @@ export function OrderDetailsDialog({
                   <h4 className="font-semibold mb-1">{t("orders.types.food")}</h4>
                   <div className="flex flex-wrap gap-2 items-center">
                     {comidas.map((item, idx) => (
-                      <span key={`${item.itemId || item.id}-${idx}`} className="text-sm bg-muted rounded-md px-2 py-1">
-                        {item.name} x{item.quantity}
+                      <div key={`${item.itemId || item.id}-${idx}`} className="flex items-center gap-1 text-sm bg-muted rounded-md px-2 py-1">
+                        <span>{item.name} x{item.quantity}</span>
                         {item.customDietaryRestrictions && item.customDietaryRestrictions.length > 0 && (
                           <span className="text-xs text-muted-foreground ml-1">
                             ({item.customDietaryRestrictions.map((restriction, index) => (
@@ -265,7 +322,17 @@ export function OrderDetailsDialog({
                             ))})
                           </span>
                         )}
-                      </span>
+                        {(user?.role === UserRole.OWNER || user?.role === UserRole.ADMIN || user?.role === UserRole.MANAGER) && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5 ml-1 hover:bg-destructive hover:text-destructive-foreground"
+                            onClick={() => handleDeleteItem(item)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </>
@@ -275,8 +342,8 @@ export function OrderDetailsDialog({
                   <h4 className="font-semibold mb-1 mt-2">{t("orders.types.drinks")}</h4>
                   <div className="flex flex-wrap gap-2 items-center">
                     {bebidas.map((item, idx) => (
-                      <span key={`${item.itemId || item.id}-${idx}`} className="text-sm bg-muted rounded-md px-2 py-1">
-                        {item.name} x{item.quantity}
+                      <div key={`${item.itemId || item.id}-${idx}`} className="flex items-center gap-1 text-sm bg-muted rounded-md px-2 py-1">
+                        <span>{item.name} x{item.quantity}</span>
                         {item.customDietaryRestrictions && item.customDietaryRestrictions.length > 0 && (
                           <span className="text-xs text-muted-foreground ml-1">
                             ({item.customDietaryRestrictions.map((restriction, index) => (
@@ -287,7 +354,17 @@ export function OrderDetailsDialog({
                             ))})
                           </span>
                         )}
-                      </span>
+                        {(user?.role === UserRole.OWNER || user?.role === UserRole.ADMIN || user?.role === UserRole.MANAGER) && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5 ml-1 hover:bg-destructive hover:text-destructive-foreground"
+                            onClick={() => handleDeleteItem(item)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </>

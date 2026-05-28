@@ -212,6 +212,7 @@ const ptTranslationsBase = {
     "dashboard": "Dashboard",
     "orders": "Pedidos",
     "tables": "Mesas",
+    "cashRegister": "Caixa",
     "inventory": "Inventário",
     "purchases": "Compras",
     "users": "Usuários",
@@ -531,7 +532,10 @@ const ptTranslationsBase = {
     },
     "success": {
       "statusUpdated": "Status Atualizado",
-      "orderDeleted": "Pedido Excluído"
+      "orderDeleted": "Pedido Excluído",
+      "itemAdded": "Item Adicionado",
+      "itemUpdated": "Item Atualizado",
+      "itemDeleted": "Item Excluído"
     },
     "error": {
       "fetchFailed": "Erro ao buscar pedidos",
@@ -559,6 +563,7 @@ const ptTranslationsBase = {
     "errors": {
       "noItemsInOrder": "Por favor, adicione itens ao pedido",
       "noTableSelected": "Por favor, selecione uma mesa",
+      "noActiveCashRegister": "Nenhum caixa ativo encontrado",
       "headers": {
         "id": "ID do Pedido",
         "tableNumber": "Número da Mesa",
@@ -633,7 +638,8 @@ const ptTranslationsBase = {
       "orderFullyPaid": "Pedido pago completamente e fechado",
       "error": "Erro ao processar pagamento"
     },
-    "partialPrice": "Preço"
+    "partialPrice": "Preço",
+    "paymentMethod": "Método de Pagamento"
   },
 
   "ordersPage": {
@@ -689,11 +695,14 @@ const ptTranslationsBase = {
     "error": {
       "fetchFailed": "Erro ao carregar pedidos",
       "updateStatusFailed": "Erro ao atualizar status do pedido",
-      "deleteFailed": "Erro ao excluir pedido"
+      "deleteFailed": "Erro ao excluir pedido",
+      "deleteItemFailed": "Erro ao excluir item",
+      "noActiveCashRegister": "Não há caixa aberta. Você deve abrir a caixa antes de realizar vendas."
     },
     "success": {
       "statusUpdated": "Status do pedido atualizado",
-      "orderDeleted": "Pedido excluído"
+      "orderDeleted": "Pedido excluído",
+      "itemDeleted": "Item excluído com sucesso"
     },
   },
 
@@ -1425,6 +1434,41 @@ const ptTranslationsBase = {
       "title": "Registrar",
       "description": "Você foi convidado a se juntar a {{establishmentName}}"
     }
+  },
+  "cashRegister": {
+    "title": "Caixa",
+    "description": "Gerenciar a abertura e fechamento do caixa do seu estabelecimento",
+    "noPermission": "Você não tem permissão para gerenciar o caixa",
+    "registerOpen": "Caixa aberta",
+    "registerClosed": "Caixa fechada",
+    "registerClosedDescription": "Não há caixa aberta atualmente",
+    "openRegister": "Abrir caixa",
+    "closeRegister": "Fechar caixa",
+    "openingAmount": "Valor de abertura",
+    "totalSales": "Vendas totais",
+    "expectedTotal": "Total esperado",
+    "closingAmount": "Valor de fechamento",
+    "difference": "Diferença",
+    "paymentBreakdown": "Desglose por tipo de pagamento",
+    "expectedTotals": "Totais esperados",
+    "actualAmounts": "Montos reais",
+    "differences": "Diferenças",
+    "cash": "Dinheiro",
+    "credit": "Crédito",
+    "debit": "Débito",
+    "transfer": "Transferência",
+    "notes": "Notas",
+    "notesPlaceholder": "Adicione notas ou observações...",
+    "closingNotes": "Notas de fechamento",
+    "closingNotesPlaceholder": "Adicione notas sobre o fechamento do caixa...",
+    "openedBy": "Aberto por",
+    "closedBy": "Fechado por",
+    "open": "Aberta",
+    "closed": "Fechada",
+    "history": "Histórico de caixas",
+    "noHistory": "Não há histórico de caixas",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar"
   },
 
   landing: landingPt,

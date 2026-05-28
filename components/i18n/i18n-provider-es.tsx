@@ -212,6 +212,7 @@ const esTranslationsBase = {
     "dashboard": "Dashboard",
     "orders": "Pedidos",
     "tables": "Mesas",
+    "cashRegister": "Caja",
     "inventory": "Inventario",
     "purchases": "Compras",
     "users": "Usuarios",
@@ -531,7 +532,10 @@ const esTranslationsBase = {
     },
     "success": {
       "statusUpdated": "Estado actualizado",
-      "orderDeleted": "Pedido eliminado"
+      "orderDeleted": "Pedido eliminado",
+      "itemAdded": "Item agregado",
+      "itemUpdated": "Item actualizado",
+      "itemDeleted": "Item eliminado"
     },
     "error": {
       "fetchFailed": "Error al cargar los pedidos",
@@ -559,6 +563,7 @@ const esTranslationsBase = {
     "errors": {
       "noItemsInOrder": "Por favor, agrega items al pedido",
       "noTableSelected": "Por favor, selecciona una mesa",
+      "noActiveCashRegister": "No se encontró un caja activo",
       "headers": {
         "id": "ID de la orden",
         "tableNumber": "Número de la mesa",
@@ -633,7 +638,8 @@ const esTranslationsBase = {
       "orderFullyPaid": "Pedido pagado completamente y cerrado",
       "error": "Error al procesar el pago"
     },
-    "partialPrice": "Precio"
+    "partialPrice": "Precio",
+    "paymentMethod": "Método de Pago"
   },
 
   "ordersPage": {
@@ -689,11 +695,14 @@ const esTranslationsBase = {
     "error": {
       "fetchFailed": "Error al cargar los pedidos",
       "updateStatusFailed": "Error al actualizar el estado del pedido",
-      "deleteFailed": "Error al eliminar el pedido"
+      "deleteFailed": "Error al eliminar el pedido",
+      "deleteItemFailed": "Error al eliminar el item",
+      "noActiveCashRegister": "No hay una caja abierta. Debe abrir la caja antes de realizar ventas."
     },
     "success": {
       "statusUpdated": "Estado del pedido actualizado",
-      "orderDeleted": "Pedido eliminado"
+      "orderDeleted": "Pedido eliminado",
+      "itemDeleted": "Item eliminado exitosamente"
     },
   },
 
@@ -1426,6 +1435,41 @@ const esTranslationsBase = {
       "title": "Registrarse",
       "description": "Has sido invitado a unirte a {{establishmentName}}"
     }
+  },
+  "cashRegister": {
+    "title": "Caja",
+    "description": "Gestionar la apertura y cierre de caja de tu establecimiento",
+    "noPermission": "No tienes permiso para gestionar la caja",
+    "registerOpen": "Caja abierta",
+    "registerClosed": "Caja cerrada",
+    "registerClosedDescription": "No hay una caja abierta actualmente",
+    "openRegister": "Abrir caja",
+    "closeRegister": "Cerrar caja",
+    "openingAmount": "Monto de apertura",
+    "totalSales": "Ventas totales",
+    "expectedTotal": "Total esperado",
+    "closingAmount": "Monto de cierre",
+    "difference": "Diferencia",
+    "paymentBreakdown": "Desglose por tipo de pago",
+    "expectedTotals": "Totales esperados",
+    "actualAmounts": "Montos reales",
+    "differences": "Diferencias",
+    "cash": "Efectivo",
+    "credit": "Crédito",
+    "debit": "Débito",
+    "transfer": "Transferencia",
+    "notes": "Notas",
+    "notesPlaceholder": "Agrega notas o observaciones...",
+    "closingNotes": "Notas de cierre",
+    "closingNotesPlaceholder": "Agrega notas sobre el cierre de caja...",
+    "openedBy": "Abierta por",
+    "closedBy": "Cerrada por",
+    "open": "Abierta",
+    "closed": "Cerrada",
+    "history": "Historial de cajas",
+    "noHistory": "No hay historial de cajas",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar"
   },
 
   landing: landingEs,

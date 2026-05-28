@@ -28,6 +28,7 @@ import {
   TableIcon,
   Layers,
   UserCog,
+  DollarSign,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -223,6 +224,13 @@ export function CollapsibleSidebar() {
       icon: TableIcon,
       mobileIcon: TableIcon,
       requiredPermission: 'tables'
+    },
+    {
+      name: t("sidebar.cashRegister"),
+      href: "/cash-register",
+      icon: DollarSign,
+      mobileIcon: DollarSign,
+      requiredPermission: 'cash-register'
     },
     {
       name: t("sidebar.inventory"),

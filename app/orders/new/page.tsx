@@ -17,12 +17,63 @@ import { InventoryItem, OrderItem } from "@/types"
 import { OrderForm } from "@/components/orders/order-form"
 import { Order } from "@/types"
 import { toast } from "sonner"
+import { hasActiveCashRegister } from "@/lib/cashRegisterHelpers"
 
 export default function NewOrderPage() {
   const { t } = useI18n()
   const { db } = useFirebase()
   const { user } = useAuth()
   const router = useRouter()
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasActiveRegister, setHasActiveRegister] = useState(false)
+
+  useEffect(() => {
+    let isMounted = true
+
+    const checkCashRegister = async () => {
+      if (!db || !user || !isMounted) {
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        const active = await hasActiveCashRegister(db, user.establishmentId || user.uid)
+        
+        if (isMounted) {
+          setHasActiveRegister(active)
+          
+          if (!active) {
+            toast.error(t("orders.errors.noActiveCashRegister"))
+            router.push('/cash-register')
+          }
+        }
+      } catch (error) {
+        console.error('Error checking cash register:', error)
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    checkCashRegister()
+
+    return () => {
+      isMounted = false
+    }
+  }, []) // Run only once on mount
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">Loading...</div>
+      </div>
+    )
+  }
+
+  if (!hasActiveRegister) {
+    return null // Will redirect to cash-register
+  }
 
   // Utility function to remove undefined values from an object
   const removeUndefinedValues = (obj: Record<string, any>): Record<string, any> => {
@@ -58,6 +109,13 @@ export default function NewOrderPage() {
     if (!user.establishmentId) {
       console.error('No establishment ID found for user')
       toast.error(t("orders.errors.establishmentIdNotFound"))
+      return
+    }
+
+    // Check if there's an active cash register
+    const hasActiveRegister = await hasActiveCashRegister(db, user.establishmentId)
+    if (!hasActiveRegister) {
+      toast.error(t("orders.errors.noActiveCashRegister"))
       return
     }
 
