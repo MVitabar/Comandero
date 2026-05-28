@@ -92,7 +92,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   }
 
   const isInvitationRoute = pathname.includes("/invitation/register")
-  const fullWidthRoutes = ["/", "/login", "/register", "/forgot-password"]
+  const fullWidthRoutes = ["/", "/login", "/register", "/forgot-password", "/privacy-policy", "/terms-and-conditions"]
   const isFullWidthRoute =
     isInvitationRoute || fullWidthRoutes.some((page) => pathname === page)
 
@@ -104,7 +104,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     )
   }
 
-  const publicPages = ["/", "/login", "/register", "/invitation/register", "/forgot-password", "/setup"]
+  const publicPages = ["/", "/login", "/register", "/invitation/register", "/forgot-password", "/setup", "/privacy-policy", "/terms-and-conditions"]
   const isPublicPage = publicPages.some((page) => pathname === page)
 
   if (!user && !isPublicPage) {

@@ -15,6 +15,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { UserRole } from "@/types"
+import { LegalModal } from "@/components/legal-modal"
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -261,19 +262,15 @@ export default function LoginPage() {
             </Link>
           </div>
           <div className="flex justify-center gap-4 text-xs text-gray-600">
-            <Link 
-              href="/terms-and-conditions" 
-              className="hover:underline"
-            >
-              {t("login.termsAndConditions")}
-            </Link>
+            <LegalModal 
+              type="terms" 
+              trigger={<span className="hover:underline cursor-pointer">{t("login.termsAndConditions")}</span>}
+            />
             <span>•</span>
-            <Link 
-              href="/privacy-policy" 
-              className="hover:underline"
-            >
-              {t("login.privacyPolicy")}
-            </Link>
+            <LegalModal 
+              type="privacy" 
+              trigger={<span className="hover:underline cursor-pointer">{t("login.privacyPolicy")}</span>}
+            />
           </div>
         </CardFooter>
       </Card>

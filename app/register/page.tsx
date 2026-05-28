@@ -17,6 +17,7 @@ import { LanguageSwitcher } from "@/components/language-switcher"
 import { PasswordStrengthIndicator } from "@/components/password-strength-indicator"
 import { Eye, EyeOff, Loader2, CheckCircle2 } from "lucide-react"
 import { UserRole, SubscriptionPlan } from "@/types"
+import { LegalModal } from "@/components/legal-modal"
 import {
   Select,
   SelectContent,
@@ -346,21 +347,15 @@ export default function RegisterPage() {
                 className={errors.terms ? "text-red-500" : ""}
               >
                 {t("register.acceptTerms")}{" "}
-                <Link 
-                  href="/terms-and-conditions" 
-                  className="text-blue-600 hover:underline"
-                  target="_blank"
-                >
-                  {t("register.termsAndConditions")}
-                </Link>{" "}
+                <LegalModal 
+                  type="terms" 
+                  trigger={<span className="text-blue-600 hover:underline cursor-pointer">{t("register.termsAndConditions")}</span>}
+                />{" "}
                 {t("register.and")}{" "}
-                <Link 
-                  href="/privacy-policy" 
-                  className="text-blue-600 hover:underline"
-                  target="_blank"
-                >
-                  {t("register.privacyPolicy")}
-                </Link>
+                <LegalModal 
+                  type="privacy" 
+                  trigger={<span className="text-blue-600 hover:underline cursor-pointer">{t("register.privacyPolicy")}</span>}
+                />
               </Label>
             </div>
             {errors.terms && (
