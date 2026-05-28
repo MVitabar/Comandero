@@ -245,19 +245,36 @@ export default function LoginPage() {
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-between">
-          <Link 
-            href="/forgot-password" 
-            className="text-sm text-blue-600 hover:underline"
-          >
-            {t("login.forgotPassword")}
-          </Link>
-          <Link 
-            href="/register" 
-            className="text-sm text-blue-600 hover:underline"
-          >
-            {t("login.registerLink")}
-          </Link>
+        <CardFooter className="flex flex-col gap-2">
+          <div className="flex justify-between w-full">
+            <Link 
+              href="/forgot-password" 
+              className="text-sm text-blue-600 hover:underline"
+            >
+              {t("login.forgotPassword")}
+            </Link>
+            <Link 
+              href="/register" 
+              className="text-sm text-blue-600 hover:underline"
+            >
+              {t("login.registerLink")}
+            </Link>
+          </div>
+          <div className="flex justify-center gap-4 text-xs text-gray-600">
+            <Link 
+              href="/terms-and-conditions" 
+              className="hover:underline"
+            >
+              {t("login.termsAndConditions")}
+            </Link>
+            <span>•</span>
+            <Link 
+              href="/privacy-policy" 
+              className="hover:underline"
+            >
+              {t("login.privacyPolicy")}
+            </Link>
+          </div>
         </CardFooter>
       </Card>
     </div>

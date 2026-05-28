@@ -345,7 +345,22 @@ export default function RegisterPage() {
                 htmlFor="terms" 
                 className={errors.terms ? "text-red-500" : ""}
               >
-                {t("register.acceptTerms")}
+                {t("register.acceptTerms")}{" "}
+                <Link 
+                  href="/terms-and-conditions" 
+                  className="text-blue-600 hover:underline"
+                  target="_blank"
+                >
+                  {t("register.termsAndConditions")}
+                </Link>{" "}
+                {t("register.and")}{" "}
+                <Link 
+                  href="/privacy-policy" 
+                  className="text-blue-600 hover:underline"
+                  target="_blank"
+                >
+                  {t("register.privacyPolicy")}
+                </Link>
               </Label>
             </div>
             {errors.terms && (
