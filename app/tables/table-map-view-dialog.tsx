@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { useI18n } from '@/components/i18n-provider'
 import { TableMap } from './table-maps-list'
 import { useFirebase } from '@/components/firebase-provider'
-import { doc, getDoc, collection, addDoc, setDoc, serverTimestamp, updateDoc, onSnapshot } from 'firebase/firestore'
+import { doc, getDoc, collection, addDoc, setDoc, serverTimestamp, updateDoc, onSnapshot, writeBatch } from 'firebase/firestore'
 import { TableCard } from '@/components/table-card'
 import { Order, OrderItem } from '@/types'
 import { useAuth } from '@/components/auth-provider'
@@ -22,6 +24,8 @@ interface RestaurantTable {
   status: 'available' | 'occupied' | 'reserved'
   mapId: string
   restaurantId?: string
+  x?: number
+  y?: number
 }
 
 interface TableMapViewDialogProps {
@@ -43,6 +47,11 @@ export default function TableMapViewDialog({
   const [selectedTable, setSelectedTable] = useState<RestaurantTable | null>(null)
   const [isOrderFormOpen, setIsOrderFormOpen] = useState(false)
   const [orders, setOrders] = useState<Order[]>([])
+  const [isBulkCreateDialogOpen, setIsBulkCreateDialogOpen] = useState(false)
+  const [bulkTableCount, setBulkTableCount] = useState(20)
+  const [bulkTableCapacity, setBulkTableCapacity] = useState(2)
+  const [bulkTablePrefix, setBulkTablePrefix] = useState('')
+  const [isBulkCreating, setIsBulkCreating] = useState(false)
 
   useEffect(() => {
     async function fetchTables() {
@@ -356,6 +365,80 @@ export default function TableMapViewDialog({
     setIsOrderFormOpen(false)
   }
 
+  const handleBulkCreateTables = async () => {
+    if (!db || !user) return
+
+    try {
+      setIsBulkCreating(true)
+      const restaurantId = user.establishmentId || user.uid
+      const tableMapRef = doc(db, `restaurants/${restaurantId}/tableMaps`, tableMap.id)
+      
+      // Fetch the current table map to get the latest layout
+      const tableMapSnapshot = await getDoc(tableMapRef)
+      
+      if (!tableMapSnapshot.exists()) {
+        toast.error("Table map not found")
+        return
+      }
+
+      const tableMapData = tableMapSnapshot.data()
+      const existingTables = tableMapData?.layout?.tables || []
+      const currentTableCount = existingTables.length
+
+      // Generate new tables
+      const newTables: RestaurantTable[] = []
+      for (let i = 0; i < bulkTableCount; i++) {
+        const tableNumber = currentTableCount + i + 1
+        const tableName = bulkTablePrefix 
+          ? `${bulkTablePrefix}-Mesa ${tableNumber}`
+          : `Mesa ${tableNumber}`
+        
+        const newTable: RestaurantTable = {
+          id: uuidv4(),
+          name: tableName,
+          capacity: bulkTableCapacity,
+          status: 'available',
+          mapId: tableMap.id,
+          x: 0,
+          y: 0,
+          restaurantId: restaurantId
+        }
+        newTables.push(newTable)
+      }
+
+      // Update the table map's layout to include the new tables
+      await updateDoc(tableMapRef, {
+        'layout.tables': [...existingTables, ...newTables],
+        updatedAt: new Date()
+      })
+
+      toast.success(t('tableMaps.bulkCreateSuccess', { count: bulkTableCount }))
+
+      // Close dialog and reset form
+      setIsBulkCreateDialogOpen(false)
+      setBulkTableCount(20)
+      setBulkTableCapacity(2)
+      setBulkTablePrefix('')
+      
+      // Refresh tables
+      const updatedSnapshot = await getDoc(tableMapRef)
+      const updatedData = updatedSnapshot.data()
+      const updatedTables = updatedData?.layout?.tables || []
+      const processedTables = updatedTables.map((table: any) => ({
+        ...table,
+        id: table.id || uuidv4(),
+        status: table.status || 'available',
+        mapId: table.mapId ?? tableMap.id
+      }))
+      setTables(processedTables)
+    } catch (error) {
+      console.error('Error creating bulk tables:', error)
+      toast.error(t('tableMaps.bulkCreateError'))
+    } finally {
+      setIsBulkCreating(false)
+    }
+  }
+
   // Accesibilidad: ids únicos para descripciones de los diálogos
   const mainDescriptionId = `table-map-desc-${tableMap.id}`;
   const orderFormDescriptionId = selectedTable ? `order-form-desc-${selectedTable.id}` : 'order-form-desc';
@@ -378,13 +461,30 @@ export default function TableMapViewDialog({
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-6xl h-[80vh] overflow-y-auto" aria-describedby={mainDescriptionId}>
           <DialogHeader>
-            <DialogTitle>{tableMap.name}</DialogTitle>
-            <DialogDescription id={mainDescriptionId}>{tableMap.description}</DialogDescription>
+            <div className="flex justify-between items-start">
+              <div>
+                <DialogTitle>{tableMap.name}</DialogTitle>
+                <DialogDescription id={mainDescriptionId}>{tableMap.description}</DialogDescription>
+              </div>
+              <Button 
+                onClick={() => setIsBulkCreateDialogOpen(true)}
+                variant="default"
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {t('tableMaps.bulkCreateTables')}
+              </Button>
+            </div>
           </DialogHeader>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {tables.length === 0 ? (
-              <div>{t('tables.tableMaps.noTablesFound')}</div>
+              <div className="col-span-full flex justify-center items-center py-12">
+                <div className="text-center">
+                  <p className="text-gray-500 text-lg">{t('tables.tableMaps.noTablesFound')}</p>
+                  <p className="text-gray-400 text-sm mt-2">{t('tableMaps.bulkCreateHint')}</p>
+                </div>
+              </div>
             ) : (
               tables
                 .sort((a, b) => {
@@ -449,6 +549,77 @@ export default function TableMapViewDialog({
           </DialogContent>
         </Dialog>
       )}
+
+      <Dialog open={isBulkCreateDialogOpen} onOpenChange={setIsBulkCreateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('tableMaps.bulkCreateTables')}</DialogTitle>
+            <DialogDescription>
+              {t('tableMaps.bulkCreateDescription')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="tablePrefix" className="text-right">
+                {t('tableMaps.tablePrefix')}
+              </Label>
+              <Input 
+                id="tablePrefix" 
+                value={bulkTablePrefix} 
+                onChange={(e) => setBulkTablePrefix(e.target.value)}
+                placeholder={t('tableMaps.tablePrefixPlaceholder')}
+                className="col-span-3" 
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="tableCount" className="text-right">
+                {t('tableMaps.tableCount')}
+              </Label>
+              <Input 
+                id="tableCount" 
+                type="number" 
+                value={bulkTableCount} 
+                onChange={(e) => {
+                  const value = parseInt(e.target.value, 10)
+                  setBulkTableCount(value > 0 ? value : 1)
+                }} 
+                placeholder="20"
+                className="col-span-3" 
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="tableCapacity" className="text-right">
+                {t('tableMaps.tableCapacity')}
+              </Label>
+              <Input 
+                id="tableCapacity" 
+                type="number" 
+                value={bulkTableCapacity} 
+                onChange={(e) => {
+                  const value = parseInt(e.target.value, 10)
+                  setBulkTableCapacity(value > 0 ? value : 2)
+                }} 
+                placeholder="2"
+                className="col-span-3" 
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsBulkCreateDialogOpen(false)}
+            >
+              {t('commons.cancel')}
+            </Button>
+            <Button 
+              onClick={handleBulkCreateTables}
+              disabled={isBulkCreating}
+            >
+              {isBulkCreating ? t('tableMaps.creating') : t('tableMaps.createTables', { count: bulkTableCount })}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

@@ -5,12 +5,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { useTranslation } from 'react-i18next'
 import { TableMap } from './table-maps-list'
 import { useFirebase } from '@/components/firebase-provider'
 import { useAuth } from '@/components/auth-provider'
 import { doc, collection, updateDoc, setDoc, query, getDocs, serverTimestamp } from 'firebase/firestore'
 import {toast} from 'sonner'
+import { v4 as uuidv4 } from 'uuid'
 interface TableMapDialogProps {
   isOpen: boolean
   onClose: () => void
@@ -28,6 +30,10 @@ export default function TableMapDialog({
   const [name, setName] = useState(initialData?.name || '')
   const [description, setDescription] = useState(initialData?.description || '')
   const [layout, setLayout] = useState(initialData?.layout || { tables: [] })
+  const [createTables, setCreateTables] = useState(false)
+  const [tableCount, setTableCount] = useState(20)
+  const [tableCapacity, setTableCapacity] = useState(2)
+  const [tablePrefix, setTablePrefix] = useState('')
 
   useEffect(() => {
     // Reset form when initialData changes
@@ -45,15 +51,36 @@ export default function TableMapDialog({
     }
 
     try {
+      const restaurantId = user.establishmentId || user.uid
+      
+      // Generate tables if requested
+      let tables = layout.tables || []
+      if (createTables && !initialData) {
+        for (let i = 0; i < tableCount; i++) {
+          const tableNumber = i + 1
+          const tableName = tablePrefix 
+            ? `${tablePrefix}-Mesa ${tableNumber}`
+            : `Mesa ${tableNumber}`
+          
+          tables.push({
+            id: uuidv4(),
+            name: tableName,
+            capacity: tableCapacity,
+            status: 'available',
+            x: 0,
+            y: 0,
+            restaurantId: restaurantId
+          })
+        }
+      }
+
       const tableMapData = {
         name,
         description,
-        layout,
+        layout: { tables },
         updatedAt: new Date(),
         createdAt: initialData?.createdAt || new Date()
       }
-
-      const restaurantId = user.establishmentId || user.uid
 
       if (initialData) {
         // Update existing table map
@@ -118,6 +145,72 @@ export default function TableMapDialog({
               placeholder={t('tables.tableMaps.mapDescriptionPlaceholder')}
             />
           </div>
+          
+          {!initialData && (
+            <>
+              <div className="border-t pt-4 mt-4">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Checkbox
+                    id="createTables"
+                    checked={createTables}
+                    onCheckedChange={(checked) => setCreateTables(checked as boolean)}
+                  />
+                  <Label htmlFor="createTables" className="cursor-pointer">
+                    {t('tableMaps.createTablesOnMapCreation')}
+                  </Label>
+                </div>
+                
+                {createTables && (
+                  <div className="space-y-4 ml-6">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="tablePrefix" className="text-right">
+                        {t('tables.tableMaps.tablePrefix')}
+                      </Label>
+                      <Input 
+                        id="tablePrefix" 
+                        value={tablePrefix} 
+                        onChange={(e) => setTablePrefix(e.target.value)}
+                        placeholder={t('tables.tableMaps.tablePrefixPlaceholder')}
+                        className="col-span-3" 
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="tableCount" className="text-right">
+                        {t('tables.tableMaps.tableCount')}
+                      </Label>
+                      <Input 
+                        id="tableCount" 
+                        type="number" 
+                        value={tableCount} 
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value, 10)
+                          setTableCount(value > 0 ? value : 1)
+                        }} 
+                        placeholder="20"
+                        className="col-span-3" 
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="tableCapacity" className="text-right">
+                        {t('tables.tableMaps.tableCapacity')}
+                      </Label>
+                      <Input 
+                        id="tableCapacity" 
+                        type="number" 
+                        value={tableCapacity} 
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value, 10)
+                          setTableCapacity(value > 0 ? value : 2)
+                        }} 
+                        placeholder="2"
+                        className="col-span-3" 
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
         
         <DialogFooter>
