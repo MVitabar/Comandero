@@ -459,7 +459,8 @@ const esTranslationsBase = {
       "itemsPurchased": "items comprados",
       "costByCategory": "Costo por Categoría",
       "monthlyCost": "Costo Mensual",
-      "recentPurchases": "Compras Recientes"
+      "recentPurchases": "Compras Recientes",
+      "noData": "No hay datos disponibles"
     }
   },
 

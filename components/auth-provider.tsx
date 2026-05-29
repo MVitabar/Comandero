@@ -61,7 +61,7 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext)
 
-const publicRoutes = ["/", "/login", "/register", "/forgot-password", "/invitation/register", "/setup"]
+const publicRoutes = ["/", "/login", "/register", "/forgot-password", "/invitation/register", "/setup", "/privacy-policy", "/terms-and-conditions", "/features/"]
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -677,7 +677,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false)
 
         // Redirect logic
-        if (!firebaseUser && !publicRoutes.includes(pathname)) {
+        if (!firebaseUser && !publicRoutes.some((route) => pathname === route || pathname.startsWith(route))) {
           router.push("/login")
         }
       },

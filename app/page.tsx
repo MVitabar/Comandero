@@ -383,8 +383,10 @@ export default function LandingPage() {
                   {t("landing.features.orders.description")}
                 </p>
                 <div className="mt-4 flex items-center text-blue-600 font-medium group-hover:translate-x-2 transition-transform">
-                  <span>{t("landing.features.learnMore")}</span>
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <Link href="/features/orders" className="flex items-center">
+                    <span>{t("landing.features.learnMore")}</span>
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
                 </div>
               </CardContent>
             </Card>
@@ -399,8 +401,10 @@ export default function LandingPage() {
                   {t("landing.features.tables.description")}
                 </p>
                 <div className="mt-4 flex items-center text-purple-600 font-medium group-hover:translate-x-2 transition-transform">
-                  <span>{t("landing.features.learnMore")}</span>
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <Link href="/features/tables" className="flex items-center">
+                    <span>{t("landing.features.learnMore")}</span>
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
                 </div>
               </CardContent>
             </Card>
@@ -415,8 +419,10 @@ export default function LandingPage() {
                   {t("landing.features.reports.description")}
                 </p>
                 <div className="mt-4 flex items-center text-green-600 font-medium group-hover:translate-x-2 transition-transform">
-                  <span>{t("landing.features.learnMore")}</span>
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <Link href="/features/reports" className="flex items-center">
+                    <span>{t("landing.features.learnMore")}</span>
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
                 </div>
               </CardContent>
             </Card>
@@ -431,8 +437,10 @@ export default function LandingPage() {
                   {t("landing.features.reservations.description")}
                 </p>
                 <div className="mt-4 flex items-center text-orange-600 font-medium group-hover:translate-x-2 transition-transform">
-                  <span>{t("landing.features.learnMore")}</span>
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <Link href="/features/reservations" className="flex items-center">
+                    <span>{t("landing.features.learnMore")}</span>
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
                 </div>
               </CardContent>
             </Card>
@@ -447,8 +455,10 @@ export default function LandingPage() {
                   {t("landing.features.staff.description")}
                 </p>
                 <div className="mt-4 flex items-center text-pink-600 font-medium group-hover:translate-x-2 transition-transform">
-                  <span>{t("landing.features.learnMore")}</span>
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <Link href="/features/staff" className="flex items-center">
+                    <span>{t("landing.features.learnMore")}</span>
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
                 </div>
               </CardContent>
             </Card>
@@ -463,8 +473,10 @@ export default function LandingPage() {
                   {t("landing.features.inventory.description")}
                 </p>
                 <div className="mt-4 flex items-center text-cyan-600 font-medium group-hover:translate-x-2 transition-transform">
-                  <span>{t("landing.features.learnMore")}</span>
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <Link href="/features/inventory" className="flex items-center">
+                    <span>{t("landing.features.learnMore")}</span>
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
                 </div>
               </CardContent>
             </Card>

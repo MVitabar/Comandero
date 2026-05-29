@@ -39,30 +39,193 @@ export const landingEn = {
     title: "Core features",
     subtitle:
       "Our platform offers every tool you need to run your restaurant efficiently.",
+    backToHome: "Back to home",
     learnMore: "Learn more",
     orders: {
       title: "Order management",
       description: "Take orders quickly with real-time updates for the kitchen.",
+      details: {
+        title: "Order Management Features",
+        mobileOrders: {
+          title: "Mobile Orders",
+          description: "Take orders directly from mobile devices with instant synchronization"
+        },
+        realTime: {
+          title: "Real-time Updates",
+          description: "Orders update instantly in kitchen and bar for maximum efficiency"
+        },
+        staffManagement: {
+          title: "Staff Management",
+          description: "Assign orders to specific staff members for better organization"
+        },
+        fastProcessing: {
+          title: "Fast Processing",
+          description: "Optimized system to process orders quickly and reduce wait times"
+        }
+      },
+      benefits: {
+        title: "Benefits",
+        benefit1: "Reduces order errors by up to 80%",
+        benefit2: "Increases staff efficiency",
+        benefit3: "Improves customer experience",
+        benefit4: "Instant synchronization between devices"
+      },
+      cta: "Start with Orders"
     },
     tables: {
       title: "Table management",
       description: "View and manage your table layout with live status.",
+      details: {
+        title: "Table Management Features",
+        tableMaps: {
+          title: "Visual Table Maps",
+          description: "Create visual maps of your restaurant with drag and drop"
+        },
+        bulkCreation: {
+          title: "Bulk Creation",
+          description: "Create multiple tables automatically with sequential names and custom prefixes"
+        },
+        mobileAccess: {
+          title: "Mobile Access",
+          description: "Manage tables from any mobile device"
+        },
+        realTimeStatus: {
+          title: "Real-time Status",
+          description: "View the status of each table in real-time (available, occupied, reserved)"
+        }
+      },
+      benefits: {
+        title: "Benefits",
+        benefit1: "Optimizes table assignment",
+        benefit2: "Reduces wait times",
+        benefit3: "Improves table turnover",
+        benefit4: "Full control of customer flow"
+      },
+      cta: "Start with Tables"
     },
     reports: {
       title: "Reports & analytics",
       description: "Detailed reports on sales, inventory, and restaurant performance.",
+      details: {
+        title: "Reports Features",
+        salesAnalytics: {
+          title: "Sales Analytics",
+          description: "View sales trends and consumption patterns"
+        },
+        detailedReports: {
+          title: "Detailed Reports",
+          description: "Generate detailed reports by period, category, product, and more"
+        },
+        exportData: {
+          title: "Export Data",
+          description: "Export reports in multiple formats for external analysis"
+        },
+        customPeriods: {
+          title: "Custom Periods",
+          description: "Analyze data by custom periods (daily, weekly, monthly, yearly)"
+        }
+      },
+      benefits: {
+        title: "Benefits",
+        benefit1: "Make data-driven decisions",
+        benefit2: "Identify improvement opportunities",
+        benefit3: "Optimize costs and margins",
+        benefit4: "Monitor performance in real-time"
+      },
+      cta: "Start with Reports"
     },
     reservations: {
       title: "Reservations",
       description: "Manage customer reservations simply and avoid overload.",
+      details: {
+        title: "Reservations Features",
+        easyScheduling: {
+          title: "Easy Scheduling",
+          description: "Intuitive system to schedule and manage reservations"
+        },
+        capacityManagement: {
+          title: "Capacity Management",
+          description: "Control restaurant capacity to avoid over-booking"
+        },
+        notifications: {
+          title: "Automatic Notifications",
+          description: "Send confirmations and reminders to customers automatically"
+        },
+        mobileBooking: {
+          title: "Mobile Booking",
+          description: "Allow customers to make reservations from their mobile devices"
+        }
+      },
+      benefits: {
+        title: "Benefits",
+        benefit1: "Reduces no-shows by up to 60%",
+        benefit2: "Optimizes restaurant capacity",
+        benefit3: "Improves customer experience",
+        benefit4: "Automates reservation process"
+      },
+      cta: "Start with Reservations"
     },
     staff: {
       title: "Staff management",
       description: "Manage roles, permissions, and assign tasks to your team.",
+      details: {
+        title: "Staff Management Features",
+        roleManagement: {
+          title: "Role Management",
+          description: "Define custom roles with specific permissions for each team member"
+        },
+        shiftManagement: {
+          title: "Shift Management",
+          description: "Organize work shifts and schedules efficiently"
+        },
+        performanceTracking: {
+          title: "Performance Tracking",
+          description: "Monitor staff performance with detailed metrics"
+        },
+        mobileAccess: {
+          title: "Mobile Access",
+          description: "Staff can access the system from mobile devices"
+        }
+      },
+      benefits: {
+        title: "Benefits",
+        benefit1: "Improves team productivity",
+        benefit2: "Reduces operational errors",
+        benefit3: "Facilitates internal communication",
+        benefit4: "Full control of staff"
+      },
+      cta: "Start with Staff"
     },
     inventory: {
       title: "Inventory",
       description: "Real-time stock control with low-stock alerts and supplier management.",
+      details: {
+        title: "Inventory Features",
+        stockManagement: {
+          title: "Stock Management",
+          description: "Control product inventory in real-time"
+        },
+        lowStockAlerts: {
+          title: "Low Stock Alerts",
+          description: "Receive automatic notifications when stock is low"
+        },
+        costControl: {
+          title: "Cost Control",
+          description: "Monitor and control inventory costs"
+        },
+        usageTracking: {
+          title: "Usage Tracking",
+          description: "Analyze product usage to optimize purchases"
+        }
+      },
+      benefits: {
+        title: "Benefits",
+        benefit1: "Reduces waste by up to 40%",
+        benefit2: "Optimizes purchases and stock",
+        benefit3: "Improves profit margins",
+        benefit4: "Full inventory control"
+      },
+      cta: "Start with Inventory"
     },
   },
   benefits: {
@@ -348,30 +511,193 @@ export const landingEs = {
     title: "Recursos principales",
     subtitle:
       "Nuestra plataforma ofrece todas las herramientas que necesita para gestionar su restaurante de manera eficiente.",
+    backToHome: "Volver al inicio",
     learnMore: "Saber más",
     orders: {
       title: "Gestión de pedidos",
       description: "Tome pedidos de forma rápida con actualizaciones en tiempo real para cocina.",
+      details: {
+        title: "Características de Gestión de Pedidos",
+        mobileOrders: {
+          title: "Pedidos Móviles",
+          description: "Toma pedidos directamente desde dispositivos móviles con sincronización instantánea"
+        },
+        realTime: {
+          title: "Actualización en Tiempo Real",
+          description: "Los pedidos se actualizan instantáneamente en cocina y barra para mayor eficiencia"
+        },
+        staffManagement: {
+          title: "Gestión de Personal",
+          description: "Asigna pedidos a miembros del personal específicos para mejor organización"
+        },
+        fastProcessing: {
+          title: "Procesamiento Rápido",
+          description: "Sistema optimizado para procesar pedidos rápidamente y reducir tiempos de espera"
+        }
+      },
+      benefits: {
+        title: "Beneficios",
+        benefit1: "Reduce errores en pedidos hasta un 80%",
+        benefit2: "Aumenta la eficiencia del personal",
+        benefit3: "Mejora la experiencia del cliente",
+        benefit4: "Sincronización instantánea entre dispositivos"
+      },
+      cta: "Comenzar con Pedidos"
     },
     tables: {
       title: "Gestión de mesas",
       description: "Visualice y administre la disposición de sus mesas con estado en tiempo real.",
+      details: {
+        title: "Características de Gestión de Mesas",
+        tableMaps: {
+          title: "Mapas de Mesas Visuales",
+          description: "Crea mapas visuales de tu restaurante con arrastrar y soltar"
+        },
+        bulkCreation: {
+          title: "Creación en Masa",
+          description: "Crea múltiples mesas automáticamente con nombres secuenciales y prefijos personalizados"
+        },
+        mobileAccess: {
+          title: "Acceso Móvil",
+          description: "Gestión de mesas desde cualquier dispositivo móvil"
+        },
+        realTimeStatus: {
+          title: "Estado en Tiempo Real",
+          description: "Visualiza el estado de cada mesa en tiempo real (disponible, ocupada, reservada)"
+        }
+      },
+      benefits: {
+        title: "Beneficios",
+        benefit1: "Optimiza la asignación de mesas",
+        benefit2: "Reduce tiempos de espera",
+        benefit3: "Mejora la rotación de mesas",
+        benefit4: "Control total del flujo de clientes"
+      },
+      cta: "Comenzar con Mesas"
     },
     reports: {
       title: "Informes y análisis",
       description: "Informes detallados sobre ventas, inventario y rendimiento del restaurante.",
+      details: {
+        title: "Características de Reportes",
+        salesAnalytics: {
+          title: "Análisis de Ventas",
+          description: "Visualiza tendencias de ventas y patrones de consumo"
+        },
+        detailedReports: {
+          title: "Reportes Detallados",
+          description: "Genera reportes detallados por período, categoría, producto y más"
+        },
+        exportData: {
+          title: "Exportación de Datos",
+          description: "Exporta reportes en múltiples formatos para análisis externos"
+        },
+        customPeriods: {
+          title: "Períodos Personalizados",
+          description: "Analiza datos por períodos personalizados (diario, semanal, mensual, anual)"
+        }
+      },
+      benefits: {
+        title: "Beneficios",
+        benefit1: "Toma decisiones basadas en datos",
+        benefit2: "Identifica oportunidades de mejora",
+        benefit3: "Optimiza costos y márgenes",
+        benefit4: "Monitorea el rendimiento en tiempo real"
+      },
+      cta: "Comenzar con Reportes"
     },
     reservations: {
       title: "Reservas",
       description: "Gestione reservas de clientes de forma simple y evite sobrecargas.",
+      details: {
+        title: "Características de Reservas",
+        easyScheduling: {
+          title: "Agendamiento Fácil",
+          description: "Sistema intuitivo para agendar y gestionar reservas"
+        },
+        capacityManagement: {
+          title: "Gestión de Capacidad",
+          description: "Controla la capacidad del restaurante para evitar sobre-reservas"
+        },
+        notifications: {
+          title: "Notificaciones Automáticas",
+          description: "Envía confirmaciones y recordatorios automáticos a los clientes"
+        },
+        mobileBooking: {
+          title: "Reservas Móviles",
+          description: "Permite a los clientes hacer reservas desde sus dispositivos móviles"
+        }
+      },
+      benefits: {
+        title: "Beneficios",
+        benefit1: "Reduce no-shows hasta un 60%",
+        benefit2: "Optimiza la capacidad del restaurante",
+        benefit3: "Mejora la experiencia del cliente",
+        benefit4: "Automatiza el proceso de reservas"
+      },
+      cta: "Comenzar con Reservas"
     },
     staff: {
       title: "Gestión de personal",
       description: "Administre roles, permisos y asigne tareas específicas a su equipo.",
+      details: {
+        title: "Características de Gestión de Personal",
+        roleManagement: {
+          title: "Gestión de Roles",
+          description: "Define roles personalizados con permisos específicos para cada miembro del equipo"
+        },
+        shiftManagement: {
+          title: "Gestión de Turnos",
+          description: "Organiza turnos y horarios de trabajo de manera eficiente"
+        },
+        performanceTracking: {
+          title: "Seguimiento de Rendimiento",
+          description: "Monitorea el rendimiento del personal con métricas detalladas"
+        },
+        mobileAccess: {
+          title: "Acceso Móvil",
+          description: "El personal puede acceder al sistema desde dispositivos móviles"
+        }
+      },
+      benefits: {
+        title: "Beneficios",
+        benefit1: "Mejora la productividad del equipo",
+        benefit2: "Reduce errores operativos",
+        benefit3: "Facilita la comunicación interna",
+        benefit4: "Control total del personal"
+      },
+      cta: "Comenzar con Personal"
     },
     inventory: {
       title: "Inventario",
       description: "Control de stock en tiempo real con alertas de stock bajo y proveedores.",
+      details: {
+        title: "Características de Inventario",
+        stockManagement: {
+          title: "Gestión de Stock",
+          description: "Controla el inventario de productos en tiempo real"
+        },
+        lowStockAlerts: {
+          title: "Alertas de Bajo Stock",
+          description: "Recibe notificaciones automáticas cuando el stock es bajo"
+        },
+        costControl: {
+          title: "Control de Costos",
+          description: "Monitorea y controla los costos de inventario"
+        },
+        usageTracking: {
+          title: "Seguimiento de Uso",
+          description: "Analiza el uso de productos para optimizar compras"
+        }
+      },
+      benefits: {
+        title: "Beneficios",
+        benefit1: "Reduce desperdicios hasta un 40%",
+        benefit2: "Optimiza compras y stock",
+        benefit3: "Mejora márgenes de ganancia",
+        benefit4: "Control total del inventario"
+      },
+      cta: "Comenzar con Inventario"
     },
   },
   benefits: {
@@ -657,30 +983,193 @@ export const landingPt = {
     title: "Recursos principais",
     subtitle:
       "Nossa plataforma oferece todas as ferramentas que você precisa para gerenciar seu restaurante de maneira eficiente.",
+    backToHome: "Voltar ao início",
     learnMore: "Saiba mais",
     orders: {
       title: "Gestão de pedidos",
       description: "Faça pedidos de maneira rápida e eficiente, com atualizações em tempo real para a cozinha.",
+      details: {
+        title: "Recursos de Gestão de Pedidos",
+        mobileOrders: {
+          title: "Pedidos Móveis",
+          description: "Faça pedidos diretamente de dispositivos móveis com sincronização instantânea"
+        },
+        realTime: {
+          title: "Atualizações em Tempo Real",
+          description: "Os pedidos são atualizados instantaneamente na cozinha e bar para máxima eficiência"
+        },
+        staffManagement: {
+          title: "Gestão de Equipe",
+          description: "Atribua pedidos a membros específicos da equipe para melhor organização"
+        },
+        fastProcessing: {
+          title: "Processamento Rápido",
+          description: "Sistema otimizado para processar pedidos rapidamente e reduzir tempos de espera"
+        }
+      },
+      benefits: {
+        title: "Benefícios",
+        benefit1: "Reduz erros em pedidos em até 80%",
+        benefit2: "Aumenta a eficiência da equipe",
+        benefit3: "Melhora a experiência do cliente",
+        benefit4: "Sincronização instantânea entre dispositivos"
+      },
+      cta: "Começar com Pedidos"
     },
     tables: {
       title: "Gestão de mesas",
       description: "Visualize e administre a disposição das suas mesas, com status em tempo real.",
+      details: {
+        title: "Recursos de Gestão de Mesas",
+        tableMaps: {
+          title: "Mapas Visuais de Mesas",
+          description: "Crie mapas visuais do seu restaurante com arrastar e soltar"
+        },
+        bulkCreation: {
+          title: "Criação em Massa",
+          description: "Crie várias mesas automaticamente com nomes sequenciais e prefixos personalizados"
+        },
+        mobileAccess: {
+          title: "Acesso Móvel",
+          description: "Gerencie mesas de qualquer dispositivo móvel"
+        },
+        realTimeStatus: {
+          title: "Status em Tempo Real",
+          description: "Visualize o status de cada mesa em tempo real (disponível, ocupada, reservada)"
+        }
+      },
+      benefits: {
+        title: "Benefícios",
+        benefit1: "Otimiza a atribuição de mesas",
+        benefit2: "Reduz tempos de espera",
+        benefit3: "Melhora a rotação de mesas",
+        benefit4: "Controle total do fluxo de clientes"
+      },
+      cta: "Começar com Mesas"
     },
     reports: {
       title: "Relatórios e análises",
       description: "Obtenha relatórios detalhados sobre vendas, estoque e desempenho do seu restaurante.",
+      details: {
+        title: "Recursos de Relatórios",
+        salesAnalytics: {
+          title: "Análise de Vendas",
+          description: "Visualize tendências de vendas e padrões de consumo"
+        },
+        detailedReports: {
+          title: "Relatórios Detalhados",
+          description: "Gere relatórios detalhados por período, categoria, produto e mais"
+        },
+        exportData: {
+          title: "Exportar Dados",
+          description: "Exporte relatórios em múltiplos formatos para análise externa"
+        },
+        customPeriods: {
+          title: "Períodos Personalizados",
+          description: "Analise dados por períodos personalizados (diário, semanal, mensal, anual)"
+        }
+      },
+      benefits: {
+        title: "Benefícios",
+        benefit1: "Tome decisões baseadas em dados",
+        benefit2: "Identifique oportunidades de melhoria",
+        benefit3: "Otimize custos e margens",
+        benefit4: "Monitore o desempenho em tempo real"
+      },
+      cta: "Começar com Relatórios"
     },
     reservations: {
       title: "Reservas",
       description: "Gerencie as reservas dos seus clientes de maneira simples e evite sobrecargas.",
+      details: {
+        title: "Recursos de Reservas",
+        easyScheduling: {
+          title: "Agendamento Fácil",
+          description: "Sistema intuitivo para agendar e gerenciar reservas"
+        },
+        capacityManagement: {
+          title: "Gestão de Capacidade",
+          description: "Controle a capacidade do restaurante para evitar excesso de reservas"
+        },
+        notifications: {
+          title: "Notificações Automáticas",
+          description: "Envie confirmações e lembretes automáticos aos clientes"
+        },
+        mobileBooking: {
+          title: "Reservas Móveis",
+          description: "Permite que os clientes façam reservas de seus dispositivos móveis"
+        }
+      },
+      benefits: {
+        title: "Benefícios",
+        benefit1: "Reduz no-shows em até 60%",
+        benefit2: "Otimiza a capacidade do restaurante",
+        benefit3: "Melhora a experiência do cliente",
+        benefit4: "Automatiza o processo de reservas"
+      },
+      cta: "Começar com Reservas"
     },
     staff: {
       title: "Gestão de pessoal",
       description: "Administre os papéis e permissões da sua equipe, atribuindo tarefas específicas.",
+      details: {
+        title: "Recursos de Gestão de Equipe",
+        roleManagement: {
+          title: "Gestão de Papéis",
+          description: "Defina papéis personalizados com permissões específicas para cada membro da equipe"
+        },
+        shiftManagement: {
+          title: "Gestão de Turnos",
+          description: "Organize turnos e horários de trabalho de forma eficiente"
+        },
+        performanceTracking: {
+          title: "Acompanhamento de Desempenho",
+          description: "Monitore o desempenho da equipe com métricas detalhadas"
+        },
+        mobileAccess: {
+          title: "Acesso Móvel",
+          description: "A equipe pode acessar o sistema de dispositivos móveis"
+        }
+      },
+      benefits: {
+        title: "Benefícios",
+        benefit1: "Melhora a produtividade da equipe",
+        benefit2: "Reduz erros operacionais",
+        benefit3: "Facilita a comunicação interna",
+        benefit4: "Controle total da equipe"
+      },
+      cta: "Começar com Equipe"
     },
     inventory: {
       title: "Estoque",
       description: "Controle seu estoque em tempo real, com alertas de estoque baixo e gestão de fornecedores.",
+      details: {
+        title: "Recursos de Estoque",
+        stockManagement: {
+          title: "Gestão de Estoque",
+          description: "Controle o inventário de produtos em tempo real"
+        },
+        lowStockAlerts: {
+          title: "Alertas de Estoque Baixo",
+          description: "Receba notificações automáticas quando o estoque estiver baixo"
+        },
+        costControl: {
+          title: "Controle de Custos",
+          description: "Monitore e controle os custos de inventário"
+        },
+        usageTracking: {
+          title: "Acompanhamento de Uso",
+          description: "Analise o uso de produtos para otimizar compras"
+        }
+      },
+      benefits: {
+        title: "Benefícios",
+        benefit1: "Reduz desperdícios em até 40%",
+        benefit2: "Otimiza compras e estoque",
+        benefit3: "Melhora margens de lucro",
+        benefit4: "Controle total do inventário"
+      },
+      cta: "Começar com Estoque"
     },
   },
   benefits: {

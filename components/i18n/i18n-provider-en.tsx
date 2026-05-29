@@ -459,7 +459,8 @@ const enTranslationsBase = {
       "itemsPurchased": "items purchased",
       "costByCategory": "Cost by Category",
       "monthlyCost": "Monthly Cost",
-      "recentPurchases": "Recent Purchases"
+      "recentPurchases": "Recent Purchases",
+      "noData": "No data available"
     }
   },
 

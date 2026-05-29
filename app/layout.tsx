@@ -92,11 +92,21 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   }
 
   const isInvitationRoute = pathname.includes("/invitation/register")
-  const fullWidthRoutes = ["/", "/login", "/register", "/forgot-password", "/privacy-policy", "/terms-and-conditions"]
-  const isFullWidthRoute =
-    isInvitationRoute || fullWidthRoutes.some((page) => pathname === page)
+  const publicPages = ["/", "/login", "/register", "/invitation/register", "/forgot-password", "/setup", "/privacy-policy", "/terms-and-conditions", "/features/"]
+  const isPublicPage = publicPages.some((page) => pathname === page || pathname.startsWith(page))
+  
+  // Rutas que siempre deben ser de ancho completo (incluso con usuario autenticado)
+  const alwaysFullWidthRoutes = ["/login", "/register", "/forgot-password", "/invitation/register", "/setup", "/privacy-policy", "/terms-and-conditions", "/features/"]
+  const isAlwaysFullWidthRoute =
+    isInvitationRoute || alwaysFullWidthRoutes.some((page) => pathname === page || pathname.startsWith(page))
 
-  if (isFullWidthRoute) {
+  // Si no es página pública y no hay usuario, redirigir al login
+  if (!user && !isPublicPage) {
+    return <LoginPage />
+  }
+
+  // Si es ruta que siempre debe ser de ancho completo, mostrar sin sidebar
+  if (isAlwaysFullWidthRoute) {
     return (
       <div className="min-h-screen w-full max-w-full overflow-x-hidden">
         {children}
@@ -104,13 +114,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     )
   }
 
-  const publicPages = ["/", "/login", "/register", "/invitation/register", "/forgot-password", "/setup", "/privacy-policy", "/terms-and-conditions"]
-  const isPublicPage = publicPages.some((page) => pathname === page)
-
-  if (!user && !isPublicPage) {
-    return <LoginPage />
-  }
-
+  // Si hay usuario, mostrar con sidebar
   return user ? (
     <div className="app-shell flex min-h-screen w-full min-w-0">
       <CollapsibleSidebar />
