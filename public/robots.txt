@@ -1,0 +1,17 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow admin and private areas
+Disallow: /dashboard
+Disallow: /orders
+Disallow: /tables
+Disallow: /inventory
+Disallow: /purchases
+Disallow: /cash-register
+Disallow: /reports
+Disallow: /settings
+Disallow: /users
+
+# Allow sitemap
+Sitemap: https://www.comanderoweb.shop/sitemap.xml

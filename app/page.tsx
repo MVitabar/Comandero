@@ -43,6 +43,7 @@ import "./landing.css"
 import { useI18n } from "@/components/i18n-provider"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { CookieConsentBanner } from "@/components/cookie-consent-banner"
+import { WebsiteJsonLd, OrganizationJsonLd, SoftwareApplicationJsonLd } from "@/components/seo-json-ld"
 
 const LANDING_CONTACT = {
   whatsappUrl: "https://wa.me/5548996209954",
@@ -1149,6 +1150,11 @@ export default function LandingPage() {
         </div>
       </footer>
       <CookieConsentBanner />
+      
+      {/* SEO JSON-LD Structured Data */}
+      <WebsiteJsonLd />
+      <OrganizationJsonLd />
+      <SoftwareApplicationJsonLd />
     </div>
   )
 }
