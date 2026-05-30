@@ -993,7 +993,8 @@ const ptTranslationsBase = {
       "popupClosed": "Popup foi fechado pelo usuário",
       "popupBlocked": "Popup foi bloqueado pelo navegador",
       "accountExistsWithDifferentCredential": "Conta já existe com credenciais diferentes",
-      "profileNotFound": "Perfil não encontrado"
+      "profileNotFound": "Perfil não encontrado",
+      "trialExpired": "Seu período de teste expirou. Por favor, assine para continuar usando o aplicativo."
     }
   },
 

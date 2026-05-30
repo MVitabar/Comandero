@@ -995,7 +995,8 @@ const enTranslationsBase = {
       "popupClosed": "Popup was closed by user",
       "popupBlocked": "Popup was blocked by browser",
       "accountExistsWithDifferentCredential": "Account already exists with different credential",
-      "profileNotFound": "Profile not found"
+      "profileNotFound": "Profile not found",
+      "trialExpired": "Your trial period has expired. Please subscribe to continue using the application."
     }
   },
 

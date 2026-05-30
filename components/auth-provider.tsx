@@ -38,6 +38,7 @@ import {
 import { getFirestorePaths } from '@/lib/firestore-paths';
 import { nanoid } from 'nanoid';
 import { useI18n } from '@/components/i18n-provider';
+import { getUserSubscription, isTrialActive, hasValidAccess } from '@/lib/subscription-manager';
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -61,7 +62,7 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext)
 
-const publicRoutes = ["/", "/login", "/register", "/forgot-password", "/invitation/register", "/setup", "/privacy-policy", "/terms-and-conditions", "/features/"]
+const publicRoutes = ["/", "/login", "/register", "/forgot-password", "/invitation/register", "/setup", "/privacy-policy", "/terms-and-conditions", "/features/", "/subscription"]
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -671,6 +672,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           
           setUser(customUser)
+
+          // Check if user has valid access (trial active or subscription active)
+          if (customUser && db) {
+            const isTrialActiveValue = customUser.isTrialActive && customUser.trialEndDate 
+              ? isTrialActive(customUser.trialEndDate) 
+              : false
+            
+            const subscription = await getUserSubscription(customUser.uid)
+            const hasAccess = hasValidAccess(isTrialActiveValue, subscription)
+
+            // If user doesn't have valid access and is not on subscription page, redirect to subscription
+            if (!hasAccess && pathname !== '/subscription' && !publicRoutes.some((route) => pathname === route || pathname.startsWith(route))) {
+              toast.error(t("auth.errors.trialExpired"))
+              router.push("/subscription")
+            }
+          }
         } else {
           setUser(null)
         }

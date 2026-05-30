@@ -297,3 +297,14 @@ export function getTrialDaysRemaining(trialEndDate: any): number {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   return Math.max(0, diffDays);
 }
+
+/**
+ * Check if user has valid access (trial active or subscription active)
+ */
+export function hasValidAccess(
+  isTrialActive: boolean,
+  subscription: Subscription | null
+): boolean {
+  // User has access if trial is active OR subscription is active
+  return isTrialActive || isSubscriptionActive(subscription);
+}

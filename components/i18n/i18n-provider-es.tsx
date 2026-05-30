@@ -993,7 +993,8 @@ const esTranslationsBase = {
       "popupClosed": "La ventana emergente fue cerrada por el usuario",
       "popupBlocked": "La ventana emergente fue bloqueada por el navegador",
       "accountExistsWithDifferentCredential": "La cuenta ya existe con diferentes credenciales",
-      "profileNotFound": "Perfil no encontrado"
+      "profileNotFound": "Perfil no encontrado",
+      "trialExpired": "Tu período de prueba ha expirado. Por favor suscríbete para continuar usando la aplicación."
     }
   },
 
