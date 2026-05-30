@@ -1306,6 +1306,7 @@ const enTranslationsBase = {
       "deleteAccountError": "Error deleting account",
       "passwordRequired": "Password is required",
       "enterPassword": "Enter your password to confirm",
+      "googleReauthWarning": "You will be asked to reauthenticate with your Google account to confirm account deletion.",
       "actions": {
         "submit": "Save Changes",
         "submitting": "Saving...",

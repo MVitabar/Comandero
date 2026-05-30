@@ -1304,6 +1304,7 @@ const ptTranslationsBase = {
       "deleteAccountError": "Erro ao excluir conta",
       "passwordRequired": "Senha é obrigatória",
       "enterPassword": "Digite sua senha para confirmar",
+      "googleReauthWarning": "Você será solicitado a se reautenticar com sua conta Google para confirmar a exclusão da conta.",
       "actions": {
         "submit": "Salvar Alterações",
         "submitting": "Salvando...",

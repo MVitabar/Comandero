@@ -1304,6 +1304,7 @@ const esTranslationsBase = {
       "deleteAccountError": "Error al eliminar cuenta",
       "passwordRequired": "Se requiere contraseña",
       "enterPassword": "Ingresa tu contraseña para confirmar",
+      "googleReauthWarning": "Se te pedirá que te reautentiques con tu cuenta de Google para confirmar la eliminación de la cuenta.",
       "actions": {
         "submit": "Guardar cambios",
         "submitting": "Guardando...",

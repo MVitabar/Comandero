@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useI18n } from "@/components/i18n-provider"
 import { useAuth } from "@/components/auth-provider"
 import { useFirebase } from "@/components/firebase-provider"
@@ -32,6 +32,17 @@ export function SecuritySettings() {
   const [showPasswordForm, setShowPasswordForm] = useState(false)
   const [showDeleteForm, setShowDeleteForm] = useState(false)
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
+  const [isGoogleUser, setIsGoogleUser] = useState(false)
+
+  // Check if user is using Google authentication
+  useEffect(() => {
+    if (auth?.currentUser) {
+      const googleUser = auth.currentUser.providerData.some(
+        (provider: any) => provider.providerId === 'google.com'
+      )
+      setIsGoogleUser(googleUser)
+    }
+  }, [auth, user])
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -86,7 +97,12 @@ export function SecuritySettings() {
 
     if (!auth.currentUser || !user) return
 
-    if (!deletePassword) {
+    // Check if user is using Google authentication
+    const isGoogleUser = auth.currentUser.providerData.some(
+      (provider: any) => provider.providerId === 'google.com'
+    )
+
+    if (!isGoogleUser && !deletePassword) {
       toast.error(t("settings.security.passwordRequired"))
       return
     }
@@ -94,12 +110,20 @@ export function SecuritySettings() {
     setLoading(true)
 
     try {
-      // Reauthenticate user first
-      const credential = EmailAuthProvider.credential(
-        auth.currentUser.email!,
-        deletePassword
-      )
-      await reauthenticateWithCredential(auth.currentUser, credential)
+      // Reauthenticate user based on provider
+      if (isGoogleUser) {
+        // For Google users, we need to reauthenticate with Google
+        const { GoogleAuthProvider, reauthenticateWithPopup } = await import('firebase/auth')
+        const provider = new GoogleAuthProvider()
+        await reauthenticateWithPopup(auth.currentUser, provider)
+      } else {
+        // For email/password users, reauthenticate with email/password
+        const credential = EmailAuthProvider.credential(
+          auth.currentUser.email!,
+          deletePassword
+        )
+        await reauthenticateWithCredential(auth.currentUser, credential)
+      }
 
       // Delete all establishment data if user is the owner
       if (db && user.establishmentId && user.role === 'owner') {
@@ -327,18 +351,27 @@ export function SecuritySettings() {
             </Button>
           ) : (
             <form onSubmit={handleDeleteAccount} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="deletePassword">{t("settings.security.confirmPassword")}</Label>
-                <Input
-                  id="deletePassword"
-                  type="password"
-                  value={deletePassword}
-                  onChange={(e) => setDeletePassword(e.target.value)}
-                  disabled={loading}
-                  required
-                  placeholder={t("settings.security.enterPassword")}
-                />
-              </div>
+              {isGoogleUser ? (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    {t("settings.security.googleReauthWarning")}
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="deletePassword">{t("settings.security.confirmPassword")}</Label>
+                  <Input
+                    id="deletePassword"
+                    type="password"
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    disabled={loading}
+                    required
+                    placeholder={t("settings.security.enterPassword")}
+                  />
+                </div>
+              )}
 
               <div className="flex gap-3">
                 <Button type="submit" variant="destructive" disabled={loading}>
