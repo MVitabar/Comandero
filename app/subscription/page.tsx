@@ -25,6 +25,16 @@ import {
 import { SubscriptionPlan, Payment, Subscription } from "@/types"
 import { SUBSCRIPTION_PLANS } from "@/types"
 import { toast } from "sonner"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 // Currency conversion rates (USD to BRL)
 const USD_TO_BRL = 5.0 // Approximate rate, should be updated dynamically
@@ -40,6 +50,8 @@ export default function SubscriptionPage() {
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [payments, setPayments] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
+  const [cancelling, setCancelling] = useState(false)
+  const [showCancelDialog, setShowCancelDialog] = useState(false)
 
   useEffect(() => {
     if (user?.uid) {
@@ -103,8 +115,41 @@ export default function SubscriptionPage() {
   }
 
   const handleCancel = async () => {
-    toast.info('Cancellation feature coming soon')
-    // TODO: Implement cancellation
+    if (!user?.uid || !user?.establishmentId) {
+      toast.error("User information not available")
+      return
+    }
+
+    setCancelling(true)
+    try {
+      const response = await fetch('/api/stripe/cancel-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.uid,
+          establishmentId: user.establishmentId,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to cancel subscription')
+      }
+
+      toast.success('Subscription cancelled successfully')
+      setShowCancelDialog(false)
+      
+      // Reload subscription data
+      await loadSubscriptionData()
+    } catch (error) {
+      console.error('Error cancelling subscription:', error)
+      toast.error(String(error))
+    } finally {
+      setCancelling(false)
+    }
   }
 
   if (loading) {
@@ -189,7 +234,7 @@ export default function SubscriptionPage() {
           <div className="mt-6 flex gap-3">
             <Button 
               variant="outline" 
-              onClick={handleCancel}
+              onClick={() => setShowCancelDialog(true)}
               disabled={!subActive}
             >
               Cancel Subscription
@@ -327,6 +372,28 @@ export default function SubscriptionPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Cancel Subscription Confirmation Dialog */}
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Subscription</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel your subscription? Your access to premium features will continue until the end of your current billing period. After that, you will be downgraded to the Basic plan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelling}>No, keep my subscription</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancel}
+              disabled={cancelling}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {cancelling ? 'Cancelling...' : 'Yes, cancel subscription'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
