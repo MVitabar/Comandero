@@ -304,11 +304,13 @@ export default function SubscriptionPage() {
                   </ul>
                   <Button 
                     className="w-full" 
-                    variant={plan === currentPlan ? "secondary" : "default"}
+                    variant={plan === currentPlan && subActive ? "secondary" : "default"}
                     onClick={() => handleUpgrade(plan as SubscriptionPlan)}
-                    disabled={plan === currentPlan}
+                    disabled={plan === currentPlan && subActive}
                   >
-                    {plan === currentPlan ? 'Current Plan' : 'Upgrade'}
+                    {plan === currentPlan && subActive ? 'Current Plan' : 
+                     plan === currentPlan && !subActive ? 'Subscribe' : 
+                     'Upgrade'}
                     {plan !== currentPlan && <ArrowRight className="ml-2 h-4 w-4" />}
                   </Button>
                 </CardContent>

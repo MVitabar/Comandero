@@ -64,6 +64,15 @@ export const useAuth = () => useContext(AuthContext)
 
 const publicRoutes = ["/", "/login", "/register", "/forgot-password", "/invitation/register", "/setup", "/privacy-policy", "/terms-and-conditions", "/features/", "/subscription"]
 
+const isPublicRoute = (pathname: string): boolean => {
+  return publicRoutes.some((route) => {
+    if (route === "/") {
+      return pathname === "/"
+    }
+    return pathname === route || pathname.startsWith(route)
+  })
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
@@ -675,7 +684,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           // Check if user has valid access (trial active or subscription active)
           if (customUser && db) {
-            const isTrialActiveValue = customUser.isTrialActive && customUser.trialEndDate 
+            const isTrialActiveValue = customUser.trialEndDate 
               ? isTrialActive(customUser.trialEndDate) 
               : false
             
@@ -683,7 +692,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const hasAccess = hasValidAccess(isTrialActiveValue, subscription)
 
             // If user doesn't have valid access and is not on subscription page, redirect to subscription
-            if (!hasAccess && pathname !== '/subscription' && !publicRoutes.some((route) => pathname === route || pathname.startsWith(route))) {
+            if (!hasAccess && pathname !== '/subscription' && !isPublicRoute(pathname)) {
               toast.error(t("auth.errors.trialExpired"))
               router.push("/subscription")
             }
@@ -694,7 +703,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false)
 
         // Redirect logic
-        if (!firebaseUser && !publicRoutes.some((route) => pathname === route || pathname.startsWith(route))) {
+        if (!firebaseUser && !isPublicRoute(pathname)) {
           router.push("/login")
         }
       },
@@ -1019,6 +1028,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       console.log('Logout completed successfully');
 
+      // Redirect to login page
+      router.push("/login");
+
       return {
         success: true
       };
@@ -1097,6 +1109,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Google Sign In function
   const signInWithGoogle = async (): Promise<{ success: boolean, error?: string, userId?: string, isNewUser?: boolean, user?: User | null }> => {
+    const activityContext = getUserActivityContext();
+    
     try {
       if (!auth) {
         return {
@@ -1143,6 +1157,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isNewUser: true,
           user: null
         };
+      }
+
+      // Update last login timestamp, status, and activity (same as regular login)
+      if (db && customUser.establishmentId) {
+        const userRef = doc(db, 'restaurants', customUser.establishmentId, 'users', firebaseUser.uid)
+        
+        // Prepare login attempt record
+        const loginAttempt: LoginAttempt = {
+          timestamp: new Date(),
+          success: true,
+          ipAddress: activityContext.ipAddress,
+          device: activityContext.device,
+          location: activityContext.location
+        };
+
+        // Create session record for work hours tracking
+        const sessionRef = doc(collection(db, 'restaurants', customUser.establishmentId, 'sessions'));
+        const sessionId = sessionRef.id;
+        
+        // Check if document exists before updating
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+          // Update user document with login activity
+          await updateDoc(userRef, {
+            status: 'active',
+            'activity.lastSuccessfulLogin': serverTimestamp(),
+            'activity.loginAttempts': arrayUnion(loginAttempt),
+            'activity.failedLoginCount': 0, // Reset failed login count on successful login
+            currentSessionId: sessionId
+          });
+        }
+
+        // Create session record
+        await setDoc(sessionRef, {
+          sessionId,
+          userId: firebaseUser.uid,
+          username: customUser.username,
+          email: firebaseUser.email,
+          role: customUser.role,
+          establishmentId: customUser.establishmentId,
+          loginTime: serverTimestamp(),
+          logoutTime: null,
+          duration: null,
+          device: activityContext.device,
+          ipAddress: activityContext.ipAddress,
+          location: activityContext.location,
+          status: 'active'
+        });
       }
 
       setUser(customUser);
