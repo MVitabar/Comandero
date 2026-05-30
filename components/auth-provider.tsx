@@ -1208,12 +1208,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const baseSlug = establishmentName.trim();
       
+      // Calculate trial dates for new users
+      const now = new Date();
+      const trialEndDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000); // 14 days from now
+      
       const signUpOptions = {
         establishmentName: baseSlug,
         role: UserRole.OWNER,
-        trialStartDate: previousTrialInfo?.trialStartDate,
-        trialEndDate: previousTrialInfo?.trialEndDate,
-        isTrialActive: previousTrialInfo?.isTrialActive || false,
+        trialStartDate: previousTrialInfo?.trialStartDate || now,
+        trialEndDate: previousTrialInfo?.trialEndDate || trialEndDate,
+        isTrialActive: previousTrialInfo?.isTrialActive !== undefined ? previousTrialInfo.isTrialActive : true,
         subscriptionPlan: previousTrialInfo?.subscriptionPlan || 'basic'
       };
       
