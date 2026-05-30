@@ -41,6 +41,7 @@ export interface ModulePermissions {
       billing: boolean;
       sessionHistory: boolean;
       printers: boolean;
+      mobileApp: boolean;
     };
   };
   reports: Permission;
@@ -73,7 +74,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
         security: true,
         billing: true,
         sessionHistory: true,
-        printers: true
+        printers: true,
+        mobileApp: true
       }
     },
     reports: { view: true, create: true, update: true, delete: true }
@@ -105,7 +107,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
         security: false,
         billing: false,
         sessionHistory: true,
-        printers: true
+        printers: true,
+        mobileApp: true
       }
     }
   },
@@ -137,7 +140,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
         security: false,
         billing: false,
         sessionHistory: true,
-        printers: true
+        printers: true,
+        mobileApp: true
       }
     }
   },
@@ -169,7 +173,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
         security: false,
         billing: false,
         sessionHistory: true,
-        printers: true
+        printers: true,
+        mobileApp: true
       }
     }
   },
@@ -200,7 +205,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
         security: false,
         billing: false,
         sessionHistory: false,
-        printers: false
+        printers: false,
+        mobileApp: false
       }
     }
   },
@@ -232,7 +238,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
         security: false,
         billing: false,
         sessionHistory: true,
-        printers: true
+        printers: true,
+        mobileApp: true
       }
     }
   }

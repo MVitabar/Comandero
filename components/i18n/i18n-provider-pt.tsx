@@ -1353,6 +1353,42 @@ const ptTranslationsBase = {
         "billingUpdateFailed": "Falha ao atualizar configurações de pagamento",
         "billingUpdateError": "Ocorreu um erro ao atualizar suas configurações de pagamento."
       }
+    },
+    "mobileApp": {
+      "title": "App Móvel PDV",
+      "description": "Baixe o aplicativo móvel de ponto de venda para dispositivos Android",
+      "appName": "Comandero POS Móvel",
+      "appDescription": "Aplicativo Android para gerenciamento de ponto de venda",
+      "platform": "Aplicativo Android",
+      "version": "Versão 1.0",
+      "downloadButton": "Baixar APK",
+      "fileInfo": "Tamanho: ~50 MB • Requer Android 5.0 ou superior",
+      "features": {
+        "pos": {
+          "title": "Funcionalidade completa de PDV",
+          "description": "Faça pedidos, gerencie mesas e processe pagamentos"
+        },
+        "offline": {
+          "title": "Modo offline",
+          "description": "Continue trabalhando sem conexão com a internet"
+        },
+        "sync": {
+          "title": "Sincronização em tempo real",
+          "description": "Os dados são sincronizados automaticamente quando conectado"
+        },
+        "printer": {
+          "title": "Integração com impressoras",
+          "description": "Conecte impressoras Bluetooth"
+        }
+      },
+      "installation": {
+        "title": "Instruções de instalação",
+        "step1": "Baixe o arquivo APK usando o botão acima",
+        "step2": "No seu dispositivo Android, vá em Configurações → Segurança",
+        "step3": "Habilite \"Instalar de fontes desconhecidas\"",
+        "step4": "Abra o arquivo APK baixado para instalar",
+        "step5": "Após a instalação, você pode desabilitar \"Instalar de fontes desconhecidas\""
+      }
     }
   },
 

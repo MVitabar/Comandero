@@ -1356,6 +1356,42 @@ const enTranslationsBase = {
         "billingUpdateFailed": "Update Failed",
         "billingUpdateError": "An error occurred while updating your billing settings."
       }
+    },
+    "mobileApp": {
+      "title": "Mobile POS App",
+      "description": "Download the mobile point of sale application for Android devices",
+      "appName": "Comandero POS Mobile",
+      "appDescription": "Android application for point of sale management",
+      "platform": "Android Application",
+      "version": "Version 1.0",
+      "downloadButton": "Download APK",
+      "fileInfo": "File size: ~50 MB • Requires Android 5.0 or higher",
+      "features": {
+        "pos": {
+          "title": "Complete POS functionality",
+          "description": "Take orders, manage tables, and process payments"
+        },
+        "offline": {
+          "title": "Offline mode",
+          "description": "Continue working without internet connection"
+        },
+        "sync": {
+          "title": "Real-time sync",
+          "description": "Data syncs automatically when connected"
+        },
+        "printer": {
+          "title": "Printer integration",
+          "description": "Connect to Bluetooth printers"
+        }
+      },
+      "installation": {
+        "title": "Installation Instructions",
+        "step1": "Download the APK file using the button above",
+        "step2": "On your Android device, go to Settings → Security",
+        "step3": "Enable \"Install from Unknown Sources\"",
+        "step4": "Open the downloaded APK file to install",
+        "step5": "After installation, you can disable \"Install from Unknown Sources\""
+      }
     }
   },
 

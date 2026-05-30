@@ -13,7 +13,7 @@ import { LanguageSettings } from "@/components/settings/language-settings"
 import { AppearanceSettings } from "@/components/settings/appearance-settings"
 import { SessionHistory } from "@/components/settings/session-history"
 import { PrinterSettings } from "@/components/settings/printer-settings"
-import { User, Settings, Bell, Globe, Palette, Store, Shield, CreditCard, Clock, Printer } from "lucide-react"
+import { User, Settings, Bell, Globe, Palette, Store, Shield, CreditCard, Clock, Printer, Download, Smartphone } from "lucide-react"
 import { 
   Select, 
   SelectContent, 
@@ -24,6 +24,7 @@ import {
 import { EstablishmentSettings } from "@/components/settings/establishment-settings"
 import { SecuritySettings } from "@/components/settings/security-settings"
 import { BillingSettings } from "@/components/settings/billing-settings"
+import { MobileAppDownload } from "@/components/settings/mobile-app-download"
 
 export default function SettingsPage() {
   const { canView } = usePermissions()
@@ -44,7 +45,8 @@ export default function SettingsPage() {
     security: true,
     billing: true,
     sessionHistory: true,
-    printers: true
+    printers: true,
+    mobileApp: true
   } : user?.role ? 
     ROLE_PERMISSIONS[user.role].settings.sections : 
     ROLE_PERMISSIONS['waiter'].settings.sections
@@ -113,6 +115,13 @@ export default function SettingsPage() {
       icon: <Printer className="h-4 w-4" />,
       content: <PrinterSettings />,
       permission: settingsPermissions?.printers
+    },
+    {
+      id: "mobileApp",
+      label: "Mobile App",
+      icon: <Smartphone className="h-4 w-4" />,
+      content: <MobileAppDownload />,
+      permission: settingsPermissions?.mobileApp
     }
   ]
 
